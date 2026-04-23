@@ -12,3 +12,5 @@ db.connect(function(err) {
     console.log('Base de datos conectada')
 });
 module.exports = db;
+
+// cd .\proyecto\backend\
