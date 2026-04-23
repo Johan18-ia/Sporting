@@ -81,7 +81,7 @@ db.query(sql,
 );
 };
 
-User.update = asyn c (user, result) => {
+User.update = async (user, result) => {
 let fields = [];
 let values = [];
 
