@@ -1,2 +1,2 @@
 cd .\proyecto\backend\     -- ingresar directamente a la carpeta de terminal
-ip con 
+ipconfig
