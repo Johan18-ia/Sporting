@@ -19,3 +19,5 @@ Iniciar el xampp
 
 ---Paso3
 node index.js
+
+en caso de error consultar con Jhon.
