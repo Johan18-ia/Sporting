@@ -1,7 +1,6 @@
 // Encargado: Gestión de Categorías (Año de Nacimiento)
 // Importar modelo Category
 const Category = require('../models/category');
-
 module.exports = {
     // ============================================
     // LISTAR TODAS LAS CATEGORÍAS
@@ -22,7 +21,6 @@ module.exports = {
             });
         });
     },
-
     // ============================================
     // OBTENER CATEGORÍA POR ID
     // ============================================
@@ -49,7 +47,6 @@ module.exports = {
             });
         });
     },
-
     // ============================================
     // CREAR NUEVA CATEGORÍA (Ejem: 2015, 2016)
     // ============================================
@@ -70,7 +67,6 @@ module.exports = {
             });
         });
     },
-
     // ============================================
     // ACTUALIZAR CATEGORÍA
     // ============================================
@@ -91,7 +87,6 @@ module.exports = {
             });
         });
     },
-
     // ============================================
     // ELIMINAR CATEGORÍA
     // ============================================
@@ -112,4 +107,4 @@ module.exports = {
             });
         });
     }
-}; 
+};

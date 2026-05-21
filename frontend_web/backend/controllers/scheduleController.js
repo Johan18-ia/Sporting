@@ -26,9 +26,8 @@ module.exports = {
     // ASIGNAR HORARIO A UNA CATEGORÍA
     // ============================================
     create(req, res) {
-        const schedule = req.body; 
+        const schedule = req.body;
         // Ejemplo de body: { "id_category": 1, "day_of_week": "Lunes", "start_time": "16:00", "end_time": "18:00", "field_name": "Cancha Principal" }
-        
         Schedule.create(schedule, (err, data) => {
             if (err) {
                 return res.status(501).json({
@@ -50,7 +49,6 @@ module.exports = {
     // ============================================
     getByCategory(req, res) {
         const id_category = req.params.id_category;
-        
         Schedule.findByCategory(id_category, (err, data) => {
             if (err) {
                 return res.status(501).json({
@@ -87,4 +85,4 @@ module.exports = {
             });
         });
     }
-}; 
+};

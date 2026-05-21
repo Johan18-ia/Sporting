@@ -135,7 +135,7 @@ module.exports = {
         // Obtiene los datos enviados desde el cliente
         const user = req.body;
         // Si no tiene rol, se asigna "user"
-        if (!user.role) { 
+        if (!user.role) {
             user.role = "user";
         }
         // Crea el usuario en la base de datos
