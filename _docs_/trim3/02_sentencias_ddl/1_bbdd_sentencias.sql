@@ -1,5 +1,5 @@
 -- =====================================================
--- CONSULTAS Y SENTENCIAS SQL - NEXUS SPORTS
+-- CONSULTAS Y SENTENCIAS SQL - sporty
 -- =====================================================
 
 -- 01. Mostrar Bases de Datos.
@@ -16,7 +16,7 @@ USE Sportys;
 -- =====================================================
 -- SE DEJA COMENTADO PARA EVITAR BORRAR LA BASE DE DATOS
 
--- DROP DATABASE NexusSports;
+-- DROP DATABASE sporty
 
 -- 04. Mostrar Tablas.
 -- =====================================================
