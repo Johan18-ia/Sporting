@@ -1,17 +1,37 @@
--- PROYECTO: Sporting
--- CARPETA: 04_seguridad_base_datos
--- DESCRIPCIÓN: Creación de usuario con permisos limitados para la aplicación web
+/* ************************************************************************************* */
+/* ------------------------- SEGURIDAD BASE DE DATOS ---------------------------------- */
+/* ----------------------------------- PROYECTO SPORTYS ------------------------------- */
+/* ************************************************************************************* */
+/* CARPETA: 04_seguridad_base_datos                                                     */
+/* DESCRIPCIÓN: Creación de usuario y asignación de permisos para la aplicación web.    */
+/* MOTOR DE BASE DE DATOS: MySQL                                                        */
+/* ************************************************************************************* */
 
+USE Sportys;
 
--- 1. Crear el usuario de conexión para la App
--- Puedes cambiar 'password_web_123' por la que quieras
-CREATE USER usuario_impactofs WITH PASSWORD 'password_web_123';
+-- ===================================================================================== --
+-- 1. CREAR USUARIO PARA LA APLICACIÓN WEB
+-- ===================================================================================== --
+-- Puedes cambiar la contraseña por una más segura.
 
--- 2. Darle permiso para ver y usar el esquema público
-GRANT USAGE ON SCHEMA public TO usuario_impactofs;
+CREATE USER IF NOT EXISTS 'usuario_sportys'@'localhost'
+IDENTIFIED BY 'password_web_123';
 
--- 3. Darle permiso para leer, insertar y actualizar datos en las tablas
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO usuario_impactofs;
+-- ===================================================================================== --
+-- 2. OTORGAR PERMISOS SOBRE LA BASE DE DATOS
+-- ===================================================================================== --
+-- Permisos básicos para trabajar con las tablas de la aplicación.
 
--- 4. Darle permiso para usar las secuencias (necesario para los IDs automáticos)
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO usuario_impactofs;
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON Sportys.*
+TO 'usuario_sportys'@'localhost';
+
+-- ===================================================================================== --
+-- 3. APLICAR CAMBIOS DE PRIVILEGIOS
+-- ===================================================================================== --
+
+FLUSH PRIVILEGES;
+
+-- ===================================================================================== --
+-- FIN SCRIPT DE SEGURIDAD
+-- ===================================================================================== --
