@@ -12,7 +12,7 @@ const User = {};
 User.findAll = (result) => {
     // Consulta SQL
     const sql = `
-        SELECT 
+        SELECT
             id,
             email,
             name,
@@ -45,7 +45,7 @@ User.findAll = (result) => {
 User.findById = (id, result) => {
     // Consulta SQL
     const sql = `
-        SELECT 
+        SELECT
             id,
             email,
             name,
@@ -78,7 +78,7 @@ User.findById = (id, result) => {
 User.findByEmail = (email, result) => {
     // Consulta SQL
     const sql = `
-        SELECT 
+        SELECT
             id,
             email,
             name,

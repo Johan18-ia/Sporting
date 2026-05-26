@@ -128,7 +128,6 @@ Product.update = (product, result) => {
                 // Retornar producto actualizado
                 result(null, product);
             }
-
         }
     );
 };

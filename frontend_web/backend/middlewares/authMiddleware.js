@@ -9,7 +9,6 @@ function verifyToken(req, res, next) {
         message: "No se proporcionó un token",
         });
     }
-
     const token = authHeader.split(" ")[1];
     if (!token) {
         return res.status(403).json({
@@ -17,7 +16,6 @@ function verifyToken(req, res, next) {
         message: "Formato de token inválido",
         });
     }
-
     jwt.verify(token, keys.secretOrKey, (err, decoded) => {
         if (err) {
         return res.status(401).json({
