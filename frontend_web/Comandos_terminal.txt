@@ -215,3 +215,223 @@ git add .
 git commit -m "Cambios realizados"
 
 git push
+
+====================================================
+====================================================
+====================================================
+
+====================================================
+            14. MANEJO DE RAMAS EN GIT
+====================================================
+
+Las ramas permiten trabajar en nuevas funciones o cambios
+sin afectar directamente la rama principal del proyecto.
+
+====================================================
+15. VER LAS RAMAS EXISTENTES
+====================================================
+
+Ver ramas locales:
+git branch
+
+Ver ramas remotas:
+git branch -r
+
+Ver todas las ramas:
+git branch -a
+
+La rama actual aparecerá con un *
+
+Ejemplo:
+* main
+  desarrollo-login
+
+====================================================
+16. CREAR UNA NUEVA RAMA
+====================================================
+
+Crear y cambiar automáticamente a una nueva rama:
+
+git checkout -b nombre-rama
+
+Ejemplo:
+git checkout -b desarrollo-login
+
+====================================================
+17. CAMBIAR ENTRE RAMAS
+====================================================
+
+Cambiar a la rama principal:
+git checkout main
+
+Cambiar a otra rama:
+git checkout nombre-rama
+
+Ejemplo:
+git checkout desarrollo-login
+
+====================================================
+18. GUARDAR CAMBIOS EN UNA RAMA
+====================================================
+
+Paso 1:
+Verificar cambios
+
+git status
+
+Paso 2:
+Agregar archivos
+
+git add .
+
+Paso 3:
+Guardar commit
+
+git commit -m "Descripción de cambios"
+
+Ejemplo:
+git commit -m "Se agrega autenticación JWT"
+
+====================================================
+19. SUBIR UNA RAMA A GITHUB
+====================================================
+
+Primera vez:
+
+git push -u origin nombre-rama
+
+Ejemplo:
+git push -u origin desarrollo-login
+
+Después de la primera vez:
+
+git push
+
+====================================================
+20. ACTUALIZAR MAIN
+====================================================
+
+Cambiar a la rama principal:
+
+git checkout main
+
+Actualizar cambios desde GitHub:
+
+git pull origin main
+
+====================================================
+21. ACTUALIZAR UNA RAMA CON CAMBIOS DE MAIN
+====================================================
+
+Paso 1:
+Ir a main
+
+git checkout main
+
+Paso 2:
+Actualizar main
+
+git pull origin main
+
+Paso 3:
+Volver a tu rama
+
+git checkout nombre-rama
+
+Paso 4:
+Traer cambios de main
+
+git merge main
+
+====================================================
+22. UNIR UNA RAMA A MAIN
+====================================================
+
+Paso 1:
+Cambiar a main
+
+git checkout main
+
+Paso 2:
+Actualizar main
+
+git pull origin main
+
+Paso 3:
+Unir la rama
+
+git merge nombre-rama
+
+Ejemplo:
+git merge desarrollo-login
+
+Paso 4:
+Subir cambios actualizados
+
+git push origin main
+
+====================================================
+23. ELIMINAR UNA RAMA
+====================================================
+
+Eliminar rama local:
+
+git branch -d nombre-rama
+
+Ejemplo:
+git branch -d desarrollo-login
+
+Eliminar rama remota:
+
+git push origin --delete nombre-rama
+
+====================================================
+24. TRAER CAMBIOS SIN MEZCLAR
+====================================================
+
+git fetch
+
+====================================================
+25. FLUJO DE TRABAJO RECOMENDADO
+====================================================
+
+1. Actualizar main
+
+git checkout main
+git pull origin main
+
+2. Crear nueva rama
+
+git checkout -b nueva-funcionalidad
+
+3. Realizar cambios
+
+git add .
+git commit -m "Nueva funcionalidad"
+
+4. Subir rama
+
+git push -u origin nueva-funcionalidad
+
+5. Unir cambios a main
+
+git checkout main
+git pull origin main
+git merge nueva-funcionalidad
+git push origin main
+
+====================================================
+26. CONSEJOS IMPORTANTES
+====================================================
+
+- No trabajar directamente sobre main
+- Crear una rama por funcionalidad
+- Hacer commits claros y organizados
+- Actualizar main constantemente
+- Revisar git status antes de hacer commit
+- Hacer pull antes de merge
+- Resolver conflictos antes de subir cambios
+
+====================================================
+                FIN DEL MANUAL
+====================================================
