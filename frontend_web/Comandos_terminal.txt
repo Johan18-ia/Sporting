@@ -1,32 +1,67 @@
+====================================================
+        MANUAL DE INSTALACIÓN Y EJECUCIÓN
+====================================================
 
--- ingrsar a la carpeta por terminal
---- paso 1 
-cd ./
+====================================================
+1. INGRESAR A LA CARPETA DEL PROYECTO
+====================================================
 
---- paso 2 
-cd .\frontend_web\backend\ -- Alternativo
---configuración de IP
-ipconfigd
+Paso 1:
+cd .\frontend_web\backend\
 
--- iniciar el servidor
----Paso 1
+Alternativo:
+Abrir directamente la carpeta backend desde la terminal.
+
+====================================================
+2. CONFIGURAR O VERIFICAR IP
+====================================================
+
+Ejecutar en la terminal:
+
+ipconfig
+
+====================================================
+3. INSTALAR DEPENDENCIAS
+====================================================
+
+Paso 1:
 npm i
 
+====================================================
+4. INICIAR SERVIDOR
+====================================================
 
----Paso 2
-Iniciar el xampp
+Paso 1:
+Iniciar XAMPP y activar:
+- Apache
+- MySQL
 
----Paso3
+Paso 2:
+Ejecutar el servidor:
+
 node index.js
 
----Paso 4
-pausar el servidor con Ctrl + C (en caso de terminar)
+====================================================
+5. DETENER EL SERVIDOR
+====================================================
 
-en caso de error consultar con Jhon.
+Presionar:
 
+Ctrl + C
 
+====================================================
+6. SOPORTE
+====================================================
 
--- En caso de perder las dependencias 
+En caso de errores o problemas:
+Consultar con Jhon.
+
+====================================================
+7. REINSTALAR DEPENDENCIAS MANUALMENTE
+====================================================
+
+Si se pierden las dependencias del proyecto:
+
 backend> npm i bcryptjs@3.0.2
 backend> npm i cors@2.8.5
 backend> npm i dotenv
@@ -40,126 +75,26 @@ backend> npm i passport-jwt@4.0.1
 backend> npm i swagger-jsdoc
 backend> npm i swagger-ui-express
 backend> npm i -D nodemon
+
+====================================================
+8. REPARAR VULNERABILIDADES
+====================================================
+
+Ejecutar:
+
 backend> npm audit fix
+
+Si persisten errores:
+
 backend> npm audit fix --force
 
-/***   git manual   ***/
+====================================================
+                MANUAL BÁSICO DE GIT
+====================================================
 
-git config --global user.name "Tu Nombre"  --Configurar nombre:
-git config --global user.email "correo@gmail.com" --Configurar correo:
-
-###### Clonar un repositorio######
-git clone URL
-
-###### Verificar estado del proyecto ######
-git status
-
-###### Agregar archivos al área de preparación ###### 
-
-###### Agregar uno: #######
-Agregar todos:
-git add .
-
-Guardar cambios (commit)
-git commit -m "Mensaje del commit"
-Ejemplo:
-git commit -m "Se agrega login con JWT"
-
-Ver historial de commits
-git log
-Versión corta:
-git log --oneline
-
-Subir cambios a GitHub
-
-Primera vez:
-git push -u origin main
-Después:
-git push
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-1. Verificar estado del proyecto
-git status
-
-Muestra archivos modificados, nuevos o listos para guardar.
-
-2. Inicializar Git en un proyecto
-git init
-3. Conectar con un repositorio remoto
-git remote add origin URL_DEL_REPOSITORIO
-Ejemplo:
-git remote add origin https://github.com/usuario/proyecto.git
-
-4. Agregar archivos al área de preparación
-
-Agregar uno:
-git add archivo.js
-Agregar todos:
-git add .
-
-5. Guardar cambios (commit)
-git commit -m "Mensaje del commit"
-Ejemplo:
-git commit -m "Se agrega login con JWT"
-
-6. Ver historial de commits
-git log
-Versión corta:
-git log --oneline
-
-7. Subir cambios a GitHub
-
-Primera vez:
-git push -u origin main
-Después:
-git push
-
-8. Descargar cambios del repositorio
-git pull
-
-9. Clonar un repositorio
-git clone URL
-
-10. Ver ramas
-git branch
-
-11. Crear una nueva rama
-git checkout -b nombre-rama
-
-12. Cambiar de rama
-git checkout main
-
-13. Traer cambios sin mezclar
-git fetch
-
-Flujo más usado
-git status
-git add .
-
-git commit -m "Cambios realizados"
-git push
-
-Si Git no reconoce tu usuario
+====================================================
+1. CONFIGURAR GIT
+====================================================
 
 Configurar nombre:
 git config --global user.name "Tu Nombre"
@@ -167,5 +102,116 @@ git config --global user.name "Tu Nombre"
 Configurar correo:
 git config --global user.email "correo@gmail.com"
 
-Ver configuración actual
+Ver configuración actual:
 git config --list
+
+====================================================
+2. INICIALIZAR GIT EN UN PROYECTO
+====================================================
+
+git init
+
+====================================================
+3. CLONAR UN REPOSITORIO
+====================================================
+
+git clone URL
+
+Ejemplo:
+git clone https://github.com/usuario/proyecto.git
+
+====================================================
+4. CONECTAR REPOSITORIO REMOTO
+====================================================
+
+git remote add origin URL_DEL_REPOSITORIO
+
+Ejemplo:
+git remote add origin https://github.com/usuario/proyecto.git
+
+====================================================
+5. VERIFICAR ESTADO DEL PROYECTO
+====================================================
+
+git status
+
+Muestra:
+- Archivos modificados
+- Archivos nuevos
+- Archivos listos para commit
+
+====================================================
+6. AGREGAR ARCHIVOS
+====================================================
+
+Agregar un archivo:
+git add archivo.js
+
+Agregar todos:
+git add .
+
+====================================================
+7. GUARDAR CAMBIOS (COMMIT)
+====================================================
+
+git commit -m "Mensaje del commit"
+
+Ejemplo:
+git commit -m "Se agrega login con JWT"
+
+====================================================
+8. VER HISTORIAL DE COMMITS
+====================================================
+
+Historial completo:
+git log
+
+Versión corta:
+git log --oneline
+
+====================================================
+9. SUBIR CAMBIOS A GITHUB
+====================================================
+
+Primera vez:
+git push -u origin main
+
+Después:
+git push
+
+====================================================
+10. DESCARGAR CAMBIOS
+====================================================
+
+git pull
+
+====================================================
+11. MANEJO DE RAMAS
+====================================================
+
+Ver ramas:
+git branch
+
+Crear nueva rama:
+git checkout -b nombre-rama
+
+Cambiar de rama:
+git checkout main
+
+====================================================
+12. TRAER CAMBIOS SIN MEZCLAR
+====================================================
+
+git fetch
+
+====================================================
+13. FLUJO DE TRABAJO MÁS USADO
+====================================================
+
+git status
+
+git add .
+
+git commit -m "Cambios realizados"
+
+git push
