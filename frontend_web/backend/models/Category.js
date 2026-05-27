@@ -1,5 +1,5 @@
 // models/category.js
-const db = require('../../config/config'); // Tu conexión a la DB
+const db = require('../config/config'); // Tu conexión a la DB
 
 const Category = {};
 
