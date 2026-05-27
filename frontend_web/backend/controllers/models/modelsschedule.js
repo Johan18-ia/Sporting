@@ -23,7 +23,7 @@ Schedule.create = (schedule, result) => {
 // Obtener horarios uniendo con la tabla de categorías para ver el año
 Schedule.getAll = (result) => {
     const sql = `
-        SELECT S.*, C.name_year AS category_name 
+        SELECT S.*, C.name_year AS category_name
         FROM schedules S
         INNER JOIN categories C ON S.id_category = C.id
         ORDER BY S.day_of_week, S.start_time ASC
@@ -31,7 +31,7 @@ Schedule.getAll = (result) => {
     db.query(sql, (err, res) => {
         if (err) result(err, null);
         else result(null, res);
-    }); 
+    });
 };
 
 module.exports = Schedule;

@@ -10,7 +10,7 @@ Tournament.create = (tournament, result) => {
         VALUES (?, ?, ?, ?, ?)
     `;
     db.query(sql, [
-        tournament.name, 
+        tournament.name,
         5, // Mínimo fijo según tu requerimiento
         8, // Máximo fijo según tu requerimiento
         'programado',
@@ -30,4 +30,4 @@ Tournament.getAll = (result) => {
     });
 };
 
-module.exports = Tournament; 
+module.exports = Tournament;

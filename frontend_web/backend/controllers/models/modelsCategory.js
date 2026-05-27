@@ -20,4 +20,4 @@ Category.create = (category, result) => {
 };
 
 // ... otros métodos (findById, update, delete)
-module.exports = Category; 
+module.exports = Category;

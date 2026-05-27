@@ -61,7 +61,7 @@ User.create = (user, result) => {
 // ============================================
 User.update = (user, result) => {
     const sql = `
-        UPDATE users 
+        UPDATE users
         SET name = ?, email = ?, phone = ?, role = ?, id_category = ?
         WHERE id = ?
     `;
