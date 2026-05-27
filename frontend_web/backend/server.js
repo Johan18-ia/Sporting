@@ -8,6 +8,9 @@ const swaggerSpec = require('./config/swagger');
 const usersRoutes = require('./routes/userRoutes');
 const app = express();
 const productRoutes = require('./routes/productRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes');
+const tournamentRoutes = require('./routes/tournamentRoutes');
+const categoryRoutes = require('./routes/categoryRoutes')
 
  // Middlewares globales
  app.use(logger('dev'));
@@ -40,10 +43,12 @@ const productRoutes = require('./routes/productRoutes');
 
  // Rutas
  app.use('/api/users', usersRoutes);
-app.use('/api/products', productRoutes);
-
+ app.use('/api/products', productRoutes);
+ app.use('/api/category', categoryRoutes);
+ app.use('/api/schedule', scheduleRoutes);
+ app.use('/api/tournament',tournamentRoutes);
 /*
-
+Agregar rutas nuevas app.use('/api/#######,#######);
 */
 
 
