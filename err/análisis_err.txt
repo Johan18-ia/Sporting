@@ -1,0 +1,18 @@
+Resultado actual
+-No se encontraron errores de editor/diagnóstico actuales en el workspace.
+-El proyecto contiene al menos dos áreas con package.json:
+backend
+
+sporting-Prot-navegable
+Recomendación
+
+Para confirmar estado de ejecución:
+
+cd c:\Users\SENA\Videos\git\Sporting\frontend_web\backend
+npm install
+npm run dev o node server.js
+Y para el frontend:
+
+cd c:\Users\SENA\Videos\git\Sporting\sporting-Prot-navegable
+npm install
+npm run dev
