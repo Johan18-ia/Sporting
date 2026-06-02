@@ -417,7 +417,7 @@ git push -u origin nueva-funcionalidad
 
 git checkout main
 git pull origin main
-git merge nueva-funcionalidad
+git merge Jhon --en caso de la rama jhon
 git push origin main
 
 ====================================================
