@@ -1,0 +1,32 @@
+sporting-Prot-navegable/
+	.gitignore
+	.vs/
+		VSWorkspaceState.json
+		slnx.sqlite
+		sporting-app/
+			v17/
+				.wsuo
+				DocumentLayout.json
+			FileContentIndex/
+				80fbaf5b-7dd3-41c9-9d2f-be6763df8dd6.vsidx
+	eslint.config.js
+	estructura.txt
+	index.html
+	package.json
+	package-lock.json
+	README.md
+	vite.config.js
+	public/
+		favicon.svg
+		icons.svg
+	src/
+		App.jsx
+		App.css
+		index.css
+		main.jsx
+		assets/
+			hero.png
+			Logo.png
+			react.svg
+			vite.svg
+
