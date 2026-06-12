@@ -29,4 +29,47 @@ sporting-Prot-navegable/
 			Logo.png
 			react.svg
 			vite.svg
-
+-- ------------------------------------------------------ --
+--             ARQUITECTURA DE EL FRONTEND                --
+-- ------------------------------------------------------ --
+sporty-frontend/
+│
+├── public/
+│
+├── src/
+│   ├── assets/
+│   │
+│   ├── components/
+│   │   ├── Navbar/
+│   │   ├── Sidebar/
+│   │   ├── Footer/
+│   │   ├── Table/
+│   │   └── Modal/
+│   │
+│   ├── pages/
+│   │   ├── Login/
+│   │   ├── Dashboard/
+│   │   ├── Users/
+│   │   ├── Categories/
+│   │   ├── Schedules/
+│   │   ├── Tournaments/
+│   │   └── Products/
+│   │
+│   ├── services/
+│   │   ├── api.js
+│   │   ├── userService.js
+│   │   ├── categoryService.js
+│   │   ├── scheduleService.js
+│   │   ├── tournamentService.js
+│   │   └── productService.js
+│   │
+│   ├── routes/
+│   │   └── AppRoutes.jsx
+│   │
+│   ├── context/
+│   │   └── AuthContext.jsx
+│   │
+│   ├── App.jsx
+│   └── main.jsx
+│
+└── package.json
