@@ -1,0 +1,21 @@
+frontend_web/backend/
+├── config/           # configuración global
+│   ├── config.js     # conexión a MySQL
+│   ├── keys.js       # secreto JWT
+│   ├── passport.js   # autenticación con Passport
+│   └── swagger.js    # documentación de la API
+├── controllers/      # lógica de negocio
+│   └── userController.js
+├── middlewares/      # validaciones y seguridad
+│   └── authMiddleware.js
+├── models/           # consultas a la base de datos
+│   └── user.js
+├── routes/           # endpoints de la API
+│   ├── userRoutes.js
+│   ├── productRoutes.js
+│   ├── categoryRoutes.js
+│   ├── scheduleRoutes.js
+│   └── tournamentRoutes.js
+├── .env              # variables de entorno
+├── index.js          # arranque del servidor
+└── server.js         # configuración principal de Express
