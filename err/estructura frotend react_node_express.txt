@@ -1,0 +1,68 @@
+Estructura de frontend_web/react_node_express
+
+frontend_web/
+└── react_node_express/
+    ├── .env
+    ├── .gitignore
+    ├── eslint.config.js
+    ├── index.html
+    ├── package-lock.json
+    ├── package.json
+    ├── README.md
+    ├── vite.config.js
+    ├── public/
+    │   ├── favicon.svg
+    │   └── icons.svg
+    └── src/
+        ├── App.css
+        ├── App.jsx
+        ├── index.css
+        ├── main.jsx
+        ├── assets/
+        ├── config/
+        │   ├── api.js
+        │   ├── constants.js
+        │   └── routes.js
+        ├── controllers/
+        │   ├── AuthController.js
+        │   ├── DashboardController.js
+        │   └── UserController.js
+        ├── hooks/
+        │   ├── useAuth.js
+        │   ├── useDashboard.js
+        │   └── useUsers.js
+        ├── models/
+        │   ├── AuthModel.js
+        │   ├── DashboardModel.js
+        │   └── UserModel.js
+        ├── services/
+        │   ├── httpService.js
+        │   ├── jwtService.js
+        │   └── storageService.js
+        ├── styles/
+        │   ├── common.css
+        │   ├── Dashboard.css
+        │   ├── Login.css
+        │   ├── Navbar.css
+        │   ├── Register.css
+        │   └── Users.css
+        ├── utils/
+        │   ├── helpers.js
+        │   └── validators.js
+        └── views/
+            ├── auth/
+            │   ├── LoginView.jsx
+            │   └── RegisterView.jsx
+            ├── common/
+            │   ├── AlertMessage.jsx
+            │   ├── LoadingSpinner.jsx
+            │   └── Navbar.jsx
+            ├── dashboard/
+            │   ├── DashboardHeader.jsx
+            │   ├── DashboardStats.jsx
+            │   ├── DashboardView.jsx
+            │   ├── UserDetails.jsx
+            │   ├── UserForm.jsx
+            │   └── UsersView.jsx
+            └── layouts/
+                └── MainLayout.jsx
