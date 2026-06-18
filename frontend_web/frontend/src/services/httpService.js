@@ -8,228 +8,106 @@ class HttpService {
   constructor() {
     this.baseURL = API_CONFIG.BASE_URL
   }
-
+  // ============================
+  // TOKEN
+  // ============================
   getToken() {
     return localStorage.getItem(TOKEN_KEY)
   }
-
+  // ============================
+  // HEADERS
+  // ============================
   getHeaders(includeAuth = true) {
     const headers = {
       'Content-Type': 'application/json'
     }
-
     if (includeAuth) {
       const token = this.getToken()
-
       if (token) {
         headers.Authorization = `Bearer ${token}`
       }
     }
-
     return headers
   }
-
+  // ============================
+  // RESPONSE HANDLER
+  // ============================
   async handleResponse(response) {
-    console.log('📡 Response status:', response.status)
-
-    let data = {}
-
+    let data = null
     try {
       data = await response.json()
-    } catch (error) {
-      console.error('❌ Error al parsear JSON:', error)
+    } catch {
+      data = null
     }
-
-    console.log('📡 Response data:', data)
-
     if (!response.ok) {
+      const message =
+        data?.message ||
+        data?.error ||
+        `Error HTTP ${response.status}`
       if (response.status === 401) {
         localStorage.removeItem(TOKEN_KEY)
-
         window.location.href = '/login'
-
         throw new Error('Sesión expirada')
       }
-
-      const errorMessage =
-        data.message ||
-        data.error ||
-        `Error HTTP: ${response.status}`
-
-      throw new Error(errorMessage)
+      throw new Error(message)
     }
-
     return data
   }
-
+  // ============================
+  // TIMEOUT CONTROL
+  // ============================
   createTimeoutController() {
     const controller = new AbortController()
-
     const timeoutId = setTimeout(() => {
       controller.abort()
-    }, API_CONFIG.TIMEOUT)
-
+    }, API_CONFIG.TIMEOUT || 10000)
     return { controller, timeoutId }
   }
+  // ============================
+  // REQUEST BASE
+  // ============================
+  async request(method, endpoint, data = null, includeAuth = true) {
+    const url = `${this.baseURL}${endpoint}`
 
-  async post(endpoint, data, includeAuth = true) {
+    const { controller, timeoutId } = this.createTimeoutController()
     try {
-      const url = `${this.baseURL}${endpoint}`
-
-      console.log(`📡 POST: ${url}`)
-      console.log('📡 Datos enviados:', data)
-
-      const { controller, timeoutId } =
-        this.createTimeoutController()
-
       const response = await fetch(url, {
-        method: 'POST',
+        method,
         headers: this.getHeaders(includeAuth),
-        body: JSON.stringify(data),
+        body: data ? JSON.stringify(data) : null,
         signal: controller.signal
       })
-
       clearTimeout(timeoutId)
-
       return await this.handleResponse(response)
     } catch (error) {
-      console.error(`❌ POST ${endpoint}:`, error)
-
+      clearTimeout(timeoutId)
       if (error.name === 'AbortError') {
-        throw new Error(
-          'Tiempo de espera agotado'
-        )
+        throw new Error('Tiempo de espera agotado')
       }
-
       throw error
     }
   }
-
-  async get(endpoint, includeAuth = true) {
-    try {
-      const url = `${this.baseURL}${endpoint}`
-
-      console.log(`📡 GET: ${url}`)
-
-      const { controller, timeoutId } =
-        this.createTimeoutController()
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders(includeAuth),
-        signal: controller.signal
-      })
-
-      clearTimeout(timeoutId)
-
-      return await this.handleResponse(response)
-    } catch (error) {
-      console.error(`❌ GET ${endpoint}:`, error)
-
-      if (error.name === 'AbortError') {
-        throw new Error(
-          'Tiempo de espera agotado'
-        )
-      }
-
-      throw error
-    }
+  // ============================
+  // MÉTODOS HTTP
+  // ============================
+  get(endpoint, includeAuth = true) {
+    return this.request('GET', endpoint, null, includeAuth)
   }
 
-  async put(endpoint, data, includeAuth = true) {
-    try {
-      const url = `${this.baseURL}${endpoint}`
-
-      console.log(`📡 PUT: ${url}`)
-
-      const { controller, timeoutId } =
-        this.createTimeoutController()
-
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: this.getHeaders(includeAuth),
-        body: JSON.stringify(data),
-        signal: controller.signal
-      })
-
-      clearTimeout(timeoutId)
-
-      return await this.handleResponse(response)
-    } catch (error) {
-      console.error(`❌ PUT ${endpoint}:`, error)
-
-      if (error.name === 'AbortError') {
-        throw new Error(
-          'Tiempo de espera agotado'
-        )
-      }
-
-      throw error
-    }
+  post(endpoint, data, includeAuth = true) {
+    return this.request('POST', endpoint, data, includeAuth)
   }
 
-  async patch(endpoint, data, includeAuth = true) {
-    try {
-      const url = `${this.baseURL}${endpoint}`
-
-      console.log(`📡 PATCH: ${url}`)
-
-      const { controller, timeoutId } =
-        this.createTimeoutController()
-
-      const response = await fetch(url, {
-        method: 'PATCH',
-        headers: this.getHeaders(includeAuth),
-        body: JSON.stringify(data),
-        signal: controller.signal
-      })
-
-      clearTimeout(timeoutId)
-
-      return await this.handleResponse(response)
-    } catch (error) {
-      console.error(`❌ PATCH ${endpoint}:`, error)
-
-      if (error.name === 'AbortError') {
-        throw new Error(
-          'Tiempo de espera agotado'
-        )
-      }
-
-      throw error
-    }
+  put(endpoint, data, includeAuth = true) {
+    return this.request('PUT', endpoint, data, includeAuth)
   }
 
-  async delete(endpoint, includeAuth = true) {
-    try {
-      const url = `${this.baseURL}${endpoint}`
+  patch(endpoint, data, includeAuth = true) {
+    return this.request('PATCH', endpoint, data, includeAuth)
+  }
 
-      console.log(`📡 DELETE: ${url}`)
-
-      const { controller, timeoutId } =
-        this.createTimeoutController()
-
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: this.getHeaders(includeAuth),
-        signal: controller.signal
-      })
-
-      clearTimeout(timeoutId)
-
-      return await this.handleResponse(response)
-    } catch (error) {
-      console.error(`❌ DELETE ${endpoint}:`, error)
-
-      if (error.name === 'AbortError') {
-        throw new Error(
-          'Tiempo de espera agotado'
-        )
-      }
-
-      throw error
-    }
+  delete(endpoint, includeAuth = true) {
+    return this.request('DELETE', endpoint, null, includeAuth)
   }
 }
-
 export default new HttpService()
