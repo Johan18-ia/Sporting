@@ -150,7 +150,7 @@ const DashboardView = () => {
                   {' '}
                   {
                     localStorage.getItem(
-                      'auth_token'
+                      'sporty_token'
                     )
                       ? 'Activo'
                       : 'No encontrado'

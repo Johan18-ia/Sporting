@@ -1,68 +1,79 @@
-Estructura de frontend_web/react_node_express
-
-frontend_web/
-└── react_node_express/
-    ├── .env
-    ├── .gitignore
-    ├── eslint.config.js
-    ├── index.html
-    ├── package-lock.json
-    ├── package.json
-    ├── README.md
-    ├── vite.config.js
-    ├── public/
-    │   ├── favicon.svg
-    │   └── icons.svg
-    └── src/
-        ├── App.css
-        ├── App.jsx
-        ├── index.css
-        ├── main.jsx
-        ├── assets/
-        ├── config/
-        │   ├── api.js
-        │   ├── constants.js
-        │   └── routes.js
-        ├── controllers/
-        │   ├── AuthController.js
-        │   ├── DashboardController.js
-        │   └── UserController.js
-        ├── hooks/
-        │   ├── useAuth.js
-        │   ├── useDashboard.js
-        │   └── useUsers.js
-        ├── models/
-        │   ├── AuthModel.js
-        │   ├── DashboardModel.js
-        │   └── UserModel.js
-        ├── services/
-        │   ├── httpService.js
-        │   ├── jwtService.js
-        │   └── storageService.js
-        ├── styles/
-        │   ├── common.css
-        │   ├── Dashboard.css
-        │   ├── Login.css
-        │   ├── Navbar.css
-        │   ├── Register.css
-        │   └── Users.css
-        ├── utils/
-        │   ├── helpers.js
-        │   └── validators.js
-        └── views/
-            ├── auth/
-            │   ├── LoginView.jsx
-            │   └── RegisterView.jsx
-            ├── common/
-            │   ├── AlertMessage.jsx
-            │   ├── LoadingSpinner.jsx
-            │   └── Navbar.jsx
-            ├── dashboard/
-            │   ├── DashboardHeader.jsx
-            │   ├── DashboardStats.jsx
-            │   ├── DashboardView.jsx
-            │   ├── UserDetails.jsx
-            │   ├── UserForm.jsx
-            │   └── UsersView.jsx
-            └── layouts/
-                └── MainLayout.jsx
+frontend_web/react_node_express/
+├── public/                    # recursos públicos de la aplicación
+│   ├── favicon.svg            # ícono mostrado en la pestaña del navegador
+│   └── icons.svg              # colección de íconos utilizados en la interfaz
+│
+├── src/
+│   ├── assets/                # imágenes, logos y recursos estáticos
+│   │
+│   ├── config/                # configuraciones globales
+│   │   ├── api.js             # configuración de la conexión con la API
+│   │   ├── constants.js       # constantes globales del sistema
+│   │   └── routes.js          # definición de rutas de navegación
+│   │
+│   ├── controllers/           # lógica de control entre vistas y modelos
+│   │   ├── AuthController.js
+│   │   ├── DashboardController.js
+│   │   └── UserController.js
+│   │
+│   ├── hooks/                 # hooks personalizados de React
+│   │   ├── useAuth.js
+│   │   ├── useDashboard.js
+│   │   └── useUsers.js
+│   │
+│   ├── models/                # comunicación con la API y manejo de datos
+│   │   ├── AuthModel.js
+│   │   ├── DashboardModel.js
+│   │   └── UserModel.js
+│   │
+│   ├── services/              # servicios reutilizables del sistema
+│   │   ├── httpService.js     # peticiones HTTP
+│   │   ├── jwtService.js      # manejo de tokens JWT
+│   │   └── storageService.js  # almacenamiento local (localStorage/sessionStorage)
+│   │
+│   ├── styles/                # hojas de estilos CSS
+│   │   ├── common.css
+│   │   ├── Dashboard.css
+│   │   ├── Login.css
+│   │   ├── Navbar.css
+│   │   ├── Register.css
+│   │   └── Users.css
+│   │
+│   ├── utils/                 # funciones auxiliares y validaciones
+│   │   ├── helpers.js
+│   │   └── validators.js
+│   │
+│   ├── views/                 # componentes visuales de la aplicación
+│   │   ├── auth/              # vistas de autenticación
+│   │   │   ├── LoginView.jsx
+│   │   │   └── RegisterView.jsx
+│   │   │
+│   │   ├── common/            # componentes reutilizables
+│   │   │   ├── AlertMessage.jsx
+│   │   │   ├── LoadingSpinner.jsx
+│   │   │   └── Navbar.jsx
+│   │   │
+│   │   ├── dashboard/         # componentes del panel administrativo
+│   │   │   ├── DashboardHeader.jsx
+│   │   │   ├── DashboardStats.jsx
+│   │   │   ├── DashboardView.jsx
+│   │   │   ├── UserDetails.jsx
+│   │   │   ├── UserForm.jsx
+│   │   │   └── UsersView.jsx
+│   │   │
+│   │   └── layouts/           # estructuras generales de las páginas
+│   │       └── MainLayout.jsx
+│   │
+│   ├── App.jsx                # componente principal de la aplicación
+│   ├── App.css                # estilos del componente principal
+│   ├── index.css              # estilos globales
+│   └── main.jsx               # punto de entrada de React
+│
+├── .env                       # variables de entorno
+├── .gitignore                 # archivos excluidos de Git
+├── eslint.config.js           # configuración de ESLint
+├── index.html                 # plantilla HTML principal
+├── package.json               # dependencias y scripts del proyecto
+├── package-lock.json          # versiones exactas de dependencias
+├── README.md                  # documentación del proyecto
+└── vite.config.js             # configuración de Vite

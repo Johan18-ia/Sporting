@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 
 import AuthModel from '../models/AuthModel'
-import storageService from '../services/storageService'
 
 const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] =

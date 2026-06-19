@@ -3,12 +3,12 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'API Mi Proyecto',
+      title: ' Mi API Proyecto',
       version: '1.0.0',
       description: 'Documentación completa de la API REST',
       contact: {
-        name: 'Albeiro Ramos',
-        email: 'profealbeiro2020@gmail.com'
+        name: 'Jhon Jolman Cordoba Irua',
+        email: 'jolmanjhon@gmail.com'
       }
     },
     servers: [

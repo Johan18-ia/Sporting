@@ -10,7 +10,7 @@ class DashboardController {
       } else {
         onError('No se pudieron cargar las estadísticas')
       }
-    } catch (error) {
+    } catch {
       onError('Error al cargar las estadísticas')
     }
   }
@@ -19,7 +19,7 @@ class DashboardController {
     try {
       const activities = await DashboardModel.getRecentActivities()
       onSuccess(activities)
-    } catch (error) {
+    } catch {
       onError('Error al cargar las actividades')
     }
   }
@@ -32,7 +32,7 @@ class DashboardController {
       } else {
         onError('No se pudieron actualizar las estadísticas')
       }
-    } catch (error) {
+    } catch {
       onError('Error al actualizar las estadísticas')
     }
   }

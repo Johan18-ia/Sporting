@@ -32,9 +32,9 @@ const DashboardStats = ({ stats }) => {
   ]
   return (
     <div className="stats-grid">
-      {statItems.map((item, index) => (
+      {statItems.map((item) => (
         <div
-          key={index}
+          key={`stat-${item.label}`}
           className="stat-card"
         >
           <div className="stat-icon">
