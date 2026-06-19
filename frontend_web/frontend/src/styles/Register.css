@@ -1,79 +1,169 @@
 /* src/styles/Register.css */
-.register-page {
+.register-container {
   min-height: 100vh;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: #ffffff;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
 }
 
 .register-card {
-  width: min(460px, 92vw);
-  background: #ffffff;
-  border: 1px solid #dddddd;
-  padding: 30px;
-  border-radius: 6px;
-  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.06);
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 100%;
+  max-width: 600px;
+  animation: fadeInUp 0.6s ease-out;
 }
 
-.register-card h1 {
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.register-header {
   text-align: center;
-  font-size: 1.7rem;
-  margin-bottom: 20px;
-  color: #333333;
+  margin-bottom: 30px;
 }
 
-.register-card form {
+.register-header h1 {
+  color: #333;
+  font-size: 28px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.register-header p {
+  color: #666;
+  font-size: 14px;
+}
+
+.register-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 20px;
 }
 
-.register-card input {
-  height: 44px;
-  border: 1px solid #cccccc;
-  text-align: center;
-  padding: 0 10px;
-  border-radius: 4px;
+/* Estilos para filas de dos columnas */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
 }
 
-.register-card button {
-  height: 44px;
-  border: none;
-  background: #8b0000;
-  color: #fff;
-  font-weight: 700;
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: #333;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input:disabled,
+.form-group select:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+select.form-control {
+  background: white;
   cursor: pointer;
-  border-radius: 4px;
 }
 
-.register-card button:hover {
-  background: #a00000;
+.form-hint {
+  font-size: 11px;
+  color: #888;
+  margin-top: 4px;
+  display: block;
+}
+
+.register-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 10px;
+}
+
+.register-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.register-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .register-footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e1e5e9;
   text-align: center;
-  margin-top: 18px;
 }
 
-.register-footer span {
-  font-weight: 700;
-  cursor: pointer;
-  color: #333333;
+.register-footer p {
+  color: #666;
+  font-size: 13px;
+  margin: 5px 0;
 }
 
-.register-error {
-  background: #ffe5e5;
-  color: #b42318;
-  padding: 10px;
-  margin-bottom: 15px;
-  border-radius: 4px;
+.register-footer a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
 }
 
-.register-success {
-  background: #e8f9ee;
-  color: #0a7d2f;
-  padding: 10px;
-  margin-bottom: 15px;
-  border-radius: 4px;
+.register-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .register-card {
+    padding: 25px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  
+  .register-header h1 {
+    font-size: 24px;
+  }
 }

@@ -3,163 +3,206 @@ import httpService from '../services/httpService'
 import API_CONFIG from '../config/api'
 
 class UserModel {
-  // ============================================
-  // LISTAR USUARIOS
-  // ============================================
+  // GET - Obtener todos los usuarios
   static async getAllUsers() {
     try {
-      console.log('📋 Consultando usuarios')
-      const response = await httpService.get(
-        API_CONFIG.ENDPOINTS.USERS
-      )
-      const users = response.data || []
+      console.log('📋 Obteniendo todos los usuarios desde API real')
+      
+      // GET a http://192.168.230.1:3000/api/users
+      const response = await httpService.get(API_CONFIG.ENDPOINTS.USERS, true)
+      
+      console.log('📦 Respuesta completa de getAllUsers:', response)
+      
+      // IMPORTANTE: La API devuelve { success: true, data: [...] }
+      // httpService.handleResponse ya extrajo la respuesta completa
+      // Ahora necesitamos extraer el array de data
+      let usersArray = []
+      
+      if (response && response.data && Array.isArray(response.data)) {
+        usersArray = response.data
+      } else if (Array.isArray(response)) {
+        usersArray = response
+      } else {
+        console.warn('⚠️ La respuesta no contiene un array de usuarios:', response)
+        usersArray = []
+      }
+      
+      console.log('✅ Usuarios obtenidos:', usersArray.length)
+      
       return {
         success: true,
-        data: users
+        data: usersArray
       }
     } catch (error) {
-      console.error(
-        '❌ Error obteniendo usuarios:',
-        error
-      )
+      console.error('Error al obtener usuarios:', error)
       return {
         success: false,
-        error:
-          error.message ||
-          'Error al obtener usuarios'
+        error: error.message || 'Error al cargar usuarios'
       }
     }
   }
-  // ============================================
-  // OBTENER USUARIO POR ID
-  // ============================================
+
+  // GET - Obtener usuario por ID
   static async getUserById(id) {
     try {
-      console.log(
-        `🔍 Consultando usuario ${id}`
-      )
-      const response = await httpService.get(
-        `/users/${id}`
-      )
+      console.log(`🔍 Obteniendo usuario con ID: ${id}`)
+      
+      const endpoint = API_CONFIG.ENDPOINTS.USER_BY_ID.replace(':id', id)
+      const response = await httpService.get(endpoint, true)
+      
+      let userData = null
+      if (response && response.data) {
+        userData = response.data
+      } else if (response && response.id) {
+        userData = response
+      } else {
+        userData = response
+      }
+      
       return {
         success: true,
-        data: response.data
+        data: userData
       }
     } catch (error) {
-      console.error(
-        '❌ Error obteniendo usuario:',
-        error
-      )
+      console.error('Error al obtener usuario:', error)
       return {
         success: false,
-        error:
-          error.message ||
-          'Usuario no encontrado'
+        error: error.message || 'Usuario no encontrado'
       }
     }
   }
-  // ============================================
-  // CREAR USUARIO
-  // ============================================
+
+  // POST - Crear nuevo usuario
   static async createUser(userData) {
     try {
-      console.log(
-        '➕ Creando usuario:',
-        userData.email
-      )
+      console.log('➕ Creando nuevo usuario:', userData.email)
+      
+      const newUser = {
+        name: userData.name,
+        lastname: userData.lastname || '',
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone || '',
+        image: userData.image || '',
+        role: userData.role || 'user'
+      }
+      
       const response = await httpService.post(
-        '/users/create',
-        {
-          name: userData.name,
-          lastname: userData.lastname,
-          email: userData.email,
-          password: userData.password,
-          phone: userData.phone,
-          role: userData.role
-        }
+        API_CONFIG.ENDPOINTS.REGISTER,
+        newUser,
+        false
       )
+      
+      let createdUser = null
+      if (response && response.data) {
+        createdUser = response.data
+      } else {
+        createdUser = response
+      }
+      
       return {
         success: true,
-        data: response.data,
-        message:
-          'Usuario creado correctamente'
+        data: createdUser,
+        message: 'Usuario creado exitosamente'
       }
     } catch (error) {
-      console.error(
-        '❌ Error creando usuario:',
-        error
-      )
+      console.error('Error al crear usuario:', error)
       return {
         success: false,
-        error:
-          error.message ||
-          'Error al crear usuario'
+        error: error.message || 'Error al crear usuario'
       }
     }
   }
-    // ==========================================
-    // ACTUALIZAR USUARIO
-    // ==========================================
-    static async updateUser(id, userData) {
-      try {
-        console.log(`✏️ Actualizando usuario ${id}`)
-        const response = await httpService.put(
-          '/users',
-          {
-            id,
-            name: userData.name,
-            lastname: userData.lastname,
-            email: userData.email,
-            phone: userData.phone,
-            role: userData.role,
-            password: userData.password
-          }
-        )
-        return {
-          success: true,
-          data: response.data
-        }
-      } catch (error) {
-        console.error(
-          '❌ Error actualizando usuario:',
-          error
-        )
-        return {
-          success: false,
-          error:
-            error.message ||
-            'Error al actualizar usuario'
-        }
-      }
-    }
-  // ============================================
-  // ELIMINAR USUARIO
-  // ============================================
-  static async deleteUser(id) {
+
+  // PUT - Actualizar usuario
+  static async updateUser(id, userData) {
     try {
-      console.log(
-        `🗑️ Eliminando usuario ${id}`
-      )
-      await httpService.delete(
-        `/users/delete/${id}`
-      )
+      console.log(`✏️ Actualizando usuario ID: ${id}`)
+      
+      const endpoint = API_CONFIG.ENDPOINTS.USER_BY_ID.replace(':id', id)
+      
+      const updateData = {}
+      if (userData.name !== undefined) updateData.name = userData.name
+      if (userData.lastname !== undefined) updateData.lastname = userData.lastname
+      if (userData.email !== undefined) updateData.email = userData.email
+      if (userData.password && userData.password !== '') updateData.password = userData.password
+      if (userData.phone !== undefined) updateData.phone = userData.phone
+      if (userData.image !== undefined) updateData.image = userData.image
+      if (userData.role !== undefined) updateData.role = userData.role
+      
+      const response = await httpService.put(endpoint, updateData, true)
+      
+      let updatedUser = null
+      if (response && response.data) {
+        updatedUser = response.data
+      } else {
+        updatedUser = response
+      }
+      
       return {
         success: true,
-        message:
-          'Usuario eliminado correctamente'
+        data: updatedUser,
+        message: 'Usuario actualizado exitosamente'
       }
     } catch (error) {
-      console.error(
-        '❌ Error eliminando usuario:',
-        error
-      )
+      console.error('Error al actualizar usuario:', error)
       return {
         success: false,
-        error:
-          error.message ||
-          'Error al eliminar usuario'
+        error: error.message || 'Error al actualizar usuario'
+      }
+    }
+  }
+
+  // PATCH - Actualizar campo específico
+  static async patchUser(id, partialData) {
+    try {
+      console.log(`📝 Actualizando campo(s) de usuario ID: ${id}`, partialData)
+      
+      const endpoint = API_CONFIG.ENDPOINTS.USER_BY_ID.replace(':id', id)
+      const response = await httpService.put(endpoint, partialData, true)
+      
+      let patchedUser = null
+      if (response && response.data) {
+        patchedUser = response.data
+      } else {
+        patchedUser = response
+      }
+      
+      return {
+        success: true,
+        data: patchedUser,
+        message: 'Campo actualizado correctamente'
+      }
+    } catch (error) {
+      console.error('Error al actualizar campo:', error)
+      return {
+        success: false,
+        error: error.message || 'Error al actualizar campo'
+      }
+    }
+  }
+
+  // DELETE - Eliminar usuario
+  static async deleteUser(id) {
+    try {
+      console.log(`🗑️ Eliminando usuario ID: ${id}`)
+      
+      const endpoint = API_CONFIG.ENDPOINTS.USER_DELETE.replace(':id', id)
+      const response = await httpService.delete(endpoint, true)
+      
+      return {
+        success: true,
+        message: 'Usuario eliminado exitosamente',
+        data: response
+      }
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error)
+      return {
+        success: false,
+        error: error.message || 'Error al eliminar usuario'
       }
     }
   }
 }
+
 export default UserModel

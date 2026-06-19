@@ -1,259 +1,163 @@
 // src/views/dashboard/UsersView.jsx
-
-// ============================================
-// IMPORTACIONES
-// ============================================
-
-// Hook de React para manejo de estados
 import { useState } from 'react'
-
-// Hook personalizado para gestión de usuarios
 import useUsers from '../../hooks/useUsers'
-
-// Hook para obtener información del usuario autenticado
-import useAuth from '../../hooks/useAuth'
-
-// Componente para mostrar mensajes de alerta
+import useAuth from '../../hooks/useAuth'  // ← NUEVO: para saber el rol del usuario actual
 import AlertMessage from '../common/AlertMessage'
-
-// Formulario para crear y editar usuarios
 import UserForm from './UserForm'
-
-// Vista de detalles del usuario
 import UserDetails from './UserDetails'
-
-// Estilos del módulo de usuarios
 import '../../styles/Users.css'
 
 const UsersView = () => {
-  // ============================================
-  // HOOKS PERSONALIZADOS
-  // ============================================
-  // Obtiene información y funciones del módulo usuarios
-  const {
-    users,
-    loading,
-    error,
-    deleteUser,
-    loadUsers
-  } = useUsers()
-  // Obtiene el usuario autenticado
-  const {
-    currentUser
-  } = useAuth()
-  // ============================================
-  // ESTADOS DEL COMPONENTE
-  // ============================================
-  // Controla visibilidad del formulario
+  const { users, loading, error, deleteUser, loadUsers } = useUsers()
+  const { currentUser } = useAuth()  // ← NUEVO: usuario logueado
   const [showForm, setShowForm] = useState(false)
-  // Controla visibilidad del modal de detalles
   const [showDetails, setShowDetails] = useState(false)
-  // Usuario actualmente seleccionado
   const [selectedUser, setSelectedUser] = useState(null)
-  // Define si el formulario está en modo edición
   const [editMode, setEditMode] = useState(false)
-  // Mensajes informativos o de error
   const [message, setMessage] = useState(null)
-  // Texto utilizado en el buscador
   const [searchTerm, setSearchTerm] = useState('')
-  // ============================================
-  // FILTRO DE BÚSQUEDA
-  // ============================================
-  // Filtra usuarios por:
-  // - Email
-  // - Nombre
-  // - Apellido
-  // - Rol
-  // - ID
+
+  // Filtrar usuarios por búsqueda (ahora incluye nombre y rol)
   const filteredUsers = users.filter(user =>
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.id?.toString().includes(searchTerm) ||
     user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.id?.toString().includes(searchTerm)
+    user.role?.toLowerCase().includes(searchTerm.toLowerCase())
   )
-  // ============================================
-  // VALIDACIÓN DE PERMISOS
-  // ============================================
-  // Solo administradores pueden crear usuarios
-  const canCreateUser = () => {
-    return currentUser?.role === 'admin'
+
+  // NUEVA FUNCIÓN: Verificar si el usuario actual puede EDITAR
+  const canEdit = (user) => {
+    if (!currentUser) return false
+    // Admin puede editar todo
+    if (currentUser.role === 'admin') return true
+    // Seller puede editar pero no eliminar
+    if (currentUser.role === 'seller') return true
+    return false
   }
-  // Solo administradores pueden editar usuarios
-  const canEdit = () => {
-    return currentUser?.role === 'admin'
-  }
-  // Solo administradores pueden eliminar usuarios
-  // y no pueden eliminarse a sí mismos
+
+  // NUEVA FUNCIÓN: Verificar si el usuario actual puede ELIMINAR
   const canDelete = (user) => {
-    if (!currentUser) {
-      return false
-    }
-    if (currentUser.role !== 'admin') {
-      return false
-    }
-    if (currentUser.id === user.id) {
-      return false
-    }
+    if (!currentUser) return false
+    // Solo admin puede eliminar
+    if (currentUser.role !== 'admin') return false
+    // No puede eliminarse a sí mismo
+    if (currentUser.id === user.id) return false
     return true
   }
-  // ============================================
-  // FORMATEO DE ROLES
-  // ============================================
-  // Devuelve la clase CSS correspondiente al rol
+
+  // NUEVA FUNCIÓN: Obtener clase CSS para el rol (color según rol)
   const getRoleBadgeClass = (role) => {
     switch (role) {
       case 'admin':
         return 'role-badge role-admin'
-
+      case 'seller':
+        return 'role-badge role-seller'
+      case 'customer':
+        return 'role-badge role-customer'
       default:
         return 'role-badge role-user'
     }
   }
-  // Devuelve el texto visible del rol
+
+  // NUEVA FUNCIÓN: Texto legible del rol
   const getRoleText = (role) => {
     switch (role) {
-      case 'admin':
-        return '👑 Administrador'
-      default:
-        return '👤 Usuario'
+      case 'admin': return '👑 Administrador'
+      case 'seller': return '🛒 Vendedor'
+      case 'customer': return '👤 Cliente'
+      default: return '👤 Usuario'
     }
   }
-  // ============================================
-  // ELIMINAR USUARIO
-  // ============================================
+
+  // Manejar eliminación (ahora con verificación de permisos)
   const handleDelete = async (user) => {
-    // Verifica permisos
     if (!canDelete(user)) {
-      setMessage({
-        type: 'error',
-        text: 'No tiene permisos para eliminar usuarios'
-      })
+      setMessage({ type: 'error', text: 'No tiene permisos para eliminar este usuario' })
+      setTimeout(() => setMessage(null), 3000)
       return
     }
-    // Confirmación del usuario
-    const confirmed = window.confirm(
-      `¿Desea eliminar a ${user.email}?`
-    )
-    if (!confirmed) {
-      return
-    }
-    try {
-      // Solicita eliminación
-      await deleteUser(user.id)
-      // Recarga la lista
-      loadUsers()
-      // Mensaje de éxito
-      setMessage({
-        type: 'success',
-        text: 'Usuario eliminado correctamente'
-      })
-    } catch (err) {
-      // Mensaje de error
-      setMessage({
-        type: 'error',
-        text: err.error || 'Error al eliminar usuario'
-      })
+    
+    if (window.confirm(`¿Estás seguro de eliminar al usuario "${user.email}"?`)) {
+      try {
+        await deleteUser(user.id)
+        setMessage({ type: 'success', text: 'Usuario eliminado exitosamente' })
+        setTimeout(() => setMessage(null), 3000)
+      } catch (err) {
+        setMessage({ type: 'error', text: err.error || 'Error al eliminar usuario' })
+      }
     }
   }
-  // ============================================
-  // EDITAR USUARIO
-  // ============================================
+
+  // Manejar edición (ahora con verificación de permisos)
   const handleEdit = (user) => {
-    // Selecciona usuario
+    if (!canEdit(user)) {
+      setMessage({ type: 'error', text: 'No tiene permisos para editar este usuario' })
+      setTimeout(() => setMessage(null), 3000)
+      return
+    }
     setSelectedUser(user)
-    // Activa modo edición
     setEditMode(true)
-    // Muestra formulario
     setShowForm(true)
-    // Oculta detalles
     setShowDetails(false)
   }
-  // ============================================
-  // VER DETALLES
-  // ============================================
+
+  // Manejar ver detalles (siempre permitido para admin/seller)
   const handleViewDetails = (user) => {
-    // Guarda usuario seleccionado
     setSelectedUser(user)
-    // Muestra modal de detalles
     setShowDetails(true)
-    // Oculta formulario
     setShowForm(false)
-    // Desactiva edición
     setEditMode(false)
   }
-  // ============================================
-  // OPERACIÓN EXITOSA
-  // ============================================
+
+  // Manejar éxito del formulario
   const handleFormSuccess = () => {
-    // Cierra formulario
     setShowForm(false)
-    // Limpia usuario seleccionado
-    setSelectedUser(null)
-    // Sale del modo edición
     setEditMode(false)
-    // Recarga usuarios
+    setSelectedUser(null)
     loadUsers()
-    // Mensaje informativo
-    setMessage({
-      type: 'success',
-      text: 'Operación realizada correctamente'
-    })
+    setMessage({ type: 'success', text: 'Operación completada exitosamente' })
+    setTimeout(() => setMessage(null), 3000)
   }
-  // ============================================
-  // CERRAR FORMULARIO
-  // ============================================
+
   const handleCloseForm = () => {
     setShowForm(false)
-    setSelectedUser(null)
     setEditMode(false)
+    setSelectedUser(null)
   }
-  // ============================================
-  // CERRAR DETALLES
-  // ============================================
+
   const handleCloseDetails = () => {
     setShowDetails(false)
     setSelectedUser(null)
   }
-  // ============================================
-  // ESTADO DE CARGA
-  // ============================================
-  if (loading && users.length === 0) {
-    return (
-      <div className="loading-container">
-        Cargando usuarios...
-      </div>
-    )
+
+  // NUEVA FUNCIÓN: Verificar si puede crear usuarios
+  const canCreateUser = () => {
+    return currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
   }
-  // ============================================
-  // MANEJO DE ERRORES
-  // ============================================
-  if (error) {
+
+  if (loading && users.length === 0) {
+    return <div className="loading-container">Cargando usuarios...</div>
+  }
+
+  // NUEVO: Si hay error de permisos (403), mostrar pantalla de acceso denegado
+  if (error && (error.includes('No tiene permisos') || error.includes('403'))) {
     return (
       <div className="error-container">
-        <h3>Error</h3>
-        <p>{error}</p>
-        <button
-          className="btn-primary"
-          onClick={loadUsers}
-        >
-          Reintentar
-        </button>
+        <div className="error-icon">🔒</div>
+        <h3>Acceso Denegado</h3>
+        <p>No tiene permisos para ver la lista de usuarios.</p>
+        <p className="error-hint">Contacte al administrador si necesita acceso.</p>
       </div>
     )
   }
-  // ============================================
-  // INTERFAZ PRINCIPAL
-  // ============================================
+
   return (
     <div className="users-container">
-      {/* CABECERA DEL MÓDULO */}
       <div className="users-header">
-        <h2>
-          Gestión de Usuarios
-        </h2>
+        <h2>Gestión de Usuarios</h2>
+        {/* NUEVO: Solo mostrar botón si tiene permisos */}
         {canCreateUser() && (
-          <button
+          <button 
             className="btn-primary"
             onClick={() => {
               setSelectedUser(null)
@@ -266,95 +170,84 @@ const UsersView = () => {
           </button>
         )}
       </div>
-      {/* MENSAJES DEL SISTEMA */}
+
       {message && (
-        <AlertMessage
-          type={message.type}
-          message={message.text}
+        <AlertMessage 
+          type={message.type} 
+          message={message.text} 
           onClose={() => setMessage(null)}
         />
       )}
-      {/* BUSCADOR */}
+
       <div className="users-search">
         <input
           type="text"
-          placeholder="Buscar usuarios..."
+          placeholder="Buscar por email, nombre, ID o rol..."
           value={searchTerm}
-          onChange={(e) =>
-            setSearchTerm(e.target.value)
-        }
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
         />
       </div>
-      {/* TABLA DE USUARIOS */}
+
+      {error && !error.includes('No tiene permisos') && (
+        <div className="error-message">
+          Error: {error}
+          <button onClick={loadUsers}>Reintentar</button>
+        </div>
+      )}
+
       <div className="users-table-container">
         <table className="users-table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Nombre</th>
+              <th>Nombre</th>        {/* NUEVO: Columna de nombre */}
               <th>Email</th>
-              <th>Rol</th>
-              <th>Teléfono</th>
+              <th>Rol</th>           {/* NUEVO: Columna de rol */}
+              <th>Teléfono</th>      {/* NUEVO: Columna de teléfono */}
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filteredUsers.length === 0 ? (
               <tr>
-                <td
-                  colSpan="6"
-                  className="no-data"
-                >
+                <td colSpan="6" className="no-data">
                   No hay usuarios registrados
                 </td>
               </tr>
             ) : (
-              filteredUsers.map(user => (
-                <tr key={user.id}>
+              filteredUsers.map((user) => (
+                <tr key={user.id} className={currentUser?.id === user.id ? 'current-user-row' : ''}>
                   <td>{user.id}</td>
+                  <td>{user.name} {user.lastname || ''}</td>
+                  <td>{user.email}</td>
                   <td>
-                    {user.name} {user.lastname}
-                  </td>
-                  <td>
-                    {user.email}
-                  </td>
-                  <td>
-                    <span
-                      className={
-                        getRoleBadgeClass(user.role)
-                      }
-                    >
+                    <span className={getRoleBadgeClass(user.role)}>
                       {getRoleText(user.role)}
                     </span>
                   </td>
-                  <td>
-                    {user.phone || '—'}
-                  </td>
+                  <td>{user.phone || '—'}</td>
                   <td className="actions">
-                    <button
+                    <button 
                       className="btn-view"
-                      onClick={() =>
-                        handleViewDetails(user)
-                      }
+                      onClick={() => handleViewDetails(user)}
+                      title="Ver detalles"
                     >
                       👁️
                     </button>
-                    <button
+                    <button 
                       className="btn-edit"
-                      onClick={() =>
-                        handleEdit(user)
-                      }
-                      disabled={!canEdit()}
+                      onClick={() => handleEdit(user)}
+                      title="Editar"
+                      disabled={!canEdit(user)}  // NUEVO: Deshabilitar si no tiene permiso
                     >
                       ✏️
                     </button>
-                    <button
+                    <button 
                       className="btn-delete"
-                      onClick={() =>
-                        handleDelete(user)
-                      }
-                      disabled={!canDelete(user)}
+                      onClick={() => handleDelete(user)}
+                      title="Eliminar"
+                      disabled={!canDelete(user)}  // NUEVO: Deshabilitar si no tiene permiso
                     >
                       🗑️
                     </button>
@@ -365,7 +258,7 @@ const UsersView = () => {
           </tbody>
         </table>
       </div>
-      {/* FORMULARIO DE CREACIÓN Y EDICIÓN */}
+
       {showForm && (
         <UserForm
           user={selectedUser}
@@ -374,7 +267,7 @@ const UsersView = () => {
           onClose={handleCloseForm}
         />
       )}
-      {/* DETALLES DEL USUARIO */}
+
       {showDetails && selectedUser && (
         <UserDetails
           user={selectedUser}
@@ -388,5 +281,5 @@ const UsersView = () => {
     </div>
   )
 }
-// Exporta el componente
+
 export default UsersView

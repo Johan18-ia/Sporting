@@ -1,157 +1,83 @@
 // src/hooks/useAuth.js
-
 import { useState, useEffect } from 'react'
-
-import AuthModel from '../models/AuthModel'
+import AuthController from '../controllers/AuthController'
+import storageService from '../services/storageService'
 
 const useAuth = () => {
-  const [isAuthenticated, setIsAuthenticated] =
-    useState(false)
-  const [currentUser, setCurrentUser] =
-    useState(null)
-  const [token, setToken] =
-    useState(null)
-  const [loading, setLoading] =
-    useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [token, setToken] = useState(null)
 
-  // ==========================================
-  // CARGA INICIAL
-  // ==========================================
   useEffect(() => {
     checkAuth()
-    const handleStorageChange = e => {
-      if (e.key === 'sporty_token') {
+    
+    const handleStorageChange = (e) => {
+      if (e.key === 'auth_token') {
         checkAuth()
       }
     }
-    window.addEventListener(
-      'storage',
-      handleStorageChange
-    )
-    return () => {
-      window.removeEventListener(
-        'storage',
-        handleStorageChange
-      )
-    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
-  // ==========================================
-  // VALIDAR SESIÓN
-  // ==========================================
 
   const checkAuth = async () => {
-    try {
-      setLoading(true)
-      const authenticated =
-        AuthModel.isAuthenticated()
-      const user =
-        AuthModel.getCurrentUser()
-      const currentToken =
-        AuthModel.getCurrentToken()
-      setIsAuthenticated(
-        authenticated
-      )
-      setCurrentUser(user)
-      setToken(currentToken)
-    } catch (error) {
-      console.error(
-        '❌ Error verificando sesión:',
-        error
-      )
-      setIsAuthenticated(false)
-      setCurrentUser(null)
-      setToken(null)
-    } finally {
-      setLoading(false)
-    }
+    setLoading(true)
+    const authState = AuthController.getAuthState()
+    setIsAuthenticated(authState.isAuthenticated)
+    setCurrentUser(authState.currentUser)
+    setToken(authState.currentToken)
+    setLoading(false)
   }
 
-  // ==========================================
-  // LOGIN
-  // ==========================================
-  const login = async credentials => {
-    try {
-      setLoading(true)
-      const result =
-        await AuthModel.login(
-          credentials
-        )
-      if (!result.success) {
-        throw new Error(
-          result.error
-        )
-      }
-      setIsAuthenticated(true)
-      setCurrentUser(
-        result.user
+  const login = async (credentials) => {
+    return new Promise((resolve, reject) => {
+      AuthController.handleLogin(
+        credentials,
+        (user, authToken) => {
+          setIsAuthenticated(true)
+          setCurrentUser(user)
+          setToken(authToken)
+          resolve({ success: true, user, token: authToken })
+        },
+        (error) => {
+          reject({ success: false, error })
+        }
       )
-      setToken(
-        result.token
-      )
-      return result
-    } catch (error) {
-      console.error(
-        '❌ Error login:',
-        error
-      )
-      return {
-        success: false,
-        error: error.message
-      }
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
-  // ==========================================
-  // REGISTRO
-  // ==========================================
-  const register = async userData => {
-    try {
-      setLoading(true)
-      return await AuthModel.register(
-        userData
+  const register = async (userData) => {
+    return new Promise((resolve, reject) => {
+      AuthController.handleRegister(
+        userData,
+        (user) => {
+          resolve({ success: true, user })
+        },
+        (error) => {
+          reject({ success: false, error })
+        }
       )
-    } catch (error) {
-      console.error(
-        '❌ Error registro:',
-        error
-      )
-      return {
-        success: false,
-        error: error.message
-      }
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
-  // ==========================================
-  // LOGOUT
-  // ==========================================
   const logout = async () => {
-    try {
-      setLoading(true)
-      await AuthModel.logout()
-      setIsAuthenticated(false)
-      setCurrentUser(null)
-      setToken(null)
-      return {
-        success: true
-      }
-    } catch (error) {
-      console.error(
-        '❌ Error logout:',
-        error
+    return new Promise((resolve, reject) => {
+      AuthController.handleLogout(
+        () => {
+          setIsAuthenticated(false)
+          setCurrentUser(null)
+          setToken(null)
+          resolve({ success: true })
+        },
+        (error) => {
+          reject({ success: false, error })
+        }
       )
-      return {
-        success: false,
-        error: error.message
-      }
-    } finally {
-      setLoading(false)
-    }
+    })
   }
+
   return {
     isAuthenticated,
     currentUser,
@@ -163,4 +89,5 @@ const useAuth = () => {
     checkAuth
   }
 }
+
 export default useAuth
