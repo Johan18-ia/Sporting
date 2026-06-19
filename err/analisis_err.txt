@@ -8,11 +8,18 @@ Recomendación
 
 Para confirmar estado de ejecución:
 
-cd c:\Users\SENA\Videos\git\Sporting\frontend_web\backend
+cd frontend_web\backend
 npm install
+npm i
 node index.js
 Y para el frontend:
 
-cd c:\Users\SENA\Videos\git\Sporting\sporting-Prot-navegable
+cd sporting-Prot-navegable
 npm install
+npm i
+npm run dev
+
+cd frontend_web\frontend
+nmp install
+npm i 
 npm run dev
