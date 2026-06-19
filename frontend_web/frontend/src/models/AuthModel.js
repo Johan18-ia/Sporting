@@ -1,24 +1,15 @@
 // src/models/AuthModel.js
-
 import httpService from '../services/httpService'
 import storageService from '../services/storageService'
 import jwtService from '../services/jwtService'
 import API_CONFIG from '../config/api'
 
 class AuthModel {
-
-  // ==========================================
-  // LOGIN
-  // ==========================================
   static async login(credentials) {
     try {
-
       console.log('🔐 Enviando login a API real:', credentials.email)
-      console.log(
-        '🔐 URL completa:',
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`
-      )
-
+      console.log('🔐 URL completa:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`)
+      
       const response = await httpService.post(
         API_CONFIG.ENDPOINTS.LOGIN,
         {
@@ -27,302 +18,153 @@ class AuthModel {
         },
         false
       )
-
-      console.log(
-        '📦 Respuesta COMPLETA del login:',
-        JSON.stringify(response, null, 2)
-      )
-
-      // Verificar respuesta del backend
+      
+      console.log('📦 Respuesta COMPLETA del login:', JSON.stringify(response, null, 2))
+      
+      // Verificar si la respuesta es exitosa
       if (!response.success) {
-        console.error(
-          '❌ Login rechazado por la API:',
-          response.message
-        )
-
+        console.error('❌ La API respondió con success=false:', response.message)
         return {
           success: false,
-          error:
-            response.message ||
-            'Credenciales incorrectas'
+          error: response.message || 'Error en el servidor'
         }
       }
-
-      // Obtener datos del usuario
+      
+      // Los datos del usuario están en response.data
       const userDataFromApi = response.data
-
+      
       if (!userDataFromApi) {
-        console.error(
-          '❌ No existe response.data'
-        )
-
+        console.error('❌ No se encontró response.data')
         return {
           success: false,
-          error:
-            'El servidor no devolvió datos del usuario'
+          error: 'Error en la respuesta del servidor: no hay datos'
         }
       }
-
-      console.log(
-        '👤 Datos usuario:',
-        userDataFromApi
-      )
-
-      // Obtener token
-      const sessionToken =
-        userDataFromApi.session_token
-
+      
+      console.log('👤 userDataFromApi:', userDataFromApi)
+      
+      const sessionToken = userDataFromApi.session_token
+      
       if (!sessionToken) {
-        console.error(
-          '❌ session_token no encontrado'
-        )
-
+        console.error('❌ No se encontró session_token')
         return {
           success: false,
-          error:
-            'No fue posible obtener el token'
+          error: 'Error al obtener token de autenticación'
         }
       }
-
+      
       let token = sessionToken
-
-      // Algunos backends envían:
-      // JWT xxxxxxxxx
-      if (
-        sessionToken &&
-        sessionToken.startsWith('JWT ')
-      ) {
+      if (sessionToken && sessionToken.startsWith('JWT ')) {
         token = sessionToken.substring(4)
       }
-
-      console.log('✅ Token obtenido')
-
-      // Guardar token
+      
+      console.log('✅ Token extraído correctamente')
+      
       storageService.setToken(token)
-
-      // También guardarlo usando jwtService
-      if (jwtService.saveToken) {
-        jwtService.saveToken(token)
-      }
-
-      // Normalizar usuario
+      
       const userData = {
-        id: userDataFromApi.id || null,
-        email: userDataFromApi.email || '',
-        name:
-          userDataFromApi.name ||
-          userDataFromApi.email?.split('@')[0] ||
-          '',
-        lastname:
-          userDataFromApi.lastname || '',
-        role:
-          userDataFromApi.role || 'USER',
-        phone:
-          userDataFromApi.phone || '',
-        image:
-          userDataFromApi.image || ''
+        id: userDataFromApi.id,
+        email: userDataFromApi.email,
+        name: userDataFromApi.name || userDataFromApi.email.split('@')[0],
+        lastname: userDataFromApi.lastname || '',
+        role: userDataFromApi.role || 'user',
+        phone: userDataFromApi.phone || '',
+        image: userDataFromApi.image || ''
       }
-
-      console.log(
-        '💾 Guardando usuario:',
-        userData
-      )
-
+      
       storageService.setUser(userData)
-
-      if (
-        storageService.setUserRole &&
-        userData.role
-      ) {
-        storageService.setUserRole(
-          userData.role
-        )
+      
+      if (userData.role) {
+        storageService.setUserRole(userData.role)
       }
-
-      console.log(
-        '✅ Login exitoso:',
-        userData.email
-      )
-
+      
+      console.log('✅ Login exitoso, usuario guardado:', userData.email)
+      
       return {
         success: true,
-        token,
+        token: token,
         user: userData
       }
-
+      
     } catch (error) {
-
-      console.error(
-        '❌ Error durante login:',
-        error
-      )
-
+      console.error('❌ Error en login:', error)
       return {
         success: false,
-        error:
-          error.message ||
-          'Error de conexión con el servidor'
+        error: error.message || 'Error de conexión con el servidor'
       }
     }
   }
 
-  // ==========================================
-  // REGISTRO
-  // ==========================================
   static async register(userData) {
     try {
-
-      console.log(
-        '📝 Registrando usuario:',
-        userData.email
-      )
-
+      console.log('📝 Registrando usuario:', userData.email)
+      
       const userToCreate = {
         name: userData.name,
-        lastname:
-          userData.lastname || '',
+        lastname: userData.lastname || '',
         email: userData.email,
         password: userData.password,
         phone: userData.phone || '',
         image: userData.image || '',
-        role: userData.role || 'USER'
+        role: userData.role || 'user'
       }
-
-      console.log(
-        '📤 Datos enviados:',
-        userToCreate
-      )
-
+      
       const response = await httpService.post(
         API_CONFIG.ENDPOINTS.REGISTER,
         userToCreate,
         false
       )
-
-      console.log(
-        '📦 Respuesta registro:',
-        response
-      )
-
+      
+      console.log('✅ Respuesta registro:', response)
+      
       if (!response.success) {
-
-        console.error(
-          '❌ Registro rechazado:',
-          response.message
-        )
-
         return {
           success: false,
-          error:
-            response.message ||
-            'No fue posible registrar el usuario'
+          error: response.message || 'Error al registrar usuario'
         }
       }
-
-      const createdUser =
-        response.data || response
-
-      console.log(
-        '✅ Usuario creado:',
-        createdUser
-      )
-
+      
+      const createdUser = response.data || response
+      
       return {
         success: true,
         user: createdUser,
-        message:
-          'Usuario registrado exitosamente'
+        message: 'Usuario registrado exitosamente'
       }
-
+      
     } catch (error) {
-
-      console.error(
-        '❌ Error durante registro:',
-        error
-      )
-
+      console.error('❌ Error en registro:', error)
       return {
         success: false,
-        error:
-          error.message ||
-          'Error al registrar usuario'
+        error: error.message || 'Error al registrar usuario'
       }
     }
   }
 
-  // ==========================================
-  // LOGOUT
-  // ==========================================
   static async logout() {
     try {
-
-      console.log(
-        '🚪 Cerrando sesión'
-      )
-
       storageService.clearSession()
-
-      if (jwtService.removeToken) {
-        jwtService.removeToken()
-      }
-
-      return {
-        success: true
-      }
-
+      return { success: true }
     } catch (error) {
-
-      console.error(
-        '❌ Error durante logout:',
-        error
-      )
-
-      return {
-        success: false,
-        error: error.message
-      }
+      console.error('Error en logout:', error)
+      return { success: false, error: error.message }
     }
   }
 
-  // ==========================================
-  // AUTENTICACIÓN
-  // ==========================================
   static isAuthenticated() {
-
-    const token =
-      storageService.getToken()
-
-    if (!token) {
-      console.warn(
-        '⚠️ No existe token'
-      )
+    const token = storageService.getToken()
+    if (!token) return false
+    
+    const isValid = jwtService.verifyToken(token)
+    
+    if (!isValid) {
+      storageService.clearSession()
       return false
     }
-
-    // Si existe verifyToken
-    if (jwtService.verifyToken) {
-
-      const isValid =
-        jwtService.verifyToken(token)
-
-      if (!isValid) {
-
-        console.warn(
-          '⚠️ Token inválido'
-        )
-
-        storageService.clearSession()
-
-        return false
-      }
-    }
-
+    
     return true
   }
 
-  // ==========================================
-  // USUARIO ACTUAL
-  // ==========================================
   static getCurrentUser() {
     return storageService.getUser()
   }

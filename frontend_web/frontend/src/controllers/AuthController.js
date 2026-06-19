@@ -1,227 +1,129 @@
 // src/controllers/AuthController.js
 import AuthModel from '../models/AuthModel'
+
 class AuthController {
-
-  // ==========================================
-  // LOGIN
-  // ==========================================
-  static async login(credentials) {
+  // Manejar login
+  static async handleLogin(credentials, onSuccess, onError) {
     try {
-      console.log(
-        '🔧 AuthController: Procesando login para:',
-        credentials.email
-      )
-      // Validar email
-      if (!credentials.email) {
-        return {
-          success: false,
-          error: 'El correo es obligatorio'
-        }
+      console.log('🔧 AuthController: Procesando login para:', credentials.email)
+      
+      // Validar que los campos no estén vacíos
+      if (!credentials.email || !credentials.password) {
+        onError('Por favor complete todos los campos')
+        return
       }
-      // Validar contraseña
-      if (!credentials.password) {
-        return {
-          success: false,
-          error: 'La contraseña es obligatoria'
-        }
-      }
-      // Validar formato email
-      const emailRegex =
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      
+      // Validar formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(credentials.email)) {
-        return {
-          success: false,
-          error: 'Ingrese un correo válido'
-        }
+        onError('Por favor ingrese un email válido')
+        return
       }
-      // Llamar al modelo
-      const result =
-        await AuthModel.login(credentials)
-      console.log(
-        '📊 Resultado login:',
-        result
-      )
-      return result
+      
+      // Intentar login con la API real
+      const result = await AuthModel.login(credentials)
+      
+      console.log('📊 Resultado del login:', result)
+      
+      if (result.success) {
+        // result.user ahora incluye: id, email, name, lastname, role, phone, image
+        // result.token es el JWT real firmado por el backend
+        onSuccess(result.user, result.token)
+      } else {
+        onError(result.error || 'Credenciales incorrectas')
+      }
     } catch (error) {
-      console.error(
-        '❌ Error AuthController.login:',
-        error
-      )
-      return {
-        success: false,
-        error:
-          error.message ||
-          'Error al conectar con el servidor'
-      }
+      console.error('❌ Error en handleLogin:', error)
+      onError('Error al conectar con el servidor')
     }
   }
-
-  // ==========================================
-  // REGISTRO
-  // ==========================================
-  static async register(userData) {
+  
+  // Manejar registro de usuario
+  static async handleRegister(userData, onSuccess, onError) {
     try {
-      console.log(
-        '🔧 AuthController: Procesando registro:',
-        userData.email
-      )
-      // Validar nombre
-      if (!userData.name) {
-        return {
-          success: false,
-          error: 'El nombre es obligatorio'
-        }
+      console.log('🔧 AuthController: Procesando registro para:', userData.email)
+      
+      // Validaciones
+      if (!userData.email || !userData.password || !userData.name || !userData.lastname) {
+        onError('Por favor complete todos los campos obligatorios (nombre, apellido, email, contraseña)')
+        return
       }
-      // Validar apellido
-      if (!userData.lastname) {
-        return {
-          success: false,
-          error: 'El apellido es obligatorio'
-        }
-      }
-      // Validar email
-      if (!userData.email) {
-        return {
-          success: false,
-          error: 'El correo es obligatorio'
-        }
-      }
-      // Validar contraseña
-      if (!userData.password) {
-        return {
-          success: false,
-          error: 'La contraseña es obligatoria'
-        }
-      }
-      const emailRegex =
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(userData.email)) {
-        return {
-          success: false,
-          error: 'Ingrese un correo válido'
-        }
+        onError('Por favor ingrese un email válido')
+        return
       }
-      if (userData.password.length < 6) {
-        return {
-          success: false,
-          error:
-            'La contraseña debe tener mínimo 6 caracteres'
-        }
+      
+      if (userData.password.length < 5) {
+        onError('La contraseña debe tener al menos 6 caracteres')
+        return
       }
-      const result =
-        await AuthModel.register(userData)
-      console.log(
-        '📊 Resultado registro:',
-        result
-      )
-      return result
+      
+      const result = await AuthModel.register(userData)
+      
+      console.log('📊 Resultado del registro:', result)
+      
+      if (result.success) {
+        onSuccess(result.user)
+      } else {
+        onError(result.error)
+      }
     } catch (error) {
-      console.error(
-        '❌ Error AuthController.register:',
-        error
-      )
-      return {
-        success: false,
-        error:
-          error.message ||
-          'Error al registrar usuario'
-      }
+      console.error('❌ Error en handleRegister:', error)
+      onError('Error al registrar usuario')
     }
   }
-
-  // ==========================================
-  // LOGOUT
-  // ==========================================
-  static async logout() {
+  
+  // Manejar logout
+  static async handleLogout(onSuccess, onError) {
     try {
-      console.log(
-        '🚪 Cerrando sesión'
-      )
-      return await AuthModel.logout()
-    } catch (error) {
-      console.error(
-        '❌ Error logout:',
-        error
-      )
-      return {
-        success: false,
-        error:
-          error.message ||
-          'Error al cerrar sesión'
+      const result = await AuthModel.logout()
+      if (result.success) {
+        onSuccess()
+      } else {
+        onError(result.error || 'Error al cerrar sesión')
       }
+    } catch (error) {
+      onError('Error al cerrar sesión')
     }
   }
-
-  // ==========================================
-  // ESTADO DE AUTENTICACIÓN
-  // ==========================================
+  
+  // Obtener estado de autenticación
   static getAuthState() {
     return {
-      isAuthenticated:
-        AuthModel.isAuthenticated(),
-      currentUser:
-        AuthModel.getCurrentUser(),
-      currentToken:
-        AuthModel.getCurrentToken()
+      isAuthenticated: AuthModel.isAuthenticated(),
+      currentUser: AuthModel.getCurrentUser(),
+      currentToken: AuthModel.getCurrentToken()
     }
   }
-
-  // ==========================================
-  // VALIDAR SESIÓN
-  // ==========================================
+  
+  // Verificar autenticación (útil para rutas protegidas)
   static async checkAuth() {
-    try {
-      const valid =
-        AuthModel.isAuthenticated()
-      if (!valid) {
-        await AuthModel.logout()
-      }
-      return valid
-    } catch (error) {
-      console.error(
-        '❌ Error checkAuth:',
-        error
-      )
-      return false
+    const isValid = AuthModel.isAuthenticated()
+    if (!isValid) {
+      await AuthModel.logout()
     }
+    return isValid
   }
-
-  // ==========================================
-  // USUARIO ACTUAL
-  // ==========================================
-  static getCurrentUser() {
-    return AuthModel.getCurrentUser()
-  }
-  static getCurrentToken() {
-    return AuthModel.getCurrentToken()
-  }
-
-  // ==========================================
-  // ROLES
-  // ==========================================
+  
+  // NUEVO: Obtener el rol del usuario actual
   static getUserRole() {
-    const user =
-      AuthModel.getCurrentUser()
+    const user = AuthModel.getCurrentUser()
     return user?.role || null
   }
+  
+  // NUEVO: Verificar si el usuario tiene un rol específico
   static hasRole(requiredRole) {
-    const role =
-      this.getUserRole()
-    return role === requiredRole
+    const userRole = this.getUserRole()
+    return userRole === requiredRole
   }
-  static hasAnyRole(allowedRoles = []) {
-    const role =
-      this.getUserRole()
-    return allowedRoles.includes(role)
-  }
-  static isAdmin() {
-    return this.hasRole('ADMIN')
-  }
-  static isCoach() {
-    return this.hasRole('COACH')
-  }
-  static isStudent() {
-    return this.hasRole('STUDENT')
+  
+  // NUEVO: Verificar si el usuario tiene alguno de los roles permitidos
+  static hasAnyRole(allowedRoles) {
+    const userRole = this.getUserRole()
+    return allowedRoles.includes(userRole)
   }
 }
+
 export default AuthController

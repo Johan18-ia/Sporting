@@ -1,5 +1,6 @@
 // src/controllers/DashboardController.js
 import DashboardModel from '../models/DashboardModel'
+
 class DashboardController {
   // Obtener estadísticas del dashboard
   static async getDashboardStats(onSuccess, onError) {
@@ -10,19 +11,21 @@ class DashboardController {
       } else {
         onError('No se pudieron cargar las estadísticas')
       }
-    } catch {
+    } catch (error) {
       onError('Error al cargar las estadísticas')
     }
   }
+  
   // Obtener actividades recientes
   static async getRecentActivities(onSuccess, onError) {
     try {
       const activities = await DashboardModel.getRecentActivities()
       onSuccess(activities)
-    } catch {
+    } catch (error) {
       onError('Error al cargar las actividades')
     }
   }
+  
   // Actualizar estadísticas (simular actualización en tiempo real)
   static async refreshStats(onSuccess, onError) {
     try {
@@ -32,9 +35,10 @@ class DashboardController {
       } else {
         onError('No se pudieron actualizar las estadísticas')
       }
-    } catch {
+    } catch (error) {
       onError('Error al actualizar las estadísticas')
     }
   }
 }
+
 export default DashboardController

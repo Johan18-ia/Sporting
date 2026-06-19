@@ -1,113 +1,117 @@
 // src/services/httpService.js
-
 import API_CONFIG from '../config/api'
-
-const TOKEN_KEY = 'sporty_token'
 
 class HttpService {
   constructor() {
     this.baseURL = API_CONFIG.BASE_URL
   }
-  // ============================
-  // TOKEN
-  // ============================
+
   getToken() {
-    return localStorage.getItem(TOKEN_KEY)
+    return localStorage.getItem('auth_token')
   }
-  // ============================
-  // HEADERS
-  // ============================
+
   getHeaders(includeAuth = true) {
     const headers = {
       'Content-Type': 'application/json'
     }
+    
     if (includeAuth) {
       const token = this.getToken()
       if (token) {
-        headers.Authorization = `Bearer ${token}`
+        headers['Authorization'] = `Bearer ${token}`
       }
     }
+    
     return headers
   }
-  // ============================
-  // RESPONSE HANDLER
-  // ============================
+
   async handleResponse(response) {
-    let data = null
+    console.log('📡 Response status:', response.status)
+    
+    // Obtener el cuerpo de la respuesta
+    let data = {}
     try {
       data = await response.json()
-    } catch {
-      data = null
+    } catch (e) {
+      console.error('Error al parsear JSON:', e)
     }
+    
+    console.log('📡 Response data completa:', data)
+    
     if (!response.ok) {
-      const message =
-        data?.message ||
-        data?.error ||
-        `Error HTTP ${response.status}`
-      if (response.status === 401) {
-        localStorage.removeItem(TOKEN_KEY)
-        window.location.href = '/login'
-        throw new Error('Sesión expirada')
-      }
-      throw new Error(message)
+      const errorMessage = data.message || data.error || `Error HTTP: ${response.status}`
+      throw new Error(errorMessage)
     }
+    
+    // Retornamos toda la respuesta para que el Modelo pueda acceder a data.session_token
     return data
   }
-  // ============================
-  // TIMEOUT CONTROL
-  // ============================
-  createTimeoutController() {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => {
-      controller.abort()
-    }, API_CONFIG.TIMEOUT || 10000)
-    return { controller, timeoutId }
-  }
-  // ============================
-  // REQUEST BASE
-  // ============================
-  async request(method, endpoint, data = null, includeAuth = true) {
-    const url = `${this.baseURL}${endpoint}`
 
-    const { controller, timeoutId } = this.createTimeoutController()
+  async post(endpoint, data, includeAuth = true) {
     try {
+      const url = `${this.baseURL}${endpoint}`
+      console.log(`📡 POST a: ${url}`)
+      console.log('📡 Datos enviados:', data)
+      
       const response = await fetch(url, {
-        method,
+        method: 'POST',
         headers: this.getHeaders(includeAuth),
-        body: data ? JSON.stringify(data) : null,
-        signal: controller.signal
+        body: JSON.stringify(data)
       })
-      clearTimeout(timeoutId)
+      
+      console.log('📡 Status:', response.status)
       return await this.handleResponse(response)
     } catch (error) {
-      clearTimeout(timeoutId)
-      if (error.name === 'AbortError') {
-        throw new Error('Tiempo de espera agotado')
-      }
+      console.error(`❌ POST ${endpoint} error:`, error)
       throw error
     }
   }
-  // ============================
-  // MÉTODOS HTTP
-  // ============================
-  get(endpoint, includeAuth = true) {
-    return this.request('GET', endpoint, null, includeAuth)
+
+  async get(endpoint, includeAuth = true) {
+    try {
+      const url = `${this.baseURL}${endpoint}`
+      console.log(`📡 GET: ${url}`)
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(includeAuth)
+      })
+      return await this.handleResponse(response)
+    } catch (error) {
+      console.error(`GET ${endpoint} error:`, error)
+      throw error
+    }
   }
 
-  post(endpoint, data, includeAuth = true) {
-    return this.request('POST', endpoint, data, includeAuth)
+  async put(endpoint, data, includeAuth = true) {
+    try {
+      const url = `${this.baseURL}${endpoint}`
+      console.log(`📡 PUT a: ${url}`)
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: this.getHeaders(includeAuth),
+        body: JSON.stringify(data)
+      })
+      return await this.handleResponse(response)
+    } catch (error) {
+      console.error(`PUT ${endpoint} error:`, error)
+      throw error
+    }
   }
 
-  put(endpoint, data, includeAuth = true) {
-    return this.request('PUT', endpoint, data, includeAuth)
-  }
-
-  patch(endpoint, data, includeAuth = true) {
-    return this.request('PATCH', endpoint, data, includeAuth)
-  }
-
-  delete(endpoint, includeAuth = true) {
-    return this.request('DELETE', endpoint, null, includeAuth)
+  async delete(endpoint, includeAuth = true) {
+    try {
+      const url = `${this.baseURL}${endpoint}`
+      console.log(`📡 DELETE a: ${url}`)
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: this.getHeaders(includeAuth)
+      })
+      return await this.handleResponse(response)
+    } catch (error) {
+      console.error(`DELETE ${endpoint} error:`, error)
+      throw error
+    }
   }
 }
+
 export default new HttpService()

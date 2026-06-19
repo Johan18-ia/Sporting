@@ -8,10 +8,7 @@ const AlertMessage = ({ type, message, onClose, duration = 5000 }) => {
     if (duration > 0) {
       const timer = setTimeout(() => {
         setIsVisible(false)
-        if (onClose) {
-          const closeTimer = setTimeout(onClose, 300)
-          return () => clearTimeout(closeTimer)
-        }
+        if (onClose) setTimeout(onClose, 300)
       }, duration)
       
       return () => clearTimeout(timer)
