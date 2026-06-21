@@ -9,7 +9,7 @@ class CategoryController {
         onError('No tiene permisos para ver categorías')
         return
       }
-      
+
       const result = await CategoryModel.getAllCategories()
       if (result.success) {
         onSuccess(result.data)
@@ -27,12 +27,12 @@ class CategoryController {
         onError('No tiene permisos para crear categorías')
         return
       }
-      
+
       if (!categoryData.name_year) {
         onError('El año de la categoría es requerido')
         return
       }
-      
+
       const result = await CategoryModel.createCategory(categoryData)
       if (result.success) {
         onSuccess(result.data)
@@ -50,7 +50,7 @@ class CategoryController {
         onError('Solo administradores pueden eliminar categorías')
         return
       }
-      
+
       const result = await CategoryModel.deleteCategory(id)
       if (result.success) {
         onSuccess()

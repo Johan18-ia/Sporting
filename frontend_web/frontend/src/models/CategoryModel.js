@@ -6,12 +6,12 @@ class CategoryModel {
   static async getAllCategories() {
     try {
       const response = await httpService.get(API_CONFIG.ENDPOINTS.CATEGORIES, true)
-      
+
       let categoriesArray = []
       if (response && response.data && Array.isArray(response.data)) {
         categoriesArray = response.data
       }
-      
+
       return { success: true, data: categoriesArray }
     } catch (error) {
       return { success: false, error: error.message || 'Error al cargar categorías' }

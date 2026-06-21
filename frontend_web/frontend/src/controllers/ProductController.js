@@ -9,7 +9,7 @@ class ProductController {
         onError('No tiene permisos para ver productos')
         return
       }
-      
+
       const result = await ProductModel.getAllProducts()
       if (result.success) {
         onSuccess(result.data)
@@ -27,12 +27,12 @@ class ProductController {
         onError('No tiene permisos para crear productos')
         return
       }
-      
+
       if (!productData.nombre || !productData.precio) {
         onError('Nombre y precio son requeridos')
         return
       }
-      
+
       const result = await ProductModel.createProduct(productData)
       if (result.success) {
         onSuccess(result.data)
@@ -50,7 +50,7 @@ class ProductController {
         onError('Solo administradores pueden eliminar productos')
         return
       }
-      
+
       const result = await ProductModel.deleteProduct(id)
       if (result.success) {
         onSuccess()

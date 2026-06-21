@@ -6,14 +6,14 @@ class ProductModel {
   static async getAllProducts() {
     try {
       const response = await httpService.get(API_CONFIG.ENDPOINTS.PRODUCTS, true)
-      
+
       let productsArray = []
       if (response && response.data && Array.isArray(response.data)) {
         productsArray = response.data
       } else if (Array.isArray(response)) {
         productsArray = response
       }
-      
+
       return { success: true, data: productsArray }
     } catch (error) {
       console.error('Error al obtener productos:', error)
@@ -28,7 +28,7 @@ class ProductModel {
         productData,
         true
       )
-      
+
       return { success: true, data: response.data || response }
     } catch (error) {
       return { success: false, error: error.message || 'Error al crear producto' }

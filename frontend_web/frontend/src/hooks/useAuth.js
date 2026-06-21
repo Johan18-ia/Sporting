@@ -1,93 +1,63 @@
-// src/hooks/useAuth.js
+// frontend_web/frontend/src/hooks/useCategories.js
 import { useState, useEffect } from 'react'
-import AuthController from '../controllers/AuthController'
-import storageService from '../services/storageService'
+import CategoryController from '../controllers/CategoryController'
 
-const useAuth = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [currentUser, setCurrentUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [token, setToken] = useState(null)
+const useCategories = () => {
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  useEffect(() => {
-    checkAuth()
-    
-    const handleStorageChange = (e) => {
-      if (e.key === 'auth_token') {
-        checkAuth()
-      }
-    }
-    
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
-
-  const checkAuth = async () => {
+  const loadCategories = async () => {
     setLoading(true)
-    const authState = AuthController.getAuthState()
-    setIsAuthenticated(authState.isAuthenticated)
-    setCurrentUser(authState.currentUser)
-    setToken(authState.currentToken)
-    setLoading(false)
+    setError(null)
+
+    CategoryController.getAllCategories(
+      (data) => {
+        setCategories(data)
+        setLoading(false)
+      },
+      (err) => {
+        setError(err)
+        setLoading(false)
+      }
+    )
   }
 
-  const login = async (credentials) => {
+  const createCategory = async (categoryData) => {
     return new Promise((resolve, reject) => {
-      AuthController.handleLogin(
-        credentials,
-        (user, authToken) => {
-          setIsAuthenticated(true)
-          setCurrentUser(user)
-          setToken(authToken)
-          resolve({ success: true, user, token: authToken })
+      CategoryController.createCategory(
+        categoryData,
+        (data) => {
+          loadCategories()
+          resolve({ success: true, data })
         },
-        (error) => {
-          reject({ success: false, error })
+        (err) => {
+          reject({ success: false, error: err })
         }
       )
     })
   }
 
-  const register = async (userData) => {
+  const deleteCategory = async (id) => {
     return new Promise((resolve, reject) => {
-      AuthController.handleRegister(
-        userData,
-        (user) => {
-          resolve({ success: true, user })
-        },
-        (error) => {
-          reject({ success: false, error })
-        }
-      )
-    })
-  }
-
-  const logout = async () => {
-    return new Promise((resolve, reject) => {
-      AuthController.handleLogout(
+      CategoryController.deleteCategory(
+        id,
         () => {
-          setIsAuthenticated(false)
-          setCurrentUser(null)
-          setToken(null)
+          loadCategories()
           resolve({ success: true })
         },
-        (error) => {
-          reject({ success: false, error })
+        (err) => {
+          reject({ success: false, error: err })
         }
       )
     })
   }
 
-  return {
-    isAuthenticated,
-    currentUser,
-    token,
-    loading,
-    login,
-    register,
-    logout,
-    checkAuth
-  }
+  useEffect(() => {
+    loadCategories()
+  }, [])
+
+  return { categories, loading, error, loadCategories, createCategory, deleteCategory }
 }
 
-export default useAuth
+export default useCategories

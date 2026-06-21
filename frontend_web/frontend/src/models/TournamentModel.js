@@ -6,12 +6,12 @@ class TournamentModel {
   static async getAllTournaments() {
     try {
       const response = await httpService.get(API_CONFIG.ENDPOINTS.TOURNAMENTS, true)
-      
+
       let tournamentsArray = []
       if (response && response.data && Array.isArray(response.data)) {
         tournamentsArray = response.data
       }
-      
+
       return { success: true, data: tournamentsArray }
     } catch (error) {
       return { success: false, error: error.message || 'Error al cargar torneos' }
