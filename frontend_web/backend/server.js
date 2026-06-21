@@ -67,6 +67,6 @@ Agregar rutas nuevas app.use('/api/#######,#######);
      res.status(err.status || 500).send(err.stack);
  });
 
- console.log('📚 Swagger disponible en: http://192.168.56.1:3000/api-docs');
+ console.log('📚 Swagger disponible en: http://192.168.20.71:3000/api-docs'); // Cambiar url
 
  module.exports = app;

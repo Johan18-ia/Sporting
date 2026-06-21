@@ -1,27 +1,42 @@
 /* src/styles/Register.css */
+/* ===== ESTILOS SPORTING - REGISTRO ===== */
+
 .register-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f5f5f5;  /* ← Fondo gris claro */
   padding: 20px;
 }
 
 .register-card {
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  padding: 35px 30px;
   width: 100%;
-  max-width: 600px;
-  animation: fadeInUp 0.6s ease-out;
+  max-width: 520px;
+  animation: fadeInUp 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Línea decorativa roja en la parte superior */
+.register-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #8B0000, #FF4B2B);
 }
 
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -29,63 +44,87 @@
   }
 }
 
+/* ===== HEADER ===== */
 .register-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 .register-header h1 {
-  color: #333;
-  font-size: 28px;
-  margin-bottom: 10px;
+  color: #8B0000;  /* ← Rojo Sporting */
+  font-size: 24px;
+  margin-bottom: 5px;
   font-weight: 600;
 }
 
 .register-header p {
   color: #666;
-  font-size: 14px;
+  font-size: 0.9rem;
+  margin: 0;
 }
 
+/* ===== LOGO ===== */
+.register-logo {
+  display: block;
+  margin: 0 auto 10px;
+  height: 60px;
+  width: auto;
+}
+
+.register-logo-text {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.register-logo-text .sporting-name {
+  color: #8B0000;
+}
+
+.register-logo-emoji {
+  font-size: 2.2rem;
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* ===== FORMULARIO ===== */
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-/* Estilos para filas de dos columnas */
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 14px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .form-group label {
   color: #333;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .form-group input,
 .form-group select {
-  padding: 12px 16px;
+  padding: 11px 14px;
   border: 2px solid #e1e5e9;
   border-radius: 10px;
   font-size: 14px;
   transition: all 0.3s ease;
   outline: none;
+  background: white;
+  color: #333;
   font-family: inherit;
 }
 
 .form-group input:focus,
 .form-group select:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #8B0000;  /* ← Rojo Sporting */
+  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
 }
 
 .form-group input:disabled,
@@ -94,20 +133,33 @@
   cursor: not-allowed;
 }
 
-select.form-control {
-  background: white;
+.form-group input::placeholder {
+  color: #999;
+}
+
+.form-group select {
   cursor: pointer;
+  appearance: auto;
 }
 
+/* ===== FILAS DE 2 COLUMNAS ===== */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ===== HINT ===== */
 .form-hint {
-  font-size: 11px;
-  color: #888;
-  margin-top: 4px;
   display: block;
+  margin-top: 4px;
+  color: #888;
+  font-size: 0.75rem;
 }
 
+/* ===== BOTÓN ===== */
 .register-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #8B0000;  /* ← Rojo Sporting sólido */
   color: white;
   padding: 14px;
   border: none;
@@ -115,55 +167,72 @@ select.form-control {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  margin-top: 10px;
+  transition: all 0.3s ease;
+  margin-top: 5px;
 }
 
 .register-button:hover:not(:disabled) {
+  background: #a00000;
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 20px rgba(139, 0, 0, 0.25);
 }
 
 .register-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
+/* ===== FOOTER ===== */
 .register-footer {
-  margin-top: 30px;
+  margin-top: 25px;
   padding-top: 20px;
   border-top: 1px solid #e1e5e9;
   text-align: center;
 }
 
 .register-footer p {
-  color: #666;
-  font-size: 13px;
+  color: #555;
+  font-size: 0.9rem;
   margin: 5px 0;
 }
 
-.register-footer a {
-  color: #667eea;
-  text-decoration: none;
+.register-footer .sporting-link {
+  color: #8B0000;
   font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
 
-.register-footer a:hover {
+.register-footer .sporting-link:hover {
+  color: #a00000;
   text-decoration: underline;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* ===== RESPONSIVE ===== */
+@media (max-width: 576px) {
   .register-card {
-    padding: 25px;
+    padding: 25px 18px;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
     gap: 0;
   }
-  
+
   .register-header h1 {
-    font-size: 24px;
+    font-size: 20px;
+  }
+
+  .register-logo {
+    height: 50px;
+  }
+
+  .register-logo-text {
+    font-size: 1.3rem;
+  }
+
+  .register-logo-emoji {
+    font-size: 1.8rem;
   }
 }

@@ -10,7 +10,7 @@ const Category = {};
 // ====================================================
 Category.getAll = (result) => {
     // Consulta SQL para obtener todas las categorías
-    const sql = 'SELECT * FROM categories ORDER BY name_year DESC';
+    const sql = 'SELECT * FROM categories ORDER BY category_year DESC';
     // Ejecuta la consulta
     db.query(sql, (err, res) => {
         // Manejo de error
@@ -28,7 +28,7 @@ Category.create = (category, result) => {
     // Consulta SQL para insertar una categoría
     const sql = `
         INSERT INTO categories (
-            name_year,
+            category_year,
             description
         )
         VALUES (?, ?)

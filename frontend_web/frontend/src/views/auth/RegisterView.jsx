@@ -3,25 +3,28 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
-import '../../styles/Register.css'
+import logoImagen from '../assets/logo.png'  // ← Si tienes logo
+import '../../styles/Register.css'  // ← Tu archivo existente
 
 const RegisterView = () => {
+  // ===== LOGICA COMPLETAMENTE =====
   const [formData, setFormData] = useState({
     name: '',
-    lastname: '',        // ← NUEVO: Apellido
+    lastname: '',
     email: '',
     password: '',
     confirmPassword: '',
-    phone: '',           // ← NUEVO: Teléfono
-    role: 'user'         // ← NUEVO: Rol (por defecto 'user')
+    phone: '',
+    role: 'user'
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  
+
   const { register } = useAuth()
   const navigate = useNavigate()
 
+  // ===== FUNCIONES SIN CAMBIOS =====
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -33,36 +36,35 @@ const RegisterView = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     console.log('📝 Intentando registrar:', formData.email)
-    
+
     // Validaciones
     if (!formData.name || !formData.lastname || !formData.email || !formData.password) {
       setError('Por favor complete todos los campos obligatorios')
       return
     }
-    
+
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden')
       return
     }
-    
+
     if (formData.password.length < 5) {
       setError('La contraseña debe tener al menos 6 caracteres')
       return
     }
-    
+
     // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(formData.email)) {
       setError('Por favor ingrese un email válido')
       return
     }
-    
+
     setLoading(true)
-    
+
     try {
-      // Enviar todos los campos que la API espera
       const result = await register({
         name: formData.name,
         lastname: formData.lastname,
@@ -70,16 +72,15 @@ const RegisterView = () => {
         password: formData.password,
         phone: formData.phone,
         role: formData.role
-        // image se puede agregar después
       })
-      
+
       console.log('✅ Registro exitoso:', result)
       setSuccess('Usuario registrado exitosamente. Redirigiendo al login...')
-      
+
       setTimeout(() => {
         navigate('/login')
       }, 2000)
-      
+
     } catch (err) {
       console.error('❌ Error en registro:', err)
       setError(err.error || 'Error al registrar usuario. Intente nuevamente.')
@@ -88,30 +89,44 @@ const RegisterView = () => {
     }
   }
 
+  // ===== SOLO CAMBIA EL DISEÑO VISUAL =====
   return (
     <div className="register-container">
-      <div className="register-card">
-        <div className="register-header">
-          <h1>Crear Cuenta</h1>
-          <p>Regístrate para acceder al sistema</p>
+      <div className="register-card sporting-register-card">
+        {/* Logo Sporting - Opcional */}
+        {logoImagen ? (
+          <img
+            src={logoImagen}
+            alt="Sporting Club"
+            className="register-logo-sporting"
+          />
+        ) : (
+          <div className="register-logo-text">
+            ⚽ <span className="sporting-club-name">Sporting Club</span>
+          </div>
+        )}
+
+        <div className="register-header sporting-header">
+          <h1>Únete a Sporting</h1>
+          <p>Crea tu cuenta para acceder al sistema</p>
         </div>
-        
+
         {error && (
-          <AlertMessage 
-            type="error" 
-            message={error} 
+          <AlertMessage
+            type="error"
+            message={error}
             onClose={() => setError('')}
           />
         )}
-        
+
         {success && (
-          <AlertMessage 
-            type="success" 
-            message={success} 
+          <AlertMessage
+            type="success"
+            message={success}
             onClose={() => setSuccess('')}
           />
         )}
-        
+
         <form onSubmit={handleSubmit} className="register-form">
           <div className="form-row">
             <div className="form-group">
@@ -125,9 +140,10 @@ const RegisterView = () => {
                 placeholder="Ingrese su nombre"
                 disabled={loading}
                 required
+                className="sporting-input"
               />
             </div>
-            
+
             <div className="form-group">
               <label htmlFor="lastname">Apellido *</label>
               <input
@@ -139,10 +155,11 @@ const RegisterView = () => {
                 placeholder="Ingrese su apellido"
                 disabled={loading}
                 required
+                className="sporting-input"
               />
             </div>
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="email">Correo Electrónico *</label>
             <input
@@ -154,9 +171,10 @@ const RegisterView = () => {
               placeholder="usuario@ejemplo.com"
               disabled={loading}
               required
+              className="sporting-input"
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="phone">Teléfono</label>
             <input
@@ -167,9 +185,10 @@ const RegisterView = () => {
               onChange={handleChange}
               placeholder="Opcional"
               disabled={loading}
+              className="sporting-input"
             />
           </div>
-          
+
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="password">Contraseña *</label>
@@ -182,9 +201,10 @@ const RegisterView = () => {
                 placeholder="Mínimo 6 caracteres"
                 disabled={loading}
                 required
+                className="sporting-input"
               />
             </div>
-            
+
             <div className="form-group">
               <label htmlFor="confirmPassword">Confirmar Contraseña *</label>
               <input
@@ -196,10 +216,11 @@ const RegisterView = () => {
                 placeholder="Repita su contraseña"
                 disabled={loading}
                 required
+                className="sporting-input"
               />
             </div>
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="role">Rol</label>
             <select
@@ -208,27 +229,27 @@ const RegisterView = () => {
               value={formData.role}
               onChange={handleChange}
               disabled={loading}
-              className="form-control"
+              className="form-control sporting-select"
             >
-              <option value="user">Usuario</option>
-              <option value="customer">Cliente</option>
-              <option value="seller">Vendedor</option>
-              <option value="admin">Administrador</option>
+              <option value="user">👤 Usuario</option>
+              <option value="customer">👤 Cliente</option>
+              <option value="seller">🛒 Vendedor</option>
+              <option value="admin">👑 Administrador</option>
             </select>
-            <small className="form-hint">El rol por defecto es "usuario"</small>
+            <small className="form-hint sporting-hint">El rol por defecto es "usuario"</small>
           </div>
-          
-          <button 
-            type="submit" 
-            className="register-button"
+
+          <button
+            type="submit"
+            className="register-button sporting-register-btn"
             disabled={loading}
           >
             {loading ? 'Registrando...' : 'Registrarse'}
           </button>
         </form>
-        
-        <div className="register-footer">
-          <p>¿Ya tienes cuenta? <Link to="/login">Inicia Sesión aquí</Link></p>
+
+        <div className="register-footer sporting-footer">
+          <p>¿Ya tienes cuenta? <Link to="/login" className="sporting-link">Inicia Sesión aquí</Link></p>
         </div>
       </div>
     </div>

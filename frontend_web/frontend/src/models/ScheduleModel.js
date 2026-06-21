@@ -6,12 +6,12 @@ class ScheduleModel {
   static async getAllSchedules() {
     try {
       const response = await httpService.get(API_CONFIG.ENDPOINTS.SCHEDULES, true)
-      
+
       let schedulesArray = []
       if (response && response.data && Array.isArray(response.data)) {
         schedulesArray = response.data
       }
-      
+
       return { success: true, data: schedulesArray }
     } catch (error) {
       return { success: false, error: error.message || 'Error al cargar horarios' }
@@ -35,12 +35,12 @@ class ScheduleModel {
     try {
       const endpoint = API_CONFIG.ENDPOINTS.SCHEDULE_BY_CATEGORY.replace(':id_category', categoryId)
       const response = await httpService.get(endpoint, true)
-      
+
       let schedulesArray = []
       if (response && response.data && Array.isArray(response.data)) {
         schedulesArray = response.data
       }
-      
+
       return { success: true, data: schedulesArray }
     } catch (error) {
       return { success: false, error: error.message || 'Error al cargar horarios por categoría' }

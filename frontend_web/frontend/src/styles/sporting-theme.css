@@ -1,0 +1,157 @@
+/* ============================================
+   SPORTING THEME - ESTILOS GLOBALES
+   ============================================ */
+
+/* ===== VARIABLES ===== */
+:root {
+  --sporting-red: #8B0000;
+  --sporting-red-hover: #a00000;
+  --sporting-red-gradient: linear-gradient(135deg, #8B0000 0%, #FF4B2B 100%);
+  --sporting-dark: #111111;
+  --sporting-gray: #333333;
+  --sporting-light-gray: #f5f5f5;
+  --sporting-border: #eeeeee;
+  --sporting-text: #333333;
+  --sporting-text-muted: #666666;
+  --sporting-white: #ffffff;
+  --sporting-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  --sporting-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.1);
+  --sporting-radius: 8px;
+  --sporting-radius-lg: 12px;
+}
+
+/* ===== RESET Y BASE ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: var(--sporting-white);
+  color: var(--sporting-text);
+}
+
+/* ===== BOTONES GLOBALES ===== */
+.btn-sporting-primary {
+  background-color: var(--sporting-red);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--sporting-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-sporting-primary:hover:not(:disabled) {
+  background-color: var(--sporting-red-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(139, 0, 0, 0.3);
+}
+
+.btn-sporting-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-sporting-secondary {
+  background-color: transparent;
+  color: var(--sporting-gray);
+  border: 1px solid #ccc;
+  padding: 10px 20px;
+  border-radius: var(--sporting-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-sporting-secondary:hover {
+  background-color: var(--sporting-light-gray);
+}
+
+.btn-sporting-danger {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--sporting-radius);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.btn-sporting-danger:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.btn-sporting-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== BADGES ===== */
+.badge-sporting {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-sporting-admin {
+  background-color: #8B0000;
+  color: white;
+}
+
+.badge-sporting-seller {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.badge-sporting-customer {
+  background-color: #10b981;
+  color: white;
+}
+
+.badge-sporting-user {
+  background-color: #6b7280;
+  color: white;
+}
+
+/* ===== DIVISORES ===== */
+.divider {
+  border: 0;
+  border-top: 1px solid var(--sporting-border);
+  margin: 15px 0;
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animacion-aparecer {
+  animation: fadeInUp 0.5s ease-out;
+}
