@@ -5,9 +5,9 @@ import useAuth from '../../hooks/useAuth'
 import DashboardHeader from './DashboardHeader'
 import DashboardStats from './DashboardStats'
 import UsersView from './UsersView'
+import CategoriesView from './CategoriesView' // <-- IMPORTANTE: Tu vista agregada
 import AlertMessage from '../common/AlertMessage'
 import LoadingSpinner from '../common/LoadingSpinner'
-// IMPORTANTE: Importar los estilos
 import '../../styles/Dashboard.css'
 import '../../styles/Users.css'
 
@@ -69,6 +69,8 @@ const DashboardView = () => {
         )
       case 'users':
         return <UsersView />
+      case 'categories': // <-- IMPORTANTE: Esto es lo que lee el botón 
+        return <CategoriesView />
       default:
         return null
     }

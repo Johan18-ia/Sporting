@@ -88,6 +88,13 @@ const DashboardHeader = ({ user, onLogout, activeTab, onTabChange }) => {
         >
           Usuarios
         </button>
+
+         <button 
+          style={tabBtnStyles(activeTab === 'categories' ? 'active' : '')} 
+          onClick={() => onTabChange('categories')}
+        >
+           Categorías
+        </button>
       </div>
       
       <div style={headerRightStyles}>
