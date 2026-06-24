@@ -1,14 +1,11 @@
-// src/views/dashboard/StudentsView.jsx
+// src/views/dashboard/SchedulesView.jsx
 import React, { useState, useEffect } from 'react'
-import AlertMessage from '../common/AlertMessage'
+import ScheduleModel from '../../models/ScheduleModel'
 import CategoryModel from '../../models/CategoryModel'
+import AlertMessage from '../common/AlertMessage'
 
-const StudentsView = () => {
-  const [students, setStudents] = useState([
-    { id: 1, nombres: 'Carlos', apellidos: 'Pérez', documento: '1112345678', categoria: '2009', nacimiento: '15/05/2009' },
-    { id: 2, nombres: 'Andrés', apellidos: 'López', documento: '2225432456', categoria: '2009', nacimiento: '22/08/2009' },
-    { id: 3, nombres: 'Juan', apellidos: 'Gómez', documento: '3332345667', categoria: '2010', nacimiento: '05/01/2010' }
-  ])
+const SchedulesView = () => {
+  const [schedules, setSchedules] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -16,61 +13,76 @@ const StudentsView = () => {
   const [showForm, setShowForm] = useState(false)
   const [filterCategory, setFilterCategory] = useState('')
   const [formData, setFormData] = useState({
-    nombres: '',
-    apellidos: '',
-    documento: '',
-    categoria: '',
-    nacimiento: ''
+    id_category: '',
+    day_of_week: 'Lunes',
+    start_time: '08:00',
+    end_time: '10:00'
   })
 
-  useEffect(() => {
-    loadCategories()
-  }, [])
+  const loadData = async () => {
+    setLoading(true)
+    const [schedulesRes, categoriesRes] = await Promise.all([
+      ScheduleModel.getAllSchedules(),
+      CategoryModel.getAllCategories()
+    ])
 
-  const loadCategories = async () => {
-    const result = await CategoryModel.getAllCategories()
-    if (result.success) {
-      setCategories(result.data)
+    if (schedulesRes.success) setSchedules(schedulesRes.data)
+    if (categoriesRes.success) setCategories(categoriesRes.data)
+
+    if (!schedulesRes.success || !categoriesRes.success) {
+      setError('Error al cargar datos')
     }
+    setLoading(false)
   }
+
+  useEffect(() => {
+    loadData()
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!formData.nombres || !formData.apellidos || !formData.documento || !formData.categoria) {
-      setMessage({ type: 'error', text: 'Complete todos los campos obligatorios' })
+    if (!formData.id_category || !formData.day_of_week) {
+      setMessage({ type: 'error', text: 'Complete todos los campos' })
       setTimeout(() => setMessage(null), 3000)
       return
     }
 
-    const newStudent = {
-      id: Date.now(),
-      ...formData,
-      nacimiento: formData.nacimiento || 'No registrado'
-    }
+    setLoading(true)
+    const result = await ScheduleModel.createSchedule(formData)
 
-    setStudents([...students, newStudent])
-    setMessage({ type: 'success', text: 'Estudiante registrado exitosamente' })
-    setShowForm(false)
-    setFormData({ nombres: '', apellidos: '', documento: '', categoria: '', nacimiento: '' })
+    if (result.success) {
+      setMessage({ type: 'success', text: 'Horario asignado exitosamente' })
+      setShowForm(false)
+      setFormData({ id_category: '', day_of_week: 'Lunes', start_time: '08:00', end_time: '10:00' })
+      loadData()
+    } else {
+      setMessage({ type: 'error', text: result.error })
+    }
+    setLoading(false)
     setTimeout(() => setMessage(null), 3000)
   }
 
-  const handleDelete = (id, nombre) => {
-    if (window.confirm(`¿Eliminar al estudiante "${nombre}"?`)) {
-      setStudents(students.filter(s => s.id !== id))
-      setMessage({ type: 'success', text: 'Estudiante eliminado' })
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Eliminar este horario?')) {
+      const result = await ScheduleModel.deleteSchedule(id)
+      if (result.success) {
+        setMessage({ type: 'success', text: 'Horario eliminado' })
+        loadData()
+      } else {
+        setMessage({ type: 'error', text: result.error })
+      }
       setTimeout(() => setMessage(null), 3000)
     }
   }
 
-  const filteredStudents = filterCategory
-    ? students.filter(s => s.categoria === filterCategory)
-    : students
+  const filteredSchedules = filterCategory
+    ? schedules.filter(s => s.id_category === parseInt(filterCategory))
+    : schedules
 
   const containerStyles = {
     padding: '20px',
@@ -92,14 +104,6 @@ const StudentsView = () => {
     gap: '10px',
     alignItems: 'center',
     marginBottom: '20px'
-  }
-
-  const selectStyles = {
-    padding: '8px 15px',
-    border: '2px solid #e1e5e9',
-    borderRadius: '8px',
-    fontSize: '14px',
-    background: 'white'
   }
 
   const tableStyles = {
@@ -124,15 +128,17 @@ const StudentsView = () => {
     borderBottom: '1px solid #e1e5e9'
   }
 
+  const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+
   return (
     <div style={containerStyles}>
       <div style={headerStyles}>
-        <h2 style={{ color: '#333', margin: 0 }}>👟 Gestión de Estudiantes</h2>
+        <h2 style={{ color: '#333', margin: 0 }}>📅 Horarios de Entrenamiento</h2>
         <button
           onClick={() => {
             setShowForm(!showForm)
             if (!showForm) {
-              setFormData({ nombres: '', apellidos: '', documento: '', categoria: '', nacimiento: '' })
+              setFormData({ id_category: '', day_of_week: 'Lunes', start_time: '08:00', end_time: '10:00' })
             }
           }}
           style={{
@@ -145,7 +151,7 @@ const StudentsView = () => {
             fontWeight: 600
           }}
         >
-          {showForm ? '✕ Cancelar' : '+ Nuevo Estudiante'}
+          {showForm ? '✕ Cancelar' : '+ Asignar Horario'}
         </button>
       </div>
 
@@ -164,64 +170,13 @@ const StudentsView = () => {
           borderRadius: '12px',
           marginBottom: '20px'
         }}>
-          <h3 style={{ marginBottom: '15px', color: '#333' }}>Registrar Estudiante</h3>
+          <h3 style={{ marginBottom: '15px', color: '#333' }}>Asignar Horario</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Nombres *</label>
-              <input
-                type="text"
-                name="nombres"
-                value={formData.nombres}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e1e5e9',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Apellidos *</label>
-              <input
-                type="text"
-                name="apellidos"
-                value={formData.apellidos}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e1e5e9',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Documento *</label>
-              <input
-                type="text"
-                name="documento"
-                value={formData.documento}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e1e5e9',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
             <div>
               <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Categoría *</label>
               <select
-                name="categoria"
-                value={formData.categoria}
+                name="id_category"
+                value={formData.id_category}
                 onChange={handleChange}
                 required
                 style={{
@@ -235,19 +190,58 @@ const StudentsView = () => {
               >
                 <option value="">Seleccionar categoría</option>
                 {categories.map(cat => (
-                  <option key={cat.id} value={cat.category_year || cat.name_year}>
+                  <option key={cat.id} value={cat.id}>
                     {cat.category_year || cat.name_year} - {cat.description || ''}
                   </option>
                 ))}
               </select>
             </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Fecha de Nacimiento</label>
-              <input
-                type="date"
-                name="nacimiento"
-                value={formData.nacimiento}
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Día *</label>
+              <select
+                name="day_of_week"
+                value={formData.day_of_week}
                 onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '2px solid #e1e5e9',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  background: 'white'
+                }}
+              >
+                {days.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Hora Inicio *</label>
+              <input
+                type="time"
+                name="start_time"
+                value={formData.start_time}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '2px solid #e1e5e9',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Hora Fin *</label>
+              <input
+                type="time"
+                name="end_time"
+                value={formData.end_time}
+                onChange={handleChange}
+                required
                 style={{
                   width: '100%',
                   padding: '10px',
@@ -260,6 +254,7 @@ const StudentsView = () => {
           </div>
           <button
             type="submit"
+            disabled={loading}
             style={{
               background: '#8B0000',
               color: 'white',
@@ -268,10 +263,11 @@ const StudentsView = () => {
               borderRadius: '8px',
               cursor: 'pointer',
               fontWeight: 600,
-              marginTop: '15px'
+              marginTop: '15px',
+              opacity: loading ? 0.6 : 1
             }}
           >
-            Guardar Estudiante
+            {loading ? 'Guardando...' : 'Asignar Horario'}
           </button>
         </form>
       )}
@@ -281,46 +277,47 @@ const StudentsView = () => {
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
-          style={selectStyles}
+          style={{
+            padding: '8px 15px',
+            border: '2px solid #e1e5e9',
+            borderRadius: '8px',
+            fontSize: '14px',
+            background: 'white'
+          }}
         >
           <option value="">Todas las categorías</option>
           {categories.map(cat => (
-            <option key={cat.id} value={cat.category_year || cat.name_year}>
+            <option key={cat.id} value={cat.id}>
               {cat.category_year || cat.name_year}
             </option>
           ))}
         </select>
         <span style={{ color: '#666', fontSize: '14px' }}>
-          {filteredStudents.length} estudiante(s)
+          {filteredSchedules.length} horario(s)
         </span>
       </div>
 
       <table style={tableStyles}>
         <thead>
           <tr>
-            <th style={thStyles}>ID</th>
-            <th style={thStyles}>Nombre Completo</th>
-            <th style={thStyles}>Documento</th>
+            <th style={thStyles}>#</th>
             <th style={thStyles}>Categoría</th>
-            <th style={thStyles}>Nacimiento</th>
+            <th style={thStyles}>Día</th>
+            <th style={thStyles}>Horario</th>
             <th style={thStyles}>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {filteredStudents.length === 0 ? (
+          {filteredSchedules.length === 0 ? (
             <tr>
-              <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
-                No hay estudiantes registrados
+              <td colSpan="5" style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
+                No hay horarios registrados
               </td>
             </tr>
           ) : (
-            filteredStudents.map((s) => (
+            filteredSchedules.map((s, index) => (
               <tr key={s.id}>
-                <td style={tdStyles}>#{s.id}</td>
-                <td style={tdStyles}>
-                  <strong>{s.nombres} {s.apellidos}</strong>
-                </td>
-                <td style={tdStyles}>{s.documento}</td>
+                <td style={tdStyles}>{index + 1}</td>
                 <td style={tdStyles}>
                   <span style={{
                     background: '#8B0000',
@@ -330,13 +327,18 @@ const StudentsView = () => {
                     fontSize: '12px',
                     fontWeight: 600
                   }}>
-                    {s.categoria}
+                    {s.category_name || `Categoría ${s.id_category}`}
                   </span>
                 </td>
-                <td style={tdStyles}>{s.nacimiento}</td>
+                <td style={tdStyles}>
+                  <strong>{s.day_of_week}</strong>
+                </td>
+                <td style={tdStyles}>
+                  {s.start_time} - {s.end_time}
+                </td>
                 <td style={tdStyles}>
                   <button
-                    onClick={() => handleDelete(s.id, s.nombres)}
+                    onClick={() => handleDelete(s.id)}
                     style={{
                       background: '#dc3545',
                       color: 'white',
@@ -359,4 +361,4 @@ const StudentsView = () => {
   )
 }
 
-export default StudentsView
+export default SchedulesView

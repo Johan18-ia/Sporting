@@ -18,7 +18,7 @@ const API_CONFIG = {
     PRODUCT_DELETE: '/products/delete/:id',
 
     // Categories (nuevos)
-    CATEGORIES: '/categories',
+    CATEGORIES: '/category',
     CATEGORY_BY_ID: '/categories/:id',
     CATEGORY_CREATE: '/categories/create',
     CATEGORY_DELETE: '/categories/delete/:id',

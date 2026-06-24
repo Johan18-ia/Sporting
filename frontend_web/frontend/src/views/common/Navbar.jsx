@@ -10,10 +10,10 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout()
-    navigate('/login')
+    navigate('/catalogo')
   }
 
-  // No mostrar navbar en dashboard
+  // No mostrar navbar en dashboard (ya tiene su propio header)
   if (location.pathname.includes('/dashboard')) {
     return null
   }
@@ -22,12 +22,16 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-logo">
-          <Link to="/">
-            <h2>Sistema Web</h2>
+          <Link to="/catalogo">
+            <h2>⚽ Sporting Club</h2>
           </Link>
         </div>
 
         <div className="navbar-menu">
+          <Link to="/catalogo" className="nav-link">
+            🛒 Catálogo
+          </Link>
+          
           {!isAuthenticated ? (
             <>
               <Link to="/login" className="nav-link">
@@ -43,7 +47,7 @@ const Navbar = () => {
                 Hola, {currentUser?.name || currentUser?.email}
               </span>
               <Link to="/dashboard" className="nav-link">
-                Dashboard
+                📊 Dashboard
               </Link>
               <button onClick={handleLogout} className="nav-link btn-logout">
                 Cerrar Sesión
