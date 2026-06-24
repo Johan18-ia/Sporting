@@ -95,6 +95,13 @@ const DashboardHeader = ({ user, onLogout, activeTab, onTabChange }) => {
         >
            Categorías
         </button>
+
+        <button 
+         style={tabBtnStyles(activeTab === 'schedules')}
+         onClick={() => onTabChange('schedules')}
+        >
+         Horarios
+</button>
       </div>
       
       <div style={headerRightStyles}>

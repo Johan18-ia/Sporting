@@ -8,6 +8,7 @@ import UsersView from './UsersView'
 import CategoriesView from './CategoriesView' // <-- IMPORTANTE: Tu vista agregada
 import AlertMessage from '../common/AlertMessage'
 import LoadingSpinner from '../common/LoadingSpinner'
+import SchedulesView from './SchedulesView'
 import '../../styles/Dashboard.css'
 import '../../styles/Users.css'
 
@@ -51,10 +52,10 @@ const DashboardView = () => {
                 <h3>Información del Sistema</h3>
                 <p>Este sistema utiliza un patrón arquitectónico MVC con React.</p>
                 <ul>
-                  <li>✅ Autenticación JWT simulada</li>
-                  <li>✅ Almacenamiento en localStorage</li>
-                  <li>✅ Rutas protegidas</li>
-                  <li>✅ CRUD de usuarios completo</li>
+                  <li>Autenticación JWT simulada</li>
+                  <li>Almacenamiento en localStorage</li>
+                  <li>Rutas protegidas</li>
+                  <li>CRUD de usuarios completo</li>
                 </ul>
               </div>
               
@@ -71,6 +72,15 @@ const DashboardView = () => {
         return <UsersView />
       case 'categories': // <-- IMPORTANTE: Esto es lo que lee el botón 
         return <CategoriesView />
+      default:
+        return null
+         
+      case 'users':
+       return <UsersView />
+      case 'categories':
+        return <CategoriesView />
+      case 'schedules': // <-- AGREGA ESTE CASO
+        return <SchedulesView />
       default:
         return null
     }
