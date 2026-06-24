@@ -1,18 +1,6 @@
 // frontend_web/frontend/src/config/api.js
-const getBaseUrl = () => {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL
-  }
-
-  if (typeof window !== 'undefined' && window.location.hostname) {
-    return `http://${window.location.hostname}:3000/api`
-  }
-
-  return 'http://localhost:3000/api'
-}
-
 const API_CONFIG = {
-  BASE_URL: getBaseUrl(),
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
   TIMEOUT: 10000,
   ENDPOINTS: {
     // Users

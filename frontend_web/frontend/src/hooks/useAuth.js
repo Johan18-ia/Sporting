@@ -1,78 +1,78 @@
-import { useState, useEffect, useCallback } from 'react'
-import AuthController from '../controllers/AuthController'
+import { useState, useEffect } from 'react'
+import AuthModel from '../models/AuthModel'
+import storageService from '../services/storageService'
 
 const useAuth = () => {
-  const [currentUser, setCurrentUser] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
-
-  const syncAuthState = useCallback(() => {
-    const state = AuthController.getAuthState()
-    setCurrentUser(state.currentUser)
-    setIsAuthenticated(state.isAuthenticated)
-    setLoading(false)
-  }, [])
+  const [currentUser, setCurrentUser] = useState(() => storageService.getUser())
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(storageService.getToken()))
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    syncAuthState()
-  }, [syncAuthState])
+    const savedUser = storageService.getUser()
+    const hasToken = Boolean(storageService.getToken())
+    setCurrentUser(savedUser)
+    setIsAuthenticated(hasToken)
+  }, [])
 
   const login = async (credentials) => {
     setLoading(true)
+    setError(null)
 
     try {
-      const result = await new Promise((resolve, reject) => {
-        AuthController.handleLogin(
-          credentials,
-          (user, token) => resolve({ success: true, user, token }),
-          (error) => reject({ success: false, error })
-        )
-      })
+      const result = await AuthModel.login(credentials)
 
-      syncAuthState()
-      return result
-    } catch (error) {
+      if (result.success) {
+        setCurrentUser(result.user)
+        setIsAuthenticated(true)
+        return result
+      }
+
+      setCurrentUser(null)
+      setIsAuthenticated(false)
+      throw { error: result.error || 'Credenciales incorrectas' }
+    } catch (err) {
+      setError(err.error || 'Error al iniciar sesión')
+      throw err
+    } finally {
       setLoading(false)
-      throw error
     }
   }
 
   const register = async (userData) => {
     setLoading(true)
+    setError(null)
 
     try {
-      const result = await new Promise((resolve, reject) => {
-        AuthController.handleRegister(
-          userData,
-          (user) => resolve({ success: true, user }),
-          (error) => reject({ success: false, error })
-        )
-      })
+      const result = await AuthModel.register(userData)
 
-      syncAuthState()
+      if (!result.success) {
+        throw { error: result.error || 'Error al registrar usuario' }
+      }
+
       return result
-    } catch (error) {
+    } catch (err) {
+      setError(err.error || 'Error al registrar usuario')
+      throw err
+    } finally {
       setLoading(false)
-      throw error
     }
   }
 
   const logout = async () => {
     setLoading(true)
+    setError(null)
 
     try {
-      const result = await new Promise((resolve, reject) => {
-        AuthController.handleLogout(
-          () => resolve({ success: true }),
-          (error) => reject({ success: false, error })
-        )
-      })
-
-      syncAuthState()
-      return result
-    } catch (error) {
+      await AuthModel.logout()
+      setCurrentUser(null)
+      setIsAuthenticated(false)
+      return { success: true }
+    } catch (err) {
+      setError(err.message || 'Error al cerrar sesión')
+      throw err
+    } finally {
       setLoading(false)
-      throw error
     }
   }
 
@@ -80,6 +80,7 @@ const useAuth = () => {
     currentUser,
     isAuthenticated,
     loading,
+    error,
     login,
     register,
     logout
