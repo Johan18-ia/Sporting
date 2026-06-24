@@ -3,11 +3,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
-import logoImagen from '../assets/logo.png'  // ← Si tienes logo, si no, usa el texto
-import '../../styles/Login.css'  // ← Tu archivo existente
+import '../../styles/Login.css'
 
 const LoginView = () => {
-  // ===== LOGICA COMPLETAMENTE  =====
   const [credentials, setCredentials] = useState({
     email: '',
     password: ''
@@ -18,7 +16,6 @@ const LoginView = () => {
   const { login } = useAuth()
   const navigate = useNavigate()
 
-  // ===== FUNCIONES SIN CAMBIOS =====
   const handleChange = (e) => {
     const { name, value } = e.target
     setCredentials(prev => ({
@@ -31,8 +28,6 @@ const LoginView = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    console.log('📝 Intentando login con:', credentials.email)
-
     if (!credentials.email || !credentials.password) {
       setError('Por favor complete todos los campos')
       return
@@ -41,33 +36,22 @@ const LoginView = () => {
     setLoading(true)
 
     try {
-      const result = await login(credentials)
-      console.log('✅ Login exitoso:', result)
+      await login(credentials)
       navigate('/dashboard')
     } catch (err) {
-      console.error('❌ Error en login:', err)
       setError(err.error || 'Error al iniciar sesión. Verifica tus credenciales.')
     } finally {
       setLoading(false)
     }
   }
 
-  // ===== SOLO CAMBIA EL DISEÑO VISUAL =====
   return (
     <div className="login-container">
       <div className="login-card sporting-login-card">
-        {/* Logo Sporting - Opcional, si no tienes logo usa texto */}
-        {logoImagen ? (
-          <img
-            src={logoImagen}
-            alt="Sporting Club"
-            className="login-logo-sporting"
-          />
-        ) : (
-          <div className="login-logo-text">
-            ⚽ <span className="sporting-club-name">Sporting Club</span>
-          </div>
-        )}
+        {/* Logo sin imagen - solo texto y emoji */}
+        <div className="login-logo-text">
+          ⚽ <span className="sporting-club-name" style={{ color: '#8B0000' }}>Sporting Club</span>
+        </div>
 
         <div className="login-header sporting-header">
           <h1>Bienvenido a Sporting</h1>
@@ -125,7 +109,7 @@ const LoginView = () => {
         <div className="login-footer sporting-footer">
           <p>¿No tienes cuenta? <a href="#" onClick={(e) => { e.preventDefault(); navigate('/register') }} className="sporting-link">Regístrate aquí</a></p>
           <div className="demo-credentials sporting-demo">
-            <p><strong>Email:</strong> oliver@stone.com</p>
+            <p><strong>Email:</strong> profealbeiro2020@gmail.com</p>
             <p><strong>Contraseña:</strong> [la que usaste para hashear]</p>
           </div>
         </div>

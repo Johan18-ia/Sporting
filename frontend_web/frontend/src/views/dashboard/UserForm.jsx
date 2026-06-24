@@ -49,7 +49,7 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     // Validaciones
     if (!formData.email) {
       setError('El email es requerido')
@@ -124,7 +124,7 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
       setError('Seleccione un campo y un valor')
       return
     }
-    
+
     setLoading(true)
     try {
       const patchData = {}

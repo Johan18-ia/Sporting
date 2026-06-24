@@ -16,7 +16,27 @@ const categoryRoutes = require('./routes/categoryRoutes')
  app.use(logger('dev'));
  app.use(express.json());
  app.use(express.urlencoded({ extended: true }));
- app.use(cors());
+ app.use(cors({
+   origin: (origin, callback) => {
+     const allowedOrigins = [
+       'http://localhost:5173',
+       'http://127.0.0.1:5173',
+       'http://10.1.196.157:5173',
+       'http://localhost',
+       'http://127.0.0.1',
+       'http://10.1.196.157'
+     ];
+
+     if (!origin || allowedOrigins.includes(origin)) {
+       callback(null, true);
+     } else {
+       callback(new Error('No permitido por CORS'));
+     }
+   },
+   credentials: true,
+   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+ }));
 
  // Documentación de swagger
  const swaggerOptions = {
@@ -67,6 +87,6 @@ Agregar rutas nuevas app.use('/api/#######,#######);
      res.status(err.status || 500).send(err.stack);
  });
 
- console.log('📚 Swagger disponible en: http://192.168.20.71:3000/api-docs'); // Cambiar url
+ console.log('📚 Swagger disponible en: http://10.1.196.157:3000/api-docs'); // Cambiar url
 
  module.exports = app;

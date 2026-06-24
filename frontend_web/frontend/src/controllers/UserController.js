@@ -4,27 +4,51 @@ import AuthController from './AuthController'  // ← NUEVO: para verificar role
 
 class UserController {
   // Obtener todos los usuarios (requiere rol admin/seller)
-  static async getAllUsers(onSuccess, onError) {
-    try {
-      // Verificar si el usuario tiene permiso (opcional - el backend ya lo hace)
-      if (!AuthController.hasAnyRole(['admin', 'seller'])) {
-        onError('No tiene permisos para ver la lista de usuarios')
-        return
-      }
-      
-      const result = await UserModel.getAllUsers()
-      if (result.success) {
-        console.log(`✅ Controlador: ${result.data?.length || 0} usuarios obtenidos`)
-        onSuccess(result.data)
-      } else {
-        console.error('❌ Controlador: Error al obtener usuarios:', result.error)
-        onError(result.error)
-      }
-    } catch (error) {
-      console.error('❌ Error en getAllUsers:', error)
-      onError('Error al cargar usuarios')
+  // backend/controllers/userController.js
+
+register(req, res) {
+  const user = req.body;
+
+  // ✅ FORZAR: Siempre asignar rol "user" en el registro público
+  user.role = 'user';  // ← Ignora cualquier rol enviado desde el frontend
+
+  User.create(user, (err, data) => {
+    if (err) {
+      return res.status(501).json({
+        success: false,
+        message: "Error al crear al usuario",
+        error: err,
+      });
+    } else {
+      return res.status(201).json({
+        success: true,
+        message: "Usuario creado correctamente",
+        data: data,
+      });
     }
+  });
+}
+// frontend_web/frontend/src/controllers/UserController.js
+static async getAllUsers(onSuccess, onError) {
+  try {
+    if (!AuthController.hasAnyRole(['admin', 'seller'])) {
+      onError('No tiene permisos para ver la lista de usuarios')
+      return
+    }
+
+    const result = await UserModel.getAllUsers()
+    if (result.success) {
+      console.log(`✅ Controlador: ${result.data?.length || 0} usuarios obtenidos`)
+      onSuccess(result.data)
+    } else {
+      console.error('❌ Controlador: Error al obtener usuarios:', result.error)
+      onError(result.error)
+    }
+  } catch (error) {
+    console.error('❌ Error en getAllUsers:', error)
+    onError('Error al cargar usuarios')
   }
+}
 
   // Obtener usuario por ID (requiere rol admin/seller)
   static async getUserById(id, onSuccess, onError) {
@@ -33,13 +57,13 @@ class UserController {
         onError('ID de usuario no proporcionado')
         return
       }
-      
+
       // Verificar permisos
       if (!AuthController.hasAnyRole(['admin', 'seller'])) {
         onError('No tiene permisos para ver este usuario')
         return
       }
-      
+
       const result = await UserModel.getUserById(id)
       if (result.success) {
         console.log(`✅ Controlador: Usuario ${id} encontrado`)
@@ -61,7 +85,7 @@ class UserController {
         onError('El email es requerido')
         return
       }
-      
+
       if (!userData.password) {
         onError('La contraseña es requerida')
         return
@@ -145,6 +169,7 @@ class UserController {
       onError('Error al actualizar campo')
     }
   }
+  
 
   // Eliminar usuario (DELETE) - SOLO admin
   static async deleteUser(id, onSuccess, onError) {

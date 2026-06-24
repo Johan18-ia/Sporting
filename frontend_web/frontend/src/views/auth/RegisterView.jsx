@@ -3,11 +3,9 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
-import logoImagen from '../assets/logo.png'  // ← Si tienes logo
-import '../../styles/Register.css'  // ← Tu archivo existente
+import '../../styles/Register.css'
 
 const RegisterView = () => {
-  // ===== LOGICA COMPLETAMENTE =====
   const [formData, setFormData] = useState({
     name: '',
     lastname: '',
@@ -15,7 +13,7 @@ const RegisterView = () => {
     password: '',
     confirmPassword: '',
     phone: '',
-    role: 'user'
+    // ❌ ELIMINAR: role: 'user'  ← Ya no lo necesitamos
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -24,7 +22,6 @@ const RegisterView = () => {
   const { register } = useAuth()
   const navigate = useNavigate()
 
-  // ===== FUNCIONES SIN CAMBIOS =====
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -55,7 +52,6 @@ const RegisterView = () => {
       return
     }
 
-    // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(formData.email)) {
       setError('Por favor ingrese un email válido')
@@ -65,13 +61,14 @@ const RegisterView = () => {
     setLoading(true)
 
     try {
+      // ✅ Siempre enviamos rol "user"
       const result = await register({
         name: formData.name,
         lastname: formData.lastname,
         email: formData.email,
         password: formData.password,
-        phone: formData.phone,
-        role: formData.role
+        phone: formData.phone || '',
+        role: 'user'  // ← SIEMPRE "user"
       })
 
       console.log('✅ Registro exitoso:', result)
@@ -89,22 +86,12 @@ const RegisterView = () => {
     }
   }
 
-  // ===== SOLO CAMBIA EL DISEÑO VISUAL =====
   return (
     <div className="register-container">
       <div className="register-card sporting-register-card">
-        {/* Logo Sporting - Opcional */}
-        {logoImagen ? (
-          <img
-            src={logoImagen}
-            alt="Sporting Club"
-            className="register-logo-sporting"
-          />
-        ) : (
-          <div className="register-logo-text">
-            ⚽ <span className="sporting-club-name">Sporting Club</span>
-          </div>
-        )}
+        <div className="register-logo-text">
+          ⚽ <span className="sporting-club-name" style={{ color: '#8B0000' }}>Sporting Club</span>
+        </div>
 
         <div className="register-header sporting-header">
           <h1>Únete a Sporting</h1>
@@ -221,22 +208,20 @@ const RegisterView = () => {
             </div>
           </div>
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label htmlFor="role">Rol</label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              disabled={loading}
-              className="form-control sporting-select"
-            >
-              <option value="user">👤 Usuario</option>
-              <option value="customer">👤 Cliente</option>
-              <option value="seller">🛒 Vendedor</option>
-              <option value="admin">👑 Administrador</option>
+            <select ...>
+              <option value="user">Usuario</option>
+              <option value="admin">Administrador</option>
             </select>
-            <small className="form-hint sporting-hint">El rol por defecto es "usuario"</small>
+          </div> */}
+
+          {/* ✅ Mensaje informativo */}
+          <div className="form-group" style={{ textAlign: 'center' }}>
+            <small style={{ color: '#888', fontSize: '0.8rem' }}>
+              ⚽ Te registrarás como <strong>Usuario</strong>.
+              Los roles administrativos son asignados por el administrador.
+            </small>
           </div>
 
           <button

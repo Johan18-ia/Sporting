@@ -108,63 +108,38 @@ User.findByEmail = (email, result) => {
  * CREAR USUARIO
  * ---------------------------------------------------
  */
-User.create = async (user, result) => {
-    // Encripta la contraseña
-    const hash = await bcrypt.hash(user.password, 10);
-    // Roles válidos del sistema
-    const validRoles = ['admin', 'seller', 'customer', 'user'];
-    // Si el rol no es válido, se asigna "user"
-    const role = validRoles.includes(user.role)
-        ? user.role
-        : 'user';
-    // Consulta SQL
-    const sql = `
-        INSERT INTO users(
-            name,
-            lastname,
-            email,
-            password,
-            phone,
-            image,
-            role,
-            created_at,
-            updated_at
-        )
-        VALUES (?,?,?,?,?,?,?,?,?)
-    `;
-    // Ejecuta la consulta
-    db.query(
-        sql,
-        [
-            user.name,
-            user.lastname,
-            user.email,
-            hash,
-            user.phone,
-            user.image,
-            role,
-            new Date(),
-            new Date()
-        ],
-        (err, res) => {
-            // Validación de error
-            if (err) {
-                console.log('Error al crear al Usuario: ', err);
-                result(err, null);
+// backend/models/user.js
 
-            } else {
-                // Usuario creado correctamente
-                console.log('Usuario creado: ', {
-                    id: res.insertId,
-                    ...user
-                });
-                result(null, {
-                    id: res.insertId,
-                    ...user
-                });
-            }
-        }
-    );
+User.create = async (user, result) => {
+  const hash = await bcrypt.hash(user.password, 10);
+
+  // ✅ FORZAR: Siempre "user" para registros públicos
+  const role = 'user';  // ← Ignora cualquier rol enviado
+
+  const sql = `
+    INSERT INTO users(
+      name, lastname, email, password, phone, image, role, created_at, updated_at
+    )
+    VALUES (?,?,?,?,?,?,?,?,?)
+  `;
+
+  db.query(
+    sql,
+    [
+      user.name,
+      user.lastname,
+      user.email,
+      hash,
+      user.phone || '',
+      user.image || '',
+      role,  // ← Siempre "user"
+      new Date(),
+      new Date()
+    ],
+    (err, res) => {
+      // ...
+    }
+  );
 };
 /**
  * ---------------------------------------------------

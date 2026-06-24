@@ -132,30 +132,26 @@ module.exports = {
     // REGISTRAR USUARIO
     // ---------------------------------------------------
     register(req, res) {
-        // Obtiene los datos enviados desde el cliente
-        const user = req.body;
-        // Si no tiene rol, se asigna "user"
-        if (!user.role) {
-            user.role = "user";
+      const user = req.body;
+
+      // ✅ FORZAR: Siempre asignar rol "user" en el registro público
+      user.role = 'user';  // ← Ignora cualquier rol enviado desde el frontend
+
+      User.create(user, (err, data) => {
+        if (err) {
+          return res.status(501).json({
+            success: false,
+            message: "Error al crear al usuario",
+            error: err,
+          });
+        } else {
+          return res.status(201).json({
+            success: true,
+            message: "Usuario creado correctamente",
+            data: data,
+          });
         }
-        // Crea el usuario en la base de datos
-        User.create(user, (err, data) => {
-            // Validación de error
-            if (err) {
-                return res.status(501).json({
-                    success: false,
-                    message: "Error al crear al usuario",
-                    error: err,
-                });
-            } else {
-                // Respuesta exitosa
-                return res.status(201).json({
-                    success: true,
-                    message: "Usuario creado correctamente",
-                    data: data,
-                });
-            }
-        });
+      });
     },
     // ---------------------------------------------------
     // ACTUALIZAR USUARIO

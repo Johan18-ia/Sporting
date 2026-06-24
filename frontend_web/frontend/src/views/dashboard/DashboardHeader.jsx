@@ -71,26 +71,26 @@ const DashboardHeader = ({ user, onLogout, activeTab, onTabChange }) => {
   return (
     <header style={headerStyles}>
       <div style={headerLeftStyles}>
-        <h1 style={{ fontSize: '20px', color: '#333', margin: 0 }}>Sistema de Información Web</h1>
+        <h1 style={{ fontSize: '20px', color: '#333', margin: 0 }}>SPORTING</h1>
         <span style={badgeStyles}>Admin Panel</span>
       </div>
-      
+
       <div style={tabStyles}>
-        <button 
+        <button
           style={tabBtnStyles(activeTab === 'dashboard')}
           onClick={() => onTabChange('dashboard')}
         >
           Dashboard
         </button>
-        <button 
+        <button
           style={tabBtnStyles(activeTab === 'users')}
           onClick={() => onTabChange('users')}
         >
           Usuarios
         </button>
 
-         <button 
-          style={tabBtnStyles(activeTab === 'categories' ? 'active' : '')} 
+         <button
+          style={tabBtnStyles(activeTab === 'categories' ? 'active' : '')}
           onClick={() => onTabChange('categories')}
         >
            Categorías
@@ -103,7 +103,7 @@ const DashboardHeader = ({ user, onLogout, activeTab, onTabChange }) => {
          Horarios
 </button>
       </div>
-      
+
       <div style={headerRightStyles}>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontWeight: 600, color: '#333', fontSize: '14px' }}>
