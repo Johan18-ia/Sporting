@@ -13,7 +13,7 @@ const RegisterView = () => {
     password: '',
     confirmPassword: '',
     phone: '',
-    role: 'user'
+    // ❌ ELIMINAR: role: 'user'  ← Ya no lo necesitamos
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -34,6 +34,9 @@ const RegisterView = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    console.log('📝 Intentando registrar:', formData.email)
+
+    // Validaciones
     if (!formData.name || !formData.lastname || !formData.email || !formData.password) {
       setError('Por favor complete todos los campos obligatorios')
       return
@@ -58,18 +61,25 @@ const RegisterView = () => {
     setLoading(true)
 
     try {
-      await register({
+      // ✅ Siempre enviamos rol "user"
+      const result = await register({
         name: formData.name,
         lastname: formData.lastname,
         email: formData.email,
         password: formData.password,
-        phone: formData.phone,
-        role: formData.role
+        phone: formData.phone || '',
+        role: 'user'  // ← SIEMPRE "user"
       })
 
+      console.log('✅ Registro exitoso:', result)
       setSuccess('Usuario registrado exitosamente. Redirigiendo al login...')
-      setTimeout(() => navigate('/login'), 2000)
+
+      setTimeout(() => {
+        navigate('/login')
+      }, 2000)
+
     } catch (err) {
+      console.error('❌ Error en registro:', err)
       setError(err.error || 'Error al registrar usuario. Intente nuevamente.')
     } finally {
       setLoading(false)
@@ -79,7 +89,6 @@ const RegisterView = () => {
   return (
     <div className="register-container">
       <div className="register-card sporting-register-card">
-        {/* Logo sin imagen - solo texto y emoji */}
         <div className="register-logo-text">
           ⚽ <span className="sporting-club-name" style={{ color: '#8B0000' }}>Sporting Club</span>
         </div>
@@ -199,22 +208,20 @@ const RegisterView = () => {
             </div>
           </div>
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label htmlFor="role">Rol</label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              disabled={loading}
-              className="form-control sporting-select"
-            >
-              <option value="user">👤 Usuario</option>
-              <option value="customer">👤 Cliente</option>
-              <option value="seller">🛒 Vendedor</option>
-              <option value="admin">👑 Administrador</option>
+            <select ...>
+              <option value="user">Usuario</option>
+              <option value="admin">Administrador</option>
             </select>
-            <small className="form-hint sporting-hint">El rol por defecto es "usuario"</small>
+          </div> */}
+
+          {/* ✅ Mensaje informativo */}
+          <div className="form-group" style={{ textAlign: 'center' }}>
+            <small style={{ color: '#888', fontSize: '0.8rem' }}>
+              ⚽ Te registrarás como <strong>Usuario</strong>.
+              Los roles administrativos son asignados por el administrador.
+            </small>
           </div>
 
           <button
