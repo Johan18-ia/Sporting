@@ -39,22 +39,22 @@ const CategoriesView = () => {
                 <h3>Agregar Categoría</h3>
                 <div style={{ marginBottom: '10px' }}>
                     <label>Año de Nacimiento: </label>
-                    <input 
-                        type="number" 
-                        value={year} 
+                    <input
+                        type="number"
+                        value={year}
                         onChange={(e) => setYear(e.target.value)}
-                        placeholder="Ej: 2014" 
-                        required 
+                        placeholder="Ej: 2014"
+                        required
                     />
                 </div>
                 <div style={{ marginBottom: '10px' }}>
                     <label>Descripción: </label>
-                    <input 
-                        type="text" 
-                        value={description} 
+                    <input
+                        type="text"
+                        value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Ej: Categoría Benjamín" 
-                        required 
+                        placeholder="Ej: Categoría Benjamín"
+                        required
                     />
                 </div>
                 <button type="submit" style={{ background: 'green', color: 'white', padding: '5px 10px', border: 'none', cursor: 'pointer' }}>

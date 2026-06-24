@@ -1,7 +1,18 @@
 // frontend_web/frontend/src/config/api.js
+const getBaseUrl = () => {
+  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+
+  if (typeof window !== 'undefined' && window.location.hostname) {
+    return `http://${window.location.hostname}:3000/api`
+  }
+
+  return 'http://localhost:3000/api'
+}
+
 const API_CONFIG = {
-  // Usa la IP de tu máquina (la que configuraste en backend/index.js)
-  BASE_URL: 'http://10.1.196.157:3000/api',  // ← Cambia por tu IP
+  BASE_URL: getBaseUrl(),
   TIMEOUT: 10000,
   ENDPOINTS: {
     // Users

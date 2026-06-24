@@ -11,7 +11,7 @@ register(req, res) {
 
   // ✅ FORZAR: Siempre asignar rol "user" en el registro público
   user.role = 'user';  // ← Ignora cualquier rol enviado desde el frontend
-  
+
   User.create(user, (err, data) => {
     if (err) {
       return res.status(501).json({
@@ -28,27 +28,27 @@ register(req, res) {
     }
   });
 }
-  static async getAllUsers(onSuccess, onError) {
-    try {
-      // Verificar si el usuario tiene permiso (opcional - el backend ya lo hace)
-      if (!AuthController.hasAnyRole(['admin', 'seller'])) {
-        onError('No tiene permisos para ver la lista de usuarios')
-        return
-      }
-
-      const result = await UserModel.getAllUsers()
-      if (result.success) {
-        console.log(`✅ Controlador: ${result.data?.length || 0} usuarios obtenidos`)
-        onSuccess(result.data)
-      } else {
-        console.error('❌ Controlador: Error al obtener usuarios:', result.error)
-        onError(result.error)
-      }
-    } catch (error) {
-      console.error('❌ Error en getAllUsers:', error)
-      onError('Error al cargar usuarios')
+// frontend_web/frontend/src/controllers/UserController.js
+static async getAllUsers(onSuccess, onError) {
+  try {
+    if (!AuthController.hasAnyRole(['admin', 'seller'])) {
+      onError('No tiene permisos para ver la lista de usuarios')
+      return
     }
+
+    const result = await UserModel.getAllUsers()
+    if (result.success) {
+      console.log(`✅ Controlador: ${result.data?.length || 0} usuarios obtenidos`)
+      onSuccess(result.data)
+    } else {
+      console.error('❌ Controlador: Error al obtener usuarios:', result.error)
+      onError(result.error)
+    }
+  } catch (error) {
+    console.error('❌ Error en getAllUsers:', error)
+    onError('Error al cargar usuarios')
   }
+}
 
   // Obtener usuario por ID (requiere rol admin/seller)
   static async getUserById(id, onSuccess, onError) {
