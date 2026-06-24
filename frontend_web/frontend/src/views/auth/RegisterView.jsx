@@ -3,11 +3,9 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
-import logoImagen from '../assets/logo.png'  // ← Si tienes logo
-import '../../styles/Register.css'  // ← Tu archivo existente
+import '../../styles/Register.css'
 
 const RegisterView = () => {
-  // ===== LOGICA COMPLETAMENTE =====
   const [formData, setFormData] = useState({
     name: '',
     lastname: '',
@@ -24,7 +22,6 @@ const RegisterView = () => {
   const { register } = useAuth()
   const navigate = useNavigate()
 
-  // ===== FUNCIONES SIN CAMBIOS =====
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -37,9 +34,6 @@ const RegisterView = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    console.log('📝 Intentando registrar:', formData.email)
-
-    // Validaciones
     if (!formData.name || !formData.lastname || !formData.email || !formData.password) {
       setError('Por favor complete todos los campos obligatorios')
       return
@@ -55,7 +49,6 @@ const RegisterView = () => {
       return
     }
 
-    // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(formData.email)) {
       setError('Por favor ingrese un email válido')
@@ -65,7 +58,7 @@ const RegisterView = () => {
     setLoading(true)
 
     try {
-      const result = await register({
+      await register({
         name: formData.name,
         lastname: formData.lastname,
         email: formData.email,
@@ -74,37 +67,22 @@ const RegisterView = () => {
         role: formData.role
       })
 
-      console.log('✅ Registro exitoso:', result)
       setSuccess('Usuario registrado exitosamente. Redirigiendo al login...')
-
-      setTimeout(() => {
-        navigate('/login')
-      }, 2000)
-
+      setTimeout(() => navigate('/login'), 2000)
     } catch (err) {
-      console.error('❌ Error en registro:', err)
       setError(err.error || 'Error al registrar usuario. Intente nuevamente.')
     } finally {
       setLoading(false)
     }
   }
 
-  // ===== SOLO CAMBIA EL DISEÑO VISUAL =====
   return (
     <div className="register-container">
       <div className="register-card sporting-register-card">
-        {/* Logo Sporting - Opcional */}
-        {logoImagen ? (
-          <img
-            src={logoImagen}
-            alt="Sporting Club"
-            className="register-logo-sporting"
-          />
-        ) : (
-          <div className="register-logo-text">
-            ⚽ <span className="sporting-club-name">Sporting Club</span>
-          </div>
-        )}
+        {/* Logo sin imagen - solo texto y emoji */}
+        <div className="register-logo-text">
+          ⚽ <span className="sporting-club-name" style={{ color: '#8B0000' }}>Sporting Club</span>
+        </div>
 
         <div className="register-header sporting-header">
           <h1>Únete a Sporting</h1>
