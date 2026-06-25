@@ -15,7 +15,16 @@ const API_CONFIG = {
         USER_BY_ID: '/users/:id',
         USER_DELETE: '/users/delete/:id',
         USER_UPDATE: '/users',
-        USER_TOGGLE_STATUS: '/users/toggle-status/:id',  // ← NUEVO
+        USER_TOGGLE_STATUS: '/users/toggle-status/:id',
+
+        // ============================================
+        // STUDENTS
+        // ============================================
+        STUDENTS: '/students',
+        STUDENT_CREATE: '/students/create',
+        STUDENT_DELETE: '/students/delete/:id',
+        STUDENT_UPDATE: '/students',        // ← NUEVO
+        STUDENT_BY_ID: '/students/:id',     // ← NUEVO
 
         // ============================================
         // PRODUCTS
@@ -46,14 +55,7 @@ const API_CONFIG = {
         // ============================================
         TOURNAMENTS: '/tournaments',
         TOURNAMENT_CREATE: '/tournaments/create',
-        TOURNAMENT_GENERATE_TEAMS: '/tournaments/generate-teams',
-
-        // ============================================
-        // STUDENTS
-        // ============================================
-        STUDENTS: '/students',
-        STUDENT_CREATE: '/students/create',
-        STUDENT_DELETE: '/students/delete/:id'
+        TOURNAMENT_GENERATE_TEAMS: '/tournaments/generate-teams'
     }
 }
 
