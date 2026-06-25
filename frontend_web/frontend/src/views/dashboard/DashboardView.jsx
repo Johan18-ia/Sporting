@@ -5,10 +5,11 @@ import useAuth from '../../hooks/useAuth'
 import DashboardHeader from './DashboardHeader'
 import DashboardStats from './DashboardStats'
 import UsersView from './UsersView'
-import CategoriesView from './CategoriesView' // <-- IMPORTANTE: Tu vista agregada
+import CategoriesView from './CategoriesView' 
 import AlertMessage from '../common/AlertMessage'
 import LoadingSpinner from '../common/LoadingSpinner'
 import SchedulesView from './SchedulesView'
+import CatalogView from './CatalogView'
 import '../../styles/Dashboard.css'
 import '../../styles/Users.css'
 
@@ -83,6 +84,15 @@ const DashboardView = () => {
         return <SchedulesView />
       default:
         return null
+
+      case 'categories':
+      return <CategoriesView />
+      case 'schedules':
+     return <SchedulesView />
+      case 'catalog': // <-- AGREGA ESTE NUEVO CASO
+       return <CatalogView />
+     default:
+       return null
     }
   }
 
