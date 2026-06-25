@@ -1,10 +1,9 @@
 // src/views/dashboard/DashboardHeader.jsx
 const DashboardHeader = ({ user, onLogout, activeTab, onTabChange }) => {
-  // Estilos inline para asegurar que se vea bien
   const headerStyles = {
     background: 'white',
     boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-    padding: '0 30px',
+    padding: '0 20px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -12,67 +11,99 @@ const DashboardHeader = ({ user, onLogout, activeTab, onTabChange }) => {
     top: 0,
     zIndex: 100,
     flexWrap: 'wrap',
-    gap: '15px'
+    gap: '10px'
   }
 
-  const headerLeftStyles = {
+  const logoStyles = {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
-    padding: '15px 0'
+    gap: '10px',
+    padding: '10px 0'
   }
 
-  const headerRightStyles = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px'
+  const logoTextStyles = {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#8B0000',
+    margin: 0
   }
 
   const badgeStyles = {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: '#8B0000',
     color: 'white',
     padding: '4px 12px',
     borderRadius: '20px',
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: 600
   }
 
   const tabStyles = {
     display: 'flex',
-    gap: '5px',
+    gap: '4px',
     background: '#f0f0f0',
     padding: '4px',
-    borderRadius: '12px'
+    borderRadius: '10px',
+    flexWrap: 'wrap'
   }
 
   const tabBtnStyles = (isActive) => ({
-    padding: '8px 20px',
+    padding: '8px 16px',
     border: 'none',
-    background: isActive ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
+    background: isActive ? '#8B0000' : 'transparent',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: '13px',
     fontWeight: 500,
     borderRadius: '8px',
     transition: 'all 0.3s ease',
-    color: isActive ? 'white' : '#666'
+    color: isActive ? 'white' : '#555',
+    whiteSpace: 'nowrap'
   })
 
+  const userInfoStyles = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '15px'
+  }
+
+  const userNameStyles = {
+    fontWeight: 600,
+    color: '#333',
+    fontSize: '14px'
+  }
+
+  const userEmailStyles = {
+    fontSize: '12px',
+    color: '#666'
+  }
+
   const logoutBtnStyles = {
-    background: '#ef4444',
+    background: '#dc3545',
     color: 'white',
     border: 'none',
     padding: '8px 16px',
     borderRadius: '8px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 500
+    fontSize: '13px',
+    fontWeight: 500,
+    transition: 'all 0.3s ease'
   }
+
+  const tabs = [
+    { id: 'dashboard', label: '📊 Dashboard' },
+    { id: 'users', label: '👥 Usuarios' },
+    { id: 'students', label: '👟 Estudiantes' },
+    { id: 'categories', label: '🏷️ Categorías' },
+    { id: 'schedules', label: '📅 Horarios' },
+    { id: 'products', label: '🛒 Productos' },
+    { id: 'tournaments', label: '🏆 Torneos' }
+  ]
 
   return (
     <header style={headerStyles}>
-      <div style={headerLeftStyles}>
-        <h1 style={{ fontSize: '20px', color: '#333', margin: 0 }}>SPORTING</h1>
-        <span style={badgeStyles}>Admin Panel</span>
+      <div style={logoStyles}>
+        <span style={{ fontSize: '28px' }}>⚽</span>
+        <h1 style={logoTextStyles}>SPORTING</h1>
+        <span style={badgeStyles}>Admin</span>
       </div>
 
       <div style={tabStyles}>
@@ -111,15 +142,15 @@ const DashboardHeader = ({ user, onLogout, activeTab, onTabChange }) => {
 </button>
       </div>
 
-      <div style={headerRightStyles}>
+      <div style={userInfoStyles}>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontWeight: 600, color: '#333', fontSize: '14px' }}>
+          <div style={userNameStyles}>
             {user?.name || user?.email?.split('@')[0] || 'Usuario'}
           </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>{user?.email}</div>
+          <div style={userEmailStyles}>{user?.email}</div>
         </div>
         <button onClick={onLogout} style={logoutBtnStyles}>
-          Cerrar Sesión
+          🚪 Salir
         </button>
       </div>
     </header>

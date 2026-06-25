@@ -40,8 +40,6 @@ const {
  */
 router.get(
     '/',
-    verifyToken,
-    authorizeRoles(['admin', 'seller']),
     productController.getAllProducts
 );
 /**
@@ -75,8 +73,6 @@ router.get(
  */
 router.get(
     '/:id',
-    verifyToken,
-    authorizeRoles(['admin', 'seller']),
     productController.getProductById
 );
 /**

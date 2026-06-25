@@ -10,31 +10,18 @@ const app = express();
 const productRoutes = require('./routes/productRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const tournamentRoutes = require('./routes/tournamentRoutes');
-const categoryRoutes = require('./routes/categoryRoutes')
+const categoryRoutes = require('./routes/categoryRoutes');
+const studentRoutes = require('./routes/studentRoutes');
+
 
  // Middlewares globales
  app.use(logger('dev'));
  app.use(express.json());
  app.use(express.urlencoded({ extended: true }));
  app.use(cors({
-   origin: (origin, callback) => {
-     const allowedOrigins = [
-       'http://localhost:5173',
-       'http://127.0.0.1:5173',
-       'http://10.1.196.157:5173',
-       'http://localhost',
-       'http://127.0.0.1',
-       'http://10.1.196.157'
-     ];
-
-     if (!origin || allowedOrigins.includes(origin)) {
-       callback(null, true);
-     } else {
-       callback(new Error('No permitido por CORS'));
-     }
-   },
+   origin: true,
    credentials: true,
-   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
  }));
 
@@ -67,6 +54,7 @@ const categoryRoutes = require('./routes/categoryRoutes')
  app.use('/api/category', categoryRoutes);
  app.use('/api/schedule', scheduleRoutes);
  app.use('/api/tournament',tournamentRoutes);
+ app.use('/api/students', studentRoutes);  // ← NUEVA RUTA
 /*
 Agregar rutas nuevas app.use('/api/#######,#######);
 */

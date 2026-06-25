@@ -38,7 +38,7 @@ const DashboardView = () => {
           <>
             <div className="dashboard-welcome">
               <h2>Bienvenido, {currentUser?.name || currentUser?.email?.split('@')[0] || 'Usuario'}!</h2>
-              <p>Este es tu panel de administración</p>
+              <p>Panel de administración de Sporting Club</p>
             </div>
             
             <DashboardStats stats={{
@@ -50,38 +50,39 @@ const DashboardView = () => {
             
             <div className="dashboard-info">
               <div className="info-card">
-                <h3>Información del Sistema</h3>
-                <p>Este sistema utiliza un patrón arquitectónico MVC con React.</p>
+                <h3>📊 Resumen del Sistema</h3>
+                <p>Gestión completa de la escuela de microfútbol</p>
                 <ul>
-                  <li>Autenticación JWT simulada</li>
-                  <li>Almacenamiento en localStorage</li>
-                  <li>Rutas protegidas</li>
-                  <li>CRUD de usuarios completo</li>
+                  <li>👥 Gestión de Usuarios</li>
+                  <li>🏷️ Categorías por año</li>
+                  <li>📅 Horarios de entrenamiento</li>
+                  <li>👟 Gestión de Estudiantes</li>
+                  <li>🏆 Torneos y Equipos</li>
+                  <li>🛒 Catálogo de Productos</li>
                 </ul>
               </div>
               
               <div className="info-card">
-                <h3>Estado de Autenticación</h3>
-                <p><strong>Token almacenado:</strong> {localStorage.getItem('auth_token') ? '✓ Activo' : '✗ No encontrado'}</p>
-                <p><strong>Usuario actual:</strong> {currentUser?.email}</p>
-                <p><strong>Rol:</strong> Administrador</p>
+                <h3>🔐 Estado de Autenticación</h3>
+                <p><strong>Token:</strong> {localStorage.getItem('auth_token') ? '✅ Activo' : '❌ No encontrado'}</p>
+                <p><strong>Usuario:</strong> {currentUser?.email}</p>
+                <p><strong>Rol:</strong> <span className="role-badge role-admin">{currentUser?.role}</span></p>
               </div>
             </div>
           </>
         )
       case 'users':
         return <UsersView />
-      case 'categories': // <-- IMPORTANTE: Esto es lo que lee el botón 
-        return <CategoriesView />
-      default:
-        return null
-         
-      case 'users':
-       return <UsersView />
       case 'categories':
         return <CategoriesView />
-      case 'schedules': // <-- AGREGA ESTE CASO
+      case 'schedules':
         return <SchedulesView />
+      case 'products':
+        return <ProductsView />
+      case 'students':
+        return <StudentsView />
+      case 'tournaments':
+        return <TournamentsView />
       default:
         return null
 

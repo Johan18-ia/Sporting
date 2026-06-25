@@ -1,117 +1,149 @@
 // src/services/httpService.js
+// ====================================================
+// SERVICIO HTTP
+// ====================================================
 import API_CONFIG from '../config/api'
 
 class HttpService {
-  constructor() {
-    this.baseURL = API_CONFIG.BASE_URL
-  }
+    constructor() {
+        this.baseURL = API_CONFIG.BASE_URL
+    }
 
-  getToken() {
-    return localStorage.getItem('auth_token')
-  }
+    getToken() {
+        return localStorage.getItem('auth_token')
+    }
 
-  getHeaders(includeAuth = true) {
-    const headers = {
-      'Content-Type': 'application/json'
-    }
-    
-    if (includeAuth) {
-      const token = this.getToken()
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-    }
-    
-    return headers
-  }
+    getHeaders(includeAuth = true) {
+        const headers = {
+            'Content-Type': 'application/json'
+        }
 
-  async handleResponse(response) {
-    console.log('📡 Response status:', response.status)
-    
-    // Obtener el cuerpo de la respuesta
-    let data = {}
-    try {
-      data = await response.json()
-    } catch (e) {
-      console.error('Error al parsear JSON:', e)
-    }
-    
-    console.log('📡 Response data completa:', data)
-    
-    if (!response.ok) {
-      const errorMessage = data.message || data.error || `Error HTTP: ${response.status}`
-      throw new Error(errorMessage)
-    }
-    
-    // Retornamos toda la respuesta para que el Modelo pueda acceder a data.session_token
-    return data
-  }
+        if (includeAuth) {
+            const token = this.getToken()
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`
+            }
+        }
 
-  async post(endpoint, data, includeAuth = true) {
-    try {
-      const url = `${this.baseURL}${endpoint}`
-      console.log(`📡 POST a: ${url}`)
-      console.log('📡 Datos enviados:', data)
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.getHeaders(includeAuth),
-        body: JSON.stringify(data)
-      })
-      
-      console.log('📡 Status:', response.status)
-      return await this.handleResponse(response)
-    } catch (error) {
-      console.error(`❌ POST ${endpoint} error:`, error)
-      throw error
+        return headers
     }
-  }
 
-  async get(endpoint, includeAuth = true) {
-    try {
-      const url = `${this.baseURL}${endpoint}`
-      console.log(`📡 GET: ${url}`)
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders(includeAuth)
-      })
-      return await this.handleResponse(response)
-    } catch (error) {
-      console.error(`GET ${endpoint} error:`, error)
-      throw error
-    }
-  }
+    async handleResponse(response) {
+        console.log('📡 Response status:', response.status)
 
-  async put(endpoint, data, includeAuth = true) {
-    try {
-      const url = `${this.baseURL}${endpoint}`
-      console.log(`📡 PUT a: ${url}`)
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: this.getHeaders(includeAuth),
-        body: JSON.stringify(data)
-      })
-      return await this.handleResponse(response)
-    } catch (error) {
-      console.error(`PUT ${endpoint} error:`, error)
-      throw error
-    }
-  }
+        let data = {}
+        try {
+            data = await response.json()
+        } catch (e) {
+            console.error('Error al parsear JSON:', e)
+        }
 
-  async delete(endpoint, includeAuth = true) {
-    try {
-      const url = `${this.baseURL}${endpoint}`
-      console.log(`📡 DELETE a: ${url}`)
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: this.getHeaders(includeAuth)
-      })
-      return await this.handleResponse(response)
-    } catch (error) {
-      console.error(`DELETE ${endpoint} error:`, error)
-      throw error
+        console.log('📡 Response data completa:', data)
+
+        if (!response.ok) {
+            const errorMessage = data.message || data.error || `Error HTTP: ${response.status}`
+            throw new Error(errorMessage)
+        }
+
+        return data
     }
-  }
+
+    // ============================================
+    // POST
+    // ============================================
+    async post(endpoint, data, includeAuth = true) {
+        try {
+            const url = `${this.baseURL}${endpoint}`
+            console.log(`📡 POST a: ${url}`)
+            console.log('📡 Datos enviados:', data)
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: this.getHeaders(includeAuth),
+                body: JSON.stringify(data)
+            })
+
+            console.log('📡 Status:', response.status)
+            return await this.handleResponse(response)
+        } catch (error) {
+            console.error(`❌ POST ${endpoint} error:`, error)
+            throw error
+        }
+    }
+
+    // ============================================
+    // GET
+    // ============================================
+    async get(endpoint, includeAuth = true) {
+        try {
+            const url = `${this.baseURL}${endpoint}`
+            console.log(`📡 GET: ${url}`)
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: this.getHeaders(includeAuth)
+            })
+            return await this.handleResponse(response)
+        } catch (error) {
+            console.error(`GET ${endpoint} error:`, error)
+            throw error
+        }
+    }
+
+    // ============================================
+    // PUT
+    // ============================================
+    async put(endpoint, data, includeAuth = true) {
+        try {
+            const url = `${this.baseURL}${endpoint}`
+            console.log(`📡 PUT a: ${url}`)
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: this.getHeaders(includeAuth),
+                body: JSON.stringify(data)
+            })
+            return await this.handleResponse(response)
+        } catch (error) {
+            console.error(`PUT ${endpoint} error:`, error)
+            throw error
+        }
+    }
+
+    // ============================================
+    // PATCH (NUEVO)
+    // ============================================
+    async patch(endpoint, data, includeAuth = true) {
+        try {
+            const url = `${this.baseURL}${endpoint}`
+            console.log(`📡 PATCH a: ${url}`)
+            const response = await fetch(url, {
+                method: 'PATCH',
+                headers: this.getHeaders(includeAuth),
+                body: JSON.stringify(data)
+            })
+            return await this.handleResponse(response)
+        } catch (error) {
+            console.error(`PATCH ${endpoint} error:`, error)
+            throw error
+        }
+    }
+
+    // ============================================
+    // DELETE
+    // ============================================
+    async delete(endpoint, includeAuth = true) {
+        try {
+            const url = `${this.baseURL}${endpoint}`
+            console.log(`📡 DELETE a: ${url}`)
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: this.getHeaders(includeAuth)
+            })
+            return await this.handleResponse(response)
+        } catch (error) {
+            console.error(`DELETE ${endpoint} error:`, error)
+            throw error
+        }
+    }
 }
 
 export default new HttpService()

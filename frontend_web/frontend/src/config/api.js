@@ -1,39 +1,62 @@
-// frontend_web/frontend/src/config/api.js
+// src/config/api.js
+// ====================================================
+// CONFIGURACIÓN DE API
+// ====================================================
 const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
-  TIMEOUT: 10000,
-  ENDPOINTS: {
-    // Users
-    LOGIN: '/users/login',
-    REGISTER: '/users/create',
-    USERS: '/users',
-    USER_BY_ID: '/users/:id',
-    USER_DELETE: '/users/delete/:id',
-    USER_UPDATE: '/users',
+    BASE_URL: import.meta.env.VITE_API_URL || 'http://10.1.196.157:3000/api',
+    TIMEOUT: 10000,
+    ENDPOINTS: {
+        // ============================================
+        // USERS
+        // ============================================
+        LOGIN: '/users/login',
+        REGISTER: '/users/create',
+        USERS: '/users',
+        USER_BY_ID: '/users/:id',
+        USER_DELETE: '/users/delete/:id',
+        USER_UPDATE: '/users',
+        USER_TOGGLE_STATUS: '/users/toggle-status/:id',
 
-    // Products (nuevos)
-    PRODUCTS: '/products',
-    PRODUCT_BY_ID: '/products/:id',
-    PRODUCT_CREATE: '/products/create',
-    PRODUCT_DELETE: '/products/delete/:id',
+        // ============================================
+        // STUDENTS
+        // ============================================
+        STUDENTS: '/students',
+        STUDENT_CREATE: '/students/create',
+        STUDENT_DELETE: '/students/delete/:id',
+        STUDENT_UPDATE: '/students',        // ← NUEVO
+        STUDENT_BY_ID: '/students/:id',     // ← NUEVO
 
-    // Categories (nuevos)
-    CATEGORIES: '/categories',
-    CATEGORY_BY_ID: '/categories/:id',
-    CATEGORY_CREATE: '/categories/create',
-    CATEGORY_DELETE: '/categories/delete/:id',
+        // ============================================
+        // PRODUCTS
+        // ============================================
+        PRODUCTS: '/products',
+        PRODUCT_BY_ID: '/products/:id',
+        PRODUCT_CREATE: '/products/create',
+        PRODUCT_DELETE: '/products/delete/:id',
 
-    // Schedules (nuevos)
-    SCHEDULES: '/schedules',
-    SCHEDULE_CREATE: '/schedules/create',
-    SCHEDULE_BY_CATEGORY: '/schedules/category/:id_category',
-    SCHEDULE_DELETE: '/schedules/delete/:id',
+        // ============================================
+        // CATEGORIES
+        // ============================================
+        CATEGORIES: '/category',
+        CATEGORY_BY_ID: '/categories/:id',
+        CATEGORY_CREATE: '/categories/create',
+        CATEGORY_DELETE: '/categories/delete/:id',
 
-    // Tournaments (nuevos)
-    TOURNAMENTS: '/tournaments',
-    TOURNAMENT_CREATE: '/tournaments/create',
-    TOURNAMENT_GENERATE_TEAMS: '/tournaments/generate-teams'
-  }
+        // ============================================
+        // SCHEDULES
+        // ============================================
+        SCHEDULES: '/schedules',
+        SCHEDULE_CREATE: '/schedules/create',
+        SCHEDULE_BY_CATEGORY: '/schedules/category/:id_category',
+        SCHEDULE_DELETE: '/schedules/delete/:id',
+
+        // ============================================
+        // TOURNAMENTS
+        // ============================================
+        TOURNAMENTS: '/tournaments',
+        TOURNAMENT_CREATE: '/tournaments/create',
+        TOURNAMENT_GENERATE_TEAMS: '/tournaments/generate-teams'
+    }
 }
 
 export default API_CONFIG

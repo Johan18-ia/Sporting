@@ -1,3 +1,6 @@
+// ====================================================
+// RUTAS: USER
+// ====================================================
 // Importa express
 const express = require('express');
 // Crea el router de express
@@ -6,70 +9,17 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 // Importa los middlewares de autenticación y roles
 const { verifyToken, authorizeRoles } = require('../middlewares/authMiddleware');
+
 /**
  * @swagger
  * tags:
  *   name: Users
  *   description: Gestión de usuarios
  */
-/**
- * ---------------------------------------------------
- * CREAR USUARIO
- * ---------------------------------------------------
- * Ruta para registrar usuarios nuevos
- */
-/**
- * @swagger
- * /api/users/create:
- *   post:
- *     tags: [Users]
- *     summary: Autoregistro
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 description: Email del usuario
- *               name:
- *                 type: string
- *                 description: Nombre del usuario
- *               lastname:
- *                 type: string
- *                 description: Apellido del usuario
- *               role:
- *                 type: string
- *                 enum: [admin, seller, user]
- *                 default: user
- *               password:
- *                 type: string
- *                 format: password
- *                 description: Contraseña del usuario
- *             example:
- *               email: "maria@example.com"
- *               name: "María"
- *               lastname: "García"
- *               password: "password123"
- *     responses:
- *       201:
- *         description: Usuario creado exitosamente
- *       400:
- *         description: Error en los datos de entrada
- */
-router.post('/create', userController.register);
-/**
- * ---------------------------------------------------
- * LOGIN DE USUARIO
- * ---------------------------------------------------
- * Ruta para iniciar sesión
- */
+
+// ====================================================
+// LOGIN DE USUARIO (PÚBLICO)
+// ====================================================
 /**
  * @swagger
  * /api/users/login:
@@ -89,13 +39,79 @@ router.post('/create', userController.register);
  *         description: Credenciales inválidas
  */
 router.post('/login', userController.login);
-/**
- * ---------------------------------------------------
- * LISTAR TODOS LOS USUARIOS
- * ---------------------------------------------------
- * Solo admin y seller pueden acceder
- */
 
+// ====================================================
+// CREAR USUARIO (SOLO ADMIN/SELLER)
+// ====================================================
+/**
+ * @swagger
+ * /api/users/create:
+ *   post:
+ *     tags: [Users]
+ *     summary: Crear usuario (solo admin/seller)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - name
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *               name:
+ *                 type: string
+ *               lastname:
+ *                 type: string
+ *               document:
+ *                 type: string
+ *               birth_date:
+ *                 type: string
+ *                 format: date
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [admin, seller, user]
+ *               category_id:
+ *                 type: integer
+ *               emergency_contact:
+ *                 type: string
+ *               emergency_phone:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Usuario creado exitosamente
+ *       400:
+ *         description: Error en los datos de entrada
+ *       403:
+ *         description: No autorizado
+ *       409:
+ *         description: Email ya registrado
+ */
+router.post(
+    '/create',
+    verifyToken,
+    authorizeRoles(['admin', 'seller']),
+    userController.register
+);
+
+// ====================================================
+// LISTAR TODOS LOS USUARIOS
+// ====================================================
 /**
  * @swagger
  * /api/users:
@@ -118,12 +134,10 @@ router.get(
     authorizeRoles(['admin', 'seller']),
     userController.getAllUsers
 );
-/**
- * ---------------------------------------------------
- * OBTENER USUARIO POR ID
- * ---------------------------------------------------
- * Solo admin y seller pueden consultar
- */
+
+// ====================================================
+// OBTENER USUARIO POR ID
+// ====================================================
 /**
  * @swagger
  * /api/users/{id}:
@@ -138,7 +152,6 @@ router.get(
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID del usuario
  *     responses:
  *       200:
  *         description: Usuario encontrado
@@ -153,12 +166,10 @@ router.get(
     authorizeRoles(['admin', 'seller']),
     userController.getUserById
 );
-/**
- * ---------------------------------------------------
- * ACTUALIZAR USUARIO
- * ---------------------------------------------------
- * Solo admin y seller pueden actualizar
- */
+
+// ====================================================
+// ACTUALIZAR USUARIO
+// ====================================================
 /**
  * @swagger
  * /api/users:
@@ -174,29 +185,47 @@ router.get(
  *           schema:
  *             type: object
  *             properties:
+ *               id:
+ *                 type: integer
  *               name:
+ *                 type: string
+ *               lastname:
  *                 type: string
  *               email:
  *                 type: string
  *                 format: email
+ *               document:
+ *                 type: string
+ *               birth_date:
+ *                 type: string
+ *                 format: date
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [admin, seller, user]
+ *               category_id:
+ *                 type: integer
+ *               emergency_contact:
+ *                 type: string
+ *               emergency_phone:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               image:
+ *                 type: string
  *               password:
  *                 type: string
  *                 format: password
- *             example:
- *               id: "2"
- *               email: "marinita@modificado.com"
- *               name: "Marinita"
- *               lastname: "Rodríguez"
- *               phone: "3163163161"
- *               image: "yyyy"
- *               password: "12345"
  *     responses:
  *       200:
  *         description: Usuario actualizado exitosamente
+ *       400:
+ *         description: Error en los datos
+ *       403:
+ *         description: No autorizado
  *       404:
  *         description: Usuario no encontrado
- *       401:
- *         description: No autorizado
  */
 router.put(
     '/',
@@ -204,12 +233,10 @@ router.put(
     authorizeRoles(['admin', 'seller']),
     userController.getUserUpdate
 );
-/**
- * ---------------------------------------------------
- * ELIMINAR USUARIO
- * ---------------------------------------------------
- * Solo admin puede eliminar usuarios
- */
+
+// ====================================================
+// ELIMINAR USUARIO
+// ====================================================
 /**
  * @swagger
  * /api/users/delete/{id}:
@@ -224,16 +251,13 @@ router.put(
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID del usuario a eliminar
  *     responses:
  *       200:
  *         description: Usuario eliminado exitosamente
+ *       403:
+ *         description: No autorizado
  *       404:
  *         description: Usuario no encontrado
- *       401:
- *         description: No autorizado
- *       403:
- *         description: Prohibido - Solo administradores pueden eliminar
  */
 router.delete(
     '/delete/:id',
@@ -241,5 +265,48 @@ router.delete(
     authorizeRoles(['admin']),
     userController.getUserDelete
 );
-// Exporta las rutas
+
+// ====================================================
+// CAMBIAR ESTADO DE USUARIO (ACTIVAR/DESACTIVAR)
+// ====================================================
+/**
+ * @swagger
+ * /api/users/toggle-status/{id}:
+ *   patch:
+ *     tags: [Users]
+ *     summary: Activar o desactivar usuario
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               is_active:
+ *                 type: integer
+ *                 enum: [0, 1]
+ *     responses:
+ *       200:
+ *         description: Estado actualizado
+ *       403:
+ *         description: No autorizado
+ */
+router.patch(
+    '/toggle-status/:id',
+    verifyToken,
+    authorizeRoles(['admin']),
+    userController.toggleUserStatus
+);
+
+// ====================================================
+// EXPORTA LAS RUTAS
+// ====================================================
 module.exports = router;

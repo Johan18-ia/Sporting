@@ -5,7 +5,7 @@ import API_CONFIG from '../config/api'
 class ProductModel {
   static async getAllProducts() {
     try {
-      const response = await httpService.get(API_CONFIG.ENDPOINTS.PRODUCTS, true)
+      const response = await httpService.get(API_CONFIG.ENDPOINTS.PRODUCTS, false)
 
       let productsArray = []
       if (response && response.data && Array.isArray(response.data)) {
