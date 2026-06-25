@@ -1,45 +1,83 @@
-// frontend_web/frontend/src/models/CategoryModel.js
-import httpService from '../services/httpService'
-import API_CONFIG from '../config/api'
+// backend/models/Category.js
+const db = require('../config/config');
 
-class CategoryModel {
-  static async getAllCategories() {
-    try {
-      const response = await httpService.get(API_CONFIG.ENDPOINTS.CATEGORIES, true)
+const Category = {};
 
-      let categoriesArray = []
-      if (response && response.data && Array.isArray(response.data)) {
-        categoriesArray = response.data
-      }
+// OBTENER TODAS LAS CATEGORÍAS
+Category.getAll = (result) => {
+    const sql = 'SELECT * FROM categories ORDER BY category_year DESC';
+    db.query(sql, (err, res) => {
+        if (err) {
+            result(err, null);
+        } else {
+            result(null, res);
+        }
+    });
+};
 
-      return { success: true, data: categoriesArray }
-    } catch (error) {
-      return { success: false, error: error.message || 'Error al cargar categorías' }
-    }
-  }
+// OBTENER CATEGORÍA POR ID
+Category.findById = (id, result) => {
+    const sql = 'SELECT * FROM categories WHERE id = ?';
+    db.query(sql, [id], (err, res) => {
+        if (err) {
+            result(err, null);
+        } else {
+            result(null, res[0]);
+        }
+    });
+};
 
-  static async createCategory(categoryData) {
-    try {
-      const response = await httpService.post(
-        API_CONFIG.ENDPOINTS.CATEGORY_CREATE,
-        categoryData,
-        true
-      )
-      return { success: true, data: response.data || response }
-    } catch (error) {
-      return { success: false, error: error.message || 'Error al crear categoría' }
-    }
-  }
+// CREAR CATEGORÍA
+Category.create = (category, result) => {
+    const sql = `
+        INSERT INTO categories (category_year, description, created_at, updated_at)
+        VALUES (?, ?, NOW(), NOW())
+    `;
+    db.query(sql, [
+        category.name_year || category.category_year,
+        category.description
+    ], (err, res) => {
+        if (err) {
+            result(err, null);
+        } else {
+            result(null, {
+                id: res.insertId,
+                ...category
+            });
+        }
+    });
+};
 
-  static async deleteCategory(id) {
-    try {
-      const endpoint = API_CONFIG.ENDPOINTS.CATEGORY_DELETE.replace(':id', id)
-      const response = await httpService.delete(endpoint, true)
-      return { success: true, data: response }
-    } catch (error) {
-      return { success: false, error: error.message || 'Error al eliminar categoría' }
-    }
-  }
-}
+// ACTUALIZAR CATEGORÍA
+Category.update = (category, result) => {
+    const sql = `
+        UPDATE categories 
+        SET category_year = ?, description = ?, updated_at = NOW()
+        WHERE id = ?
+    `;
+    db.query(sql, [
+        category.name_year || category.category_year,
+        category.description,
+        category.id
+    ], (err, res) => {
+        if (err) {
+            result(err, null);
+        } else {
+            result(null, category);
+        }
+    });
+};
 
-export default CategoryModel
+// ELIMINAR CATEGORÍA
+Category.delete = (id, result) => {
+    const sql = 'DELETE FROM categories WHERE id = ?';
+    db.query(sql, [id], (err, res) => {
+        if (err) {
+            result(err, null);
+        } else {
+            result(null, res);
+        }
+    });
+};
+
+module.exports = Category;

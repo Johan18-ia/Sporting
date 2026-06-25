@@ -10,7 +10,9 @@ const app = express();
 const productRoutes = require('./routes/productRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const tournamentRoutes = require('./routes/tournamentRoutes');
-const categoryRoutes = require('./routes/categoryRoutes')
+const categoryRoutes = require('./routes/categoryRoutes');
+const studentRoutes = require('./routes/studentRoutes');
+
 
  // Middlewares globales
  app.use(logger('dev'));
@@ -67,6 +69,7 @@ const categoryRoutes = require('./routes/categoryRoutes')
  app.use('/api/category', categoryRoutes);
  app.use('/api/schedule', scheduleRoutes);
  app.use('/api/tournament',tournamentRoutes);
+ app.use('/api/students', studentRoutes);  // ← NUEVA RUTA
 /*
 Agregar rutas nuevas app.use('/api/#######,#######);
 */
