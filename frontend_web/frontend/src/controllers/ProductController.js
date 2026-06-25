@@ -5,11 +5,6 @@ import AuthController from './AuthController'
 class ProductController {
   static async getAllProducts(onSuccess, onError) {
     try {
-      if (!AuthController.hasAnyRole(['admin', 'seller'])) {
-        onError('No tiene permisos para ver productos')
-        return
-      }
-
       const result = await ProductModel.getAllProducts()
       if (result.success) {
         onSuccess(result.data)

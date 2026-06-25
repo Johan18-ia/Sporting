@@ -123,7 +123,7 @@ const CatalogoView = () => {
     <div style={containerStyles}>
       {/* Banner */}
       <div style={bannerStyles}>
-        <h1 style={{ fontSize: '36px', margin: '0 0 10px 0' }}>⚽ Sporting Club</h1>
+        <h1 style={{ fontSize: '36px', margin: '0 0 10px 0' }}> Sporting Club</h1>
         <p style={{ fontSize: '18px', margin: 0, opacity: 0.9 }}>
           Equípate con la mejor calidad en productos deportivos
         </p>
@@ -134,7 +134,7 @@ const CatalogoView = () => {
 
       {/* Título */}
       <h2 style={{ textAlign: 'center', color: '#333', marginBottom: '30px' }}>
-        🛒 Nuestros Productos
+         Nuestros Productos
       </h2>
 
       {/* Grid de productos */}

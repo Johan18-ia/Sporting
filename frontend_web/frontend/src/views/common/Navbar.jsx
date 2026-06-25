@@ -38,7 +38,7 @@ const Navbar = () => {
                 ============================================ */}
                 <div className="navbar-menu">
                     <Link to="/catalogo" className="nav-link">
-                        🛒 Catálogo
+                         Catálogo
                     </Link>
 
                     {!isAuthenticated ? (
@@ -62,10 +62,10 @@ const Navbar = () => {
                                 👋 Hola, {currentUser?.name || currentUser?.email}
                             </span>
                             <Link to="/dashboard" className="nav-link">
-                                📊 Dashboard
+                                 Dashboard
                             </Link>
                             <button onClick={handleLogout} className="nav-link btn-logout">
-                                🚪 Cerrar Sesión
+                                 Cerrar Sesión
                             </button>
                         </>
                     )}

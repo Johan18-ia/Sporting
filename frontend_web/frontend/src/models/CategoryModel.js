@@ -1,83 +1,72 @@
-// backend/models/Category.js
-const db = require('../config/config');
+import httpService from '../services/httpService'
+import API_CONFIG from '../config/api'
 
-const Category = {};
+class CategoryModel {
+    static async getAllCategories() {
+        try {
+            const response = await httpService.get(API_CONFIG.ENDPOINTS.CATEGORIES, true)
 
-// OBTENER TODAS LAS CATEGORÍAS
-Category.getAll = (result) => {
-    const sql = 'SELECT * FROM categories ORDER BY category_year DESC';
-    db.query(sql, (err, res) => {
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, res);
+            let categoriesArray = []
+            if (response && response.data && Array.isArray(response.data)) {
+                categoriesArray = response.data
+            } else if (Array.isArray(response)) {
+                categoriesArray = response
+            }
+
+            return {
+                success: true,
+                data: categoriesArray
+            }
+        } catch (error) {
+            console.error('Error al obtener categorías:', error)
+            return {
+                success: false,
+                error: error.message || 'Error al cargar categorías'
+            }
         }
-    });
-};
+    }
 
-// OBTENER CATEGORÍA POR ID
-Category.findById = (id, result) => {
-    const sql = 'SELECT * FROM categories WHERE id = ?';
-    db.query(sql, [id], (err, res) => {
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, res[0]);
+    static async createCategory(categoryData) {
+        try {
+            const payload = {
+                name_year: categoryData.name_year || categoryData.category_year,
+                description: categoryData.description || ''
+            }
+
+            const response = await httpService.post(API_CONFIG.ENDPOINTS.CATEGORY_CREATE, payload, true)
+
+            return {
+                success: true,
+                data: response.data || response,
+                message: 'Categoría creada exitosamente'
+            }
+        } catch (error) {
+            console.error('Error al crear categoría:', error)
+            return {
+                success: false,
+                error: error.message || 'Error al crear categoría'
+            }
         }
-    });
-};
+    }
 
-// CREAR CATEGORÍA
-Category.create = (category, result) => {
-    const sql = `
-        INSERT INTO categories (category_year, description, created_at, updated_at)
-        VALUES (?, ?, NOW(), NOW())
-    `;
-    db.query(sql, [
-        category.name_year || category.category_year,
-        category.description
-    ], (err, res) => {
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, {
-                id: res.insertId,
-                ...category
-            });
+    static async deleteCategory(id) {
+        try {
+            const endpoint = API_CONFIG.ENDPOINTS.CATEGORY_DELETE.replace(':id', id)
+            const response = await httpService.delete(endpoint, true)
+
+            return {
+                success: true,
+                data: response,
+                message: 'Categoría eliminada exitosamente'
+            }
+        } catch (error) {
+            console.error('Error al eliminar categoría:', error)
+            return {
+                success: false,
+                error: error.message || 'Error al eliminar categoría'
+            }
         }
-    });
-};
+    }
+}
 
-// ACTUALIZAR CATEGORÍA
-Category.update = (category, result) => {
-    const sql = `
-        UPDATE categories 
-        SET category_year = ?, description = ?, updated_at = NOW()
-        WHERE id = ?
-    `;
-    db.query(sql, [
-        category.name_year || category.category_year,
-        category.description,
-        category.id
-    ], (err, res) => {
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, category);
-        }
-    });
-};
-
-// ELIMINAR CATEGORÍA
-Category.delete = (id, result) => {
-    const sql = 'DELETE FROM categories WHERE id = ?';
-    db.query(sql, [id], (err, res) => {
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, res);
-        }
-    });
-};
-
-module.exports = Category;
+export default CategoryModel
