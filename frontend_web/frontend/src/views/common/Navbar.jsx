@@ -49,9 +49,6 @@ const Navbar = () => {
                             <Link to="/login" className="nav-link">
                                 Iniciar Sesión
                             </Link>
-                            <Link to="/register" className="nav-link btn-primary">
-                                Registrarse
-                            </Link>
                         </>
                     ) : (
                         // ============================================

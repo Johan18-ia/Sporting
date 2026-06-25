@@ -20,21 +20,12 @@ User.findAll = (result) => {
             u.email,
             u.name,
             u.lastname,
-            u.document,
-            u.birth_date,
             u.phone,
             u.image,
             u.role,
-            u.emergency_contact,
-            u.emergency_phone,
-            u.address,
-            u.is_active,
-            u.student_id,
-            c.category_year,
             u.created_at,
             u.updated_at
         FROM users u
-        LEFT JOIN categories c ON u.category_id = c.id
         ORDER BY u.id DESC
     `;
     // Ejecuta la consulta
@@ -62,22 +53,12 @@ User.findById = (id, result) => {
             u.email,
             u.name,
             u.lastname,
-            u.document,
-            u.birth_date,
             u.phone,
             u.image,
             u.role,
-            u.emergency_contact,
-            u.emergency_phone,
-            u.address,
-            u.is_active,
-            u.student_id,
-            u.category_id,
-            c.category_year,
             u.created_at,
             u.updated_at
         FROM users u
-        LEFT JOIN categories c ON u.category_id = c.id
         WHERE u.id = ?
     `;
     // Ejecuta la consulta
@@ -105,21 +86,11 @@ User.findByEmail = (email, result) => {
             u.email,
             u.name,
             u.lastname,
-            u.document,
-            u.birth_date,
             u.phone,
             u.image,
             u.role,
-            u.emergency_contact,
-            u.emergency_phone,
-            u.address,
-            u.is_active,
-            u.student_id,
-            u.category_id,
-            c.category_year,
             u.password
         FROM users u
-        LEFT JOIN categories c ON u.category_id = c.id
         WHERE u.email = ?
     `;
     // Ejecuta consulta

@@ -41,7 +41,8 @@ module.exports = {
             }
 
             // Verificar si el usuario está activo
-            if (myUser.is_active === 0) {
+            const isActive = myUser.is_active ?? 1;
+            if (isActive === 0) {
                 return res.status(403).json({
                     success: false,
                     message: "Usuario desactivado. Contacte al administrador.",
@@ -73,16 +74,10 @@ module.exports = {
                     email: myUser.email,
                     name: myUser.name,
                     lastname: myUser.lastname,
-                    document: myUser.document,
-                    birth_date: myUser.birth_date,
                     phone: myUser.phone,
                     image: myUser.image,
                     role: myUser.role,
-                    category_year: myUser.category_year,
-                    emergency_contact: myUser.emergency_contact,
-                    emergency_phone: myUser.emergency_phone,
-                    address: myUser.address,
-                    is_active: myUser.is_active,
+                    is_active: isActive,
                     session_token: `JWT ${token}`,
                 };
 
