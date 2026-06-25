@@ -107,15 +107,39 @@ const DashboardHeader = ({ user, onLogout, activeTab, onTabChange }) => {
       </div>
 
       <div style={tabStyles}>
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            style={tabBtnStyles(activeTab === tab.id)}
-            onClick={() => onTabChange(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
+        <button
+          style={tabBtnStyles(activeTab === 'dashboard')}
+          onClick={() => onTabChange('dashboard')}
+        >
+          Dashboard
+        </button>
+        <button
+          style={tabBtnStyles(activeTab === 'users')}
+          onClick={() => onTabChange('users')}
+        >
+          Usuarios
+        </button>
+
+         <button
+          style={tabBtnStyles(activeTab === 'categories' ? 'active' : '')}
+          onClick={() => onTabChange('categories')}
+        >
+           Categorías
+        </button>
+
+        <button 
+         style={tabBtnStyles(activeTab === 'schedules')}
+         onClick={() => onTabChange('schedules')}
+        >
+         Horarios
+      </button>
+
+        <button 
+        style={tabBtnStyles(activeTab === 'catalog')}
+        onClick={() => onTabChange('catalog')}
+      >
+       Catálogo
+</button>
       </div>
 
       <div style={userInfoStyles}>
