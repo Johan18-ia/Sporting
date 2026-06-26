@@ -1,11 +1,13 @@
 {
   "name": "frontend_web",
   "version": "1.0.0",
-  "description": "node - express",
+  "description": "API REST para Sporting Club - Escuela de Microfútbol",
   "keywords": [
     "node",
-    "-",
-    "express"
+    "express",
+    "api",
+    "rest",
+    "sporting"
   ],
   "license": "ISC",
   "author": "Jhon C",

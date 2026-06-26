@@ -27,8 +27,8 @@ const API_CONFIG = {
         STUDENTS: '/students',
         STUDENT_CREATE: '/students/create',
         STUDENT_DELETE: '/students/delete/:id',
-        STUDENT_UPDATE: '/students',        // ← NUEVO
-        STUDENT_BY_ID: '/students/:id',     // ← NUEVO
+        STUDENT_UPDATE: '/students',
+        STUDENT_BY_ID: '/students/:id',
 
         // ============================================
         // PRODUCTS
@@ -39,7 +39,7 @@ const API_CONFIG = {
         PRODUCT_DELETE: '/products/delete/:id',
 
         // ============================================
-        // CATEGORIES (CORREGIDO: UNIFICADO A /categories)
+        // CATEGORIES (CORREGIDO A /categories)
         // ============================================
         CATEGORIES: '/categories',
         CATEGORY_BY_ID: '/categories/:id',
