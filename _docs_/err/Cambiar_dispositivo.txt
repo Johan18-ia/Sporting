@@ -46,7 +46,7 @@ const host = process.env.HOST || '0.0.0.0';
                     ESTA IP ESTÁ BIEN (0.0.0.0 significa "todas las interfaces")
                     NO LA CAMBIES A MENOS QUE SEA NECESARIO
 
- EXPLICACIÓN: 
+ EXPLICACIÓN:
 0.0.0.0 permite que el servidor escuche en todas las interfaces de red
 de tu computadora. Es correcto mantenerlo así.
 
