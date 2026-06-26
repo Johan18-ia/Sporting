@@ -18,8 +18,19 @@ const studentRoutes = require('./routes/studentRoutes');
  app.use(logger('dev'));
  app.use(express.json());
  app.use(express.urlencoded({ extended: true }));
+ 
+ // ============================================
+ // CONFIGURACIÓN CORS UNIFICADA (SOLO UNA VEZ)
+ // ============================================
  app.use(cors({
-   origin: true,
+   origin: [
+     'http://10.1.196.157',
+     'http://10.1.196.157:5173',
+     'http://localhost',
+     'http://localhost:5173',
+     'http://127.0.0.1',
+     'http://127.0.0.1:5173'
+   ],
    credentials: true,
    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -48,17 +59,15 @@ const studentRoutes = require('./routes/studentRoutes');
 
  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
 
- // Rutas
+ // ============================================
+ // RUTAS UNIFICADAS (TODAS EN PLURAL POR ESTÁNDAR REST)
+ // ============================================
  app.use('/api/users', usersRoutes);
  app.use('/api/products', productRoutes);
- app.use('/api/category', categoryRoutes);
- app.use('/api/schedule', scheduleRoutes);
- app.use('/api/tournament',tournamentRoutes);
- app.use('/api/students', studentRoutes);  // ← NUEVA RUTA
-/*
-Agregar rutas nuevas app.use('/api/#######,#######);
-*/
-
+ app.use('/api/categories', categoryRoutes);  // ← CAMBIADO: /categories (plural)
+ app.use('/api/schedules', scheduleRoutes);
+ app.use('/api/tournaments', tournamentRoutes);
+ app.use('/api/students', studentRoutes);
 
  // Endpoints de prueba
  app.get('/', (req, res) => {

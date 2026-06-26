@@ -1,4 +1,7 @@
 // src/hooks/useCategories.js
+// ====================================================
+// HOOK: CATEGORÍAS - CORREGIDO CON category_year
+// ====================================================
 import { useState, useEffect } from 'react';
 import CategoryModel from '../models/CategoryModel';
 
@@ -21,8 +24,11 @@ const useCategories = () => {
     };
 
     // 2. CREAR CATEGORÍA
-    const createCategory = async (name_year, description) => {
-        const resultado = await CategoryModel.createCategory({ name_year, description });
+    const createCategory = async (category_year, description) => {
+        // ============================================
+        // CORREGIDO: USAR category_year
+        // ============================================
+        const resultado = await CategoryModel.createCategory({ category_year, description });
         if (resultado.success) {
             fetchCategories(); 
             return { success: true };

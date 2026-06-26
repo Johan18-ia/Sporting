@@ -5,6 +5,7 @@
 const db = require('../config/config');
 // Objeto del modelo Category
 const Category = {};
+
 // ====================================================
 // OBTENER TODAS LAS CATEGORÍAS
 // ====================================================
@@ -21,6 +22,7 @@ Category.getAll = (result) => {
         }
     });
 };
+
 // ====================================================
 // OBTENER CATEGORÍA POR ID
 // ====================================================
@@ -37,10 +39,16 @@ Category.findById = (id, result) => {
         }
     });
 };
+
 // ====================================================
 // CREAR CATEGORÍA
 // ====================================================
 Category.create = (category, result) => {
+    // ============================================
+    // CORREGIDO: USAR category_year (estandarizado)
+    // ============================================
+    const categoryYear = category.category_year || category.name_year;
+    
     // Consulta SQL para insertar una categoría
     const sql = `
         INSERT INTO categories (
@@ -53,8 +61,8 @@ Category.create = (category, result) => {
     `;
     // Ejecuta la consulta
     db.query(sql, [
-        category.name_year || category.category_year,
-        category.description
+        categoryYear,
+        category.description || ''
     ], (err, res) => {
         // Manejo de error
         if (err) {
@@ -62,15 +70,22 @@ Category.create = (category, result) => {
         } else {
             result(null, {
                 id: res.insertId,
-                ...category
+                category_year: categoryYear,
+                description: category.description || ''
             });
         }
     });
 };
+
 // ====================================================
 // ACTUALIZAR CATEGORÍA
 // ====================================================
 Category.update = (category, result) => {
+    // ============================================
+    // CORREGIDO: USAR category_year (estandarizado)
+    // ============================================
+    const categoryYear = category.category_year || category.name_year;
+    
     // Consulta SQL para actualizar una categoría
     const sql = `
         UPDATE categories 
@@ -81,7 +96,7 @@ Category.update = (category, result) => {
     `;
     // Ejecuta la consulta
     db.query(sql, [
-        category.name_year || category.category_year,
+        categoryYear,
         category.description,
         category.id
     ], (err, res) => {
@@ -93,6 +108,7 @@ Category.update = (category, result) => {
         }
     });
 };
+
 // ====================================================
 // ELIMINAR CATEGORÍA
 // ====================================================
@@ -109,6 +125,7 @@ Category.delete = (id, result) => {
         }
     });
 };
+
 // ====================================================
 // EXPORTA EL MODELO
 // ====================================================

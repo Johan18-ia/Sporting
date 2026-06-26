@@ -1,3 +1,7 @@
+// src/models/CategoryModel.js
+// ====================================================
+// MODELO: CATEGORÍA - CORREGIDO CON CAMPO category_year
+// ====================================================
 import httpService from '../services/httpService'
 import API_CONFIG from '../config/api'
 
@@ -28,8 +32,11 @@ class CategoryModel {
 
     static async createCategory(categoryData) {
         try {
+            // ============================================
+            // CORREGIDO: USAR category_year (estandarizado)
+            // ============================================
             const payload = {
-                name_year: categoryData.name_year || categoryData.category_year,
+                category_year: categoryData.category_year || categoryData.name_year,
                 description: categoryData.description || ''
             }
 

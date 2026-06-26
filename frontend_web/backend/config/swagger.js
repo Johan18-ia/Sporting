@@ -1,4 +1,11 @@
 const swaggerJsdoc = require('swagger-jsdoc');
+
+// ============================================
+// VARIABLES DE ENTORNO PARA FLEXIBILIDAD
+// ============================================
+const HOST = process.env.HOST || '10.1.196.157';
+const PORT = process.env.PORT || 3000;
+
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -13,7 +20,7 @@ const options = {
     },
     servers: [
       {
-        url: 'http://10.1.196.157:3000', // Cambiar url
+        url: `http://${HOST}:${PORT}`,
         description: 'Servidor local'
       }
     ],

@@ -2,6 +2,10 @@
 // ====================================================
 // CONFIGURACIÓN DE API
 // ====================================================
+
+// ============================================
+// USAR VARIABLE DE ENTORNO CON FALLBACK
+// ============================================
 const API_CONFIG = {
     BASE_URL: import.meta.env.VITE_API_URL || 'http://10.1.196.157:3000/api',
     TIMEOUT: 10000,
@@ -35,9 +39,9 @@ const API_CONFIG = {
         PRODUCT_DELETE: '/products/delete/:id',
 
         // ============================================
-        // CATEGORIES
+        // CATEGORIES (CORREGIDO: UNIFICADO A /categories)
         // ============================================
-        CATEGORIES: '/category',
+        CATEGORIES: '/categories',
         CATEGORY_BY_ID: '/categories/:id',
         CATEGORY_CREATE: '/categories/create',
         CATEGORY_DELETE: '/categories/delete/:id',
