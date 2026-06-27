@@ -1,0 +1,450 @@
+================================================================================
+                    GUÍA DE CAMBIO DE IP PARA NUEVO DISPOSITIVO
+                           SPORTING CLUB - MICROFÚTBOL
+================================================================================
+
+ 1. CAMBIAR IP EN EL BACKEND
+================================================================================
+
+ARCHIVO: backend/.env
+---------------------------------------------------------------------------
+HOST=10.1.196.157  ← CAMBIAR ESTA IP
+PORT=3000
+
+ EJEMPLO:
+HOST=192.168.1.100
+PORT=3000
+
+-----------------------------------------------------------
+
+ARCHIVO: backend/server.js
+---------------------------------------------------------------------------
+console.log('📚 Swagger disponible en: http://10.1.196.157:3000/api-docs');
+                                                    ↑
+                                               CAMBIAR ESTA IP
+
+ EJEMPLO:
+console.log('📚 Swagger disponible en: http://192.168.1.100:3000/api-docs');
+
+-----------------------------------------------------------
+
+ARCHIVO: backend/config/swagger.js
+---------------------------------------------------------------------------
+const HOST = process.env.HOST || '10.1.196.157';  ← CAMBIAR ESTA IP
+                                    ↑
+                               IP POR DEFECTO
+
+ EJEMPLO:
+const HOST = process.env.HOST || '192.168.1.100';
+
+-----------------------------------------------------------
+
+ARCHIVO: backend/index.js
+---------------------------------------------------------------------------
+const host = process.env.HOST || '0.0.0.0';
+                             ↑
+                    ESTA IP ESTÁ BIEN (0.0.0.0 significa "todas las interfaces")
+                    NO LA CAMBIES A MENOS QUE SEA NECESARIO
+
+ EXPLICACIÓN:
+0.0.0.0 permite que el servidor escuche en todas las interfaces de red
+de tu computadora. Es correcto mantenerlo así.
+
+-----------------------------------------------------------
+
+ARCHIVO: backend/server.js (CORS)
+---------------------------------------------------------------------------
+app.use(cors({
+    origin: [
+        'http://10.1.196.157',          ← CAMBIAR ESTA IP
+        'http://10.1.196.157:5173',     ← CAMBIAR ESTA IP
+        'http://localhost',             ← ESTA ESTÁ BIEN
+        'http://localhost:5173',        ← ESTA ESTÁ BIEN
+        'http://127.0.0.1',             ← ESTA ESTÁ BIEN
+        'http://127.0.0.1:5173'         ← ESTA ESTÁ BIEN
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+ EJEMPLO DE CORS CORREGIDO:
+app.use(cors({
+    origin: [
+        'http://192.168.1.100',         ← NUEVA IP DEL SERVIDOR
+        'http://192.168.1.100:5173',    ← NUEVA IP DEL SERVIDOR CON PUERTO FRONTEND
+        'http://localhost',
+        'http://localhost:5173',
+        'http://127.0.0.1',
+        'http://127.0.0.1:5173'
+    ],
+    // ... resto igual
+}));
+
+================================================================================
+ 2. CAMBIAR IP EN EL FRONTEND
+================================================================================
+
+ARCHIVO: frontend/.env
+---------------------------------------------------------------------------
+VITE_API_URL=http://10.1.196.157:3000/api
+                    ↑
+               CAMBIAR ESTA IP
+
+ EJEMPLO:
+VITE_API_URL=http://192.168.1.100:3000/api
+
+-----------------------------------------------------------
+
+ARCHIVO: frontend/src/config/api.js
+---------------------------------------------------------------------------
+BASE_URL: import.meta.env.VITE_API_URL || 'http://10.1.196.157:3000/api',
+                                                      ↑
+                                                IP POR DEFECTO (FALLBACK)
+
+ EJEMPLO:
+BASE_URL: import.meta.env.VITE_API_URL || 'http://192.168.1.100:3000/api',
+
+================================================================================
+ 3. CAMBIAR IP EN LA BASE DE DATOS (opcional)
+================================================================================
+
+Si la base de datos está en otro servidor:
+
+ARCHIVO: backend/.env
+---------------------------------------------------------------------------
+DB_HOST=localhost  ← CAMBIAR SI LA BD ESTÁ EN OTRO SERVIDOR
+DB_PORT=3306
+
+ EJEMPLO (BD en otro servidor):
+DB_HOST=192.168.1.200
+DB_PORT=3306
+
+================================================================================
+ 4. CAMBIAR IP EN EL FRONTEND (componentes específicos)
+================================================================================
+
+ARCHIVO: frontend/src/views/auth/LoginView.jsx
+---------------------------------------------------------------------------
+<div className="demo-credentials sporting-demo">
+    <p><strong>Email:</strong> profealbeiro2020@gmail.com</p>
+    <p><strong>Contraseña:</strong> [la que usaste para hashear]</p>
+</div>
+
+⚠️ ESTO SOLO ES UN EJEMPLO DE CREDENCIALES, NO TIENE IP
+
+================================================================================
+ 5. CAMBIAR IP EN VARIABLES DE ENTORNO DEL SISTEMA (opcional)
+================================================================================
+
+Si usas variables de entorno del sistema:
+
+WINDOWS (PowerShell como Administrador):
+---------------------------------------------------------------------------
+setx HOST "192.168.1.100"
+setx PORT "3000"
+
+LINUX/MAC (terminal):
+---------------------------------------------------------------------------
+export HOST=192.168.1.100
+export PORT=3000
+
+================================================================================
+ 6. VERIFICAR IP DE TU NUEVO DISPOSITIVO
+================================================================================
+
+WINDOWS:
+---------------------------------------------------------------------------
+ipconfig
+
+Buscar:
+- IPv4 Address: 192.168.1.100 (ejemplo)
+
+LINUX/MAC:
+---------------------------------------------------------------------------
+ifconfig
+# o
+ip addr show
+
+Buscar:
+- inet 192.168.1.100 (ejemplo)
+
+================================================================================
+ 7. PUERTOS QUE DEBES VERIFICAR
+================================================================================
+
+PUERTO 3000 - Backend (Express)
+---------------------------------------------------------------------------
+Asegurar que esté disponible y no bloqueado por firewall
+
+PUERTO 5173 - Frontend (Vite)
+---------------------------------------------------------------------------
+Asegurar que esté disponible y no bloqueado por firewall
+
+PUERTO 3306 - MySQL
+---------------------------------------------------------------------------
+Asegurar que MySQL esté corriendo en este puerto
+
+================================================================================
+ 8. COMANDOS PARA VERIFICAR PUERTOS
+================================================================================
+
+WINDOWS:
+---------------------------------------------------------------------------
+netstat -ano | findstr :3000   # Verificar puerto 3000
+netstat -ano | findstr :5173   # Verificar puerto 5173
+netstat -ano | findstr :3306   # Verificar puerto 3306 (MySQL)
+
+LINUX/MAC:
+---------------------------------------------------------------------------
+lsof -i :3000   # Verificar puerto 3000
+lsof -i :5173   # Verificar puerto 5173
+lsof -i :3306   # Verificar puerto 3306 (MySQL)
+
+================================================================================
+ 9. DESPUÉS DE CAMBIAR LAS IPS
+================================================================================
+
+PASO 1: Reiniciar el Backend
+---------------------------------------------------------------------------
+cd frontend_web/backend
+npm run dev
+
+PASO 2: Reiniciar el Frontend
+---------------------------------------------------------------------------
+cd frontend_web/frontend
+npm run dev
+
+PASO 3: Probar la aplicación
+---------------------------------------------------------------------------
+Abrir navegador en: http://NUEVA_IP:5173
+Ejemplo: http://192.168.1.100:5173
+
+PASO 4: Verificar Swagger
+---------------------------------------------------------------------------
+Abrir: http://NUEVA_IP:3000/api-docs
+Ejemplo: http://192.168.1.100:3000/api-docs
+
+================================================================================
+ 10. PROBLEMAS COMUNES Y SOLUCIONES
+================================================================================
+
+PROBLEMA: "ERR_CONNECTION_REFUSED"
+---------------------------------------------------------------------------
+SOLUCIÓN: 
+1. Verificar que el servidor backend esté corriendo
+2. Verificar firewall (permitir puerto 3000 y 5173)
+3. Verificar que la IP sea correcta
+
+PROBLEMA: "CORS error"
+---------------------------------------------------------------------------
+SOLUCIÓN:
+1. Verificar que la IP esté en la lista de CORS en server.js
+2. Agregar la IP manualmente si es necesario
+
+PROBLEMA: "No se puede conectar a la base de datos"
+---------------------------------------------------------------------------
+SOLUCIÓN:
+1. Verificar que MySQL esté corriendo
+2. Verificar DB_HOST en .env
+3. Verificar credenciales de MySQL
+
+PROBLEMA: "Token inválido o expirado"
+---------------------------------------------------------------------------
+SOLUCIÓN:
+1. Verificar JWT_SECRET en .env
+2. Limpiar localStorage del navegador
+3. Volver a iniciar sesión
+
+================================================================================
+ 11. CONFIGURACIÓN PARA MÚLTIPLES DISPOSITIVOS EN LA MISMA RED
+================================================================================
+
+Si quieres que otros dispositivos accedan a la aplicación:
+
+1. Asegurar que todos estén en la misma red (WiFi/LAN)
+2. Usar la IP local del servidor (ej: 192.168.1.100)
+3. Desde otro dispositivo abrir: http://192.168.1.100:5173
+4. Los firewalls deben permitir la conexión
+
+================================================================================
+ 12. COMPROBAR CONEXIÓN DESDE OTRO DISPOSITIVO
+================================================================================
+
+Desde otro dispositivo en la misma red:
+
+1. Hacer ping al servidor:
+   ping 192.168.1.100
+
+2. Verificar puerto 3000:
+   telnet 192.168.1.100 3000
+
+3. Verificar puerto 5173:
+   telnet 192.168.1.100 5173
+
+================================================================================
+ 13. TENER EN CUENTA
+================================================================================
+
+⚠️ IMPORTANTE:
+---------------------------------------------------------------------------
+- Las IPs pueden cambiar si usas DHCP (asignación automática)
+- Considera usar IP fija en el servidor
+- Si cambia la IP, debes actualizar todos los archivos listados arriba
+- Los archivos .env contienen configuraciones sensibles, no compartirlos
+
+================================================================================
+ 14. PLANTILLA DE CONFIGURACIÓN PARA NUEVO DISPOSITIVO
+================================================================================
+
+COPIA ESTA PLANTILLA Y RELLENA CON TUS DATOS:
+
+NUEVA IP DEL SERVIDOR: ________________________________
+PUERTO BACKEND: 3000
+PUERTO FRONTEND: 5173
+PUERTO MYSQL: 3306
+
+BACKEND .env:
+---------------------------------------------------------------------------
+HOST= [NUEVA_IP]
+PORT=3000
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=db_node
+DB_PORT=3306
+JWT_SECRET=e9f94f8d3a1e6d7c2b3f9e5a7c8d4f2b7a0e1d3c4f5b6a7e9f8d0c3b4a6d2e1
+
+FRONTEND .env:
+---------------------------------------------------------------------------
+VITE_API_URL=http://[NUEVA_IP]:3000/api
+
+CORS EN server.js:
+---------------------------------------------------------------------------
+origin: [
+    'http://[NUEVA_IP]',
+    'http://[NUEVA_IP]:5173',
+    'http://localhost',
+    'http://localhost:5173',
+    'http://127.0.0.1',
+    'http://127.0.0.1:5173'
+]
+
+================================================================================
+ 15. ARCHIVOS CRÍTICOS PARA MODIFICAR (LISTA DE VERIFICACIÓN)
+================================================================================
+
+☐ backend/.env
+☐ backend/server.js (CORS y console.log)
+☐ backend/config/swagger.js
+☐ frontend/.env
+☐ frontend/src/config/api.js
+
+☐ SOLO SI LA BASE DE DATOS CAMBIA: backend/.env (DB_HOST)
+☐ SOLO SI EL PUERTO CAMBIA: backend/.env (PORT)
+☐ SOLO SI EL PUERTO CAMBIA: frontend/.env (VITE_API_URL)
+
+================================================================================
+ 16. COMANDOS ÚTILES PARA DEPURACIÓN
+================================================================================
+
+Ver IP actual del dispositivo:
+---------------------------------------------------------------------------
+Windows: ipconfig
+Linux/Mac: ifconfig
+
+Verificar que el backend está escuchando:
+---------------------------------------------------------------------------
+Windows: netstat -ano | findstr :3000
+Linux/Mac: lsof -i :3000
+
+Verificar que el frontend está escuchando:
+---------------------------------------------------------------------------
+Windows: netstat -ano | findstr :5173
+Linux/Mac: lsof -i :5173
+
+Verificar conexión desde otro dispositivo:
+---------------------------------------------------------------------------
+Windows: ping 192.168.1.100
+Linux/Mac: ping 192.168.1.100
+
+Probar API desde navegador:
+---------------------------------------------------------------------------
+http://192.168.1.100:3000/test
+
+================================================================================
+ 17. SOLUCIÓN RÁPIDA (SI QUIERES PROBAR LOCALMENTE)
+================================================================================
+
+Si solo pruebas en localhost (misma máquina), usa:
+
+BACKEND .env:
+---------------------------------------------------------------------------
+HOST=localhost
+PORT=3000
+
+FRONTEND .env:
+---------------------------------------------------------------------------
+VITE_API_URL=http://localhost:3000/api
+
+CORS:
+---------------------------------------------------------------------------
+origin: [
+    'http://localhost',
+    'http://localhost:5173',
+    'http://127.0.0.1',
+    'http://127.0.0.1:5173'
+]
+
+SWAGGER:
+---------------------------------------------------------------------------
+servers: [
+    {
+        url: 'http://localhost:3000',
+        description: 'Servidor local'
+    }
+]
+
+FRONTEND API:
+---------------------------------------------------------------------------
+BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+
+================================================================================
+ 18. PARA PRODUCCIÓN
+================================================================================
+
+Para desplegar en producción (servidor en internet):
+
+1. Usar un dominio en lugar de IP:
+   VITE_API_URL=https://midominio.com/api
+
+2. Configurar SSL/HTTPS:
+   Usar certificados SSL para conexiones seguras
+
+3. Usar variables de entorno en el servidor de producción:
+   Configurar las variables de entorno directamente en el hosting
+
+4. Configurar el firewall para permitir solo los puertos necesarios
+
+5. Usar PM2 o similar para mantener el servidor corriendo:
+   npm install -g pm2
+   pm2 start index.js --name sporting-backend
+   pm2 save
+   pm2 startup
+
+================================================================================
+ 19. NOTAS FINALES
+================================================================================
+ Si todo está configurado correctamente:
+- La API responde en: http://[TU_IP]:3000
+- Swagger en: http://[TU_IP]:3000/api-docs
+- Frontend en: http://[TU_IP]:5173
+- Base de datos en: localhost:3306
+ Para probar desde otro dispositivo:
+- Asegurar que estén en la misma red
+- Usar la IP del servidor (no localhost ni 127.0.0.1)
+- Abrir http://[IP_DEL_SERVIDOR]:5173
+
+================================================================================
+                    FIN DE LA GUÍA DE CONFIGURACIÓN
+================================================================================

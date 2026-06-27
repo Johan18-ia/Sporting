@@ -5,6 +5,7 @@
 const db = require('../config/config');
 // Objeto del modelo Category
 const Category = {};
+
 // ====================================================
 // OBTENER TODAS LAS CATEGORÍAS
 // ====================================================
@@ -21,6 +22,24 @@ Category.getAll = (result) => {
         }
     });
 };
+
+// ====================================================
+// OBTENER CATEGORÍA POR ID
+// ====================================================
+Category.findById = (id, result) => {
+    // Consulta SQL para obtener una categoría por ID
+    const sql = 'SELECT * FROM categories WHERE id = ?';
+    // Ejecuta la consulta
+    db.query(sql, [id], (err, res) => {
+        // Manejo de error
+        if (err) {
+            result(err, null);
+        } else {
+            result(null, res[0]);
+        }
+    });
+};
+
 // ====================================================
 // OBTENER CATEGORÍA POR ID
 // ====================================================
@@ -41,6 +60,11 @@ Category.findById = (id, result) => {
 // CREAR CATEGORÍA
 // ====================================================
 Category.create = (category, result) => {
+    // ============================================
+    // CORREGIDO: USAR category_year (estandarizado)
+    // ============================================
+    const categoryYear = category.category_year || category.name_year;
+    
     // Consulta SQL para insertar una categoría
     const sql = `
         INSERT INTO categories (
@@ -53,8 +77,8 @@ Category.create = (category, result) => {
     `;
     // Ejecuta la consulta
     db.query(sql, [
-        category.name_year || category.category_year,
-        category.description
+        categoryYear,
+        category.description || ''
     ], (err, res) => {
         // Manejo de error
         if (err) {
@@ -62,11 +86,62 @@ Category.create = (category, result) => {
         } else {
             result(null, {
                 id: res.insertId,
-                ...category
+                category_year: categoryYear,
+                description: category.description || ''
             });
         }
     });
 };
+
+// ====================================================
+// ACTUALIZAR CATEGORÍA
+// ====================================================
+Category.update = (category, result) => {
+    // ============================================
+    // CORREGIDO: USAR category_year (estandarizado)
+    // ============================================
+    const categoryYear = category.category_year || category.name_year;
+    
+    // Consulta SQL para actualizar una categoría
+    const sql = `
+        UPDATE categories 
+        SET category_year = ?,
+            description = ?,
+            updated_at = NOW()
+        WHERE id = ?
+    `;
+    // Ejecuta la consulta
+    db.query(sql, [
+        categoryYear,
+        category.description,
+        category.id
+    ], (err, res) => {
+        // Manejo de error
+        if (err) {
+            result(err, null);
+        } else {
+            result(null, category);
+        }
+    });
+};
+
+// ====================================================
+// ELIMINAR CATEGORÍA
+// ====================================================
+Category.delete = (id, result) => {
+    // Consulta SQL para eliminar una categoría
+    const sql = 'DELETE FROM categories WHERE id = ?';
+    // Ejecuta la consulta
+    db.query(sql, [id], (err, res) => {
+        // Manejo de error
+        if (err) {
+            result(err, null);
+        } else {
+            result(null, res);
+        }
+    });
+};
+
 // ====================================================
 // ACTUALIZAR CATEGORÍA
 // ====================================================

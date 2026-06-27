@@ -1,5 +1,10 @@
 require('dotenv').config();
-const mysql = require('mysql');
+
+// ============================================
+// CAMBIADO: mysql2 ES MÁS MODERNO Y RECOMENDADO
+// ============================================
+const mysql = require('mysql2');
+
 const db = mysql.createPool({
 host: process.env.DB_HOST,
 user: process.env.DB_USER,
@@ -19,4 +24,3 @@ db.on('error', (err) => {
 });
 
 module.exports = db;
-

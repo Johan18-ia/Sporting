@@ -100,9 +100,9 @@ router.get(
  *           schema:
  *             type: object
  *             required:
- *               - name_year
+ *               - category_year
  *             properties:
- *               name_year:
+ *               category_year:
  *                 type: integer
  *                 example: 2015
  *               description:
@@ -142,7 +142,7 @@ router.post(
  *             properties:
  *               id:
  *                 type: integer
- *               name_year:
+ *               category_year:
  *                 type: integer
  *               description:
  *                 type: string

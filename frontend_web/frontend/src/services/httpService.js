@@ -1,6 +1,6 @@
 // src/services/httpService.js
 // ====================================================
-// SERVICIO HTTP
+// SERVICIO HTTP - CORREGIDO CON MEJOR MANEJO DE ERRORES
 // ====================================================
 import API_CONFIG from '../config/api'
 
@@ -28,20 +28,38 @@ class HttpService {
         return headers
     }
 
+    // ============================================
+    // MANEJO DE RESPUESTAS MEJORADO
+    // ============================================
     async handleResponse(response) {
         console.log('📡 Response status:', response.status)
 
         let data = {}
+        let errorMessage = `Error HTTP: ${response.status}`
+
         try {
+            // Intentar parsear como JSON
             data = await response.json()
+            
+            // Si la respuesta tiene un mensaje de error del backend, usarlo
+            if (data.message) errorMessage = data.message
+            if (data.error) errorMessage = data.error
+            
+            console.log('📡 Response data (JSON):', data)
         } catch (e) {
-            console.error('Error al parsear JSON:', e)
+            // Si no es JSON, leer como texto
+            try {
+                const text = await response.text()
+                if (text) errorMessage = text
+                console.warn('📡 Response data (text):', text)
+            } catch (textError) {
+                console.error('Error al leer respuesta como texto:', textError)
+            }
+            console.warn('⚠️ La respuesta no es un JSON válido:', e)
         }
 
-        console.log('📡 Response data completa:', data)
-
         if (!response.ok) {
-            const errorMessage = data.message || data.error || `Error HTTP: ${response.status}`
+            // Lanzar un error con el mensaje específico
             throw new Error(errorMessage)
         }
 
@@ -84,7 +102,7 @@ class HttpService {
             })
             return await this.handleResponse(response)
         } catch (error) {
-            console.error(`GET ${endpoint} error:`, error)
+            console.error(`❌ GET ${endpoint} error:`, error)
             throw error
         }
     }
@@ -103,13 +121,13 @@ class HttpService {
             })
             return await this.handleResponse(response)
         } catch (error) {
-            console.error(`PUT ${endpoint} error:`, error)
+            console.error(`❌ PUT ${endpoint} error:`, error)
             throw error
         }
     }
 
     // ============================================
-    // PATCH (NUEVO)
+    // PATCH
     // ============================================
     async patch(endpoint, data, includeAuth = true) {
         try {
@@ -122,7 +140,7 @@ class HttpService {
             })
             return await this.handleResponse(response)
         } catch (error) {
-            console.error(`PATCH ${endpoint} error:`, error)
+            console.error(`❌ PATCH ${endpoint} error:`, error)
             throw error
         }
     }
@@ -140,7 +158,7 @@ class HttpService {
             })
             return await this.handleResponse(response)
         } catch (error) {
-            console.error(`DELETE ${endpoint} error:`, error)
+            console.error(`❌ DELETE ${endpoint} error:`, error)
             throw error
         }
     }
