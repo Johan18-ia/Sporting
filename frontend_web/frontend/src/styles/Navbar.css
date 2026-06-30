@@ -47,8 +47,8 @@
 }
 
 .btn-primary {
-  background: white;
-  color: #667eea !important;
+  background: rgb(239, 238, 238);
+  color: #ffffff !important;
 }
 
 .btn-primary:hover {

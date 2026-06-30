@@ -29,7 +29,7 @@ const Navbar = () => {
                 ============================================ */}
                 <div className="navbar-logo">
                     <Link to="/catalogo">
-                        <h2>⚽ Sporting Club</h2>
+                        <h2>Sporting</h2>
                     </Link>
                 </div>
 

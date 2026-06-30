@@ -1,5 +1,6 @@
 // src/views/common/Footer.jsx
 import React from 'react'
+import logoSporting from '../../assets/Logo.png'
 
 const Footer = () => {
   const footerStyles = {
@@ -52,8 +53,21 @@ const Footer = () => {
           {/* Columna 1: Logo y eslogan */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-              <span style={{ fontSize: '32px' }}>⚽</span>
-              <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#8B0000' }}>SPORTING</span>
+              <img 
+                      src={logoSporting}  
+                      alt="Sporting Logo" 
+                      className="navbar-logo-img"
+                      style={{
+                        height: '100%',
+                        maxHeight: '70px', 
+                        objectFit: 'contain',
+                        display: 'block'
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        if (e.target.nextSibling) e.target.nextSibling.style.display = 'inline';
+                      }}
+                    />
             </div>
             <p style={{ color: '#aaaaaa', fontStyle: 'italic', fontSize: '14px' }}>
               "Formando campeones para la vida."

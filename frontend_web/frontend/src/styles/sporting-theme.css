@@ -6,7 +6,7 @@
 :root {
   --sporting-red: #8B0000;
   --sporting-red-hover: #a00000;
-  --sporting-red-gradient: linear-gradient(135deg, #8B0000 0%, #FF4B2B 100%);
+  --sporting-red-gradient: linear-gradient(135deg, #8B0000 0%, #eb472ae7 100%);
   --sporting-dark: #111111;
   --sporting-gray: #333333;
   --sporting-light-gray: #f5f5f5;

@@ -48,9 +48,8 @@ const LoginView = () => {
   return (
     <div className="login-container">
       <div className="login-card sporting-login-card">
-        {/* Logo sin imagen - solo texto y emoji */}
         <div className="login-logo-text">
-          ⚽ <span className="sporting-club-name" style={{ color: '#8B0000' }}>Sporting Club</span>
+           <span className="sporting-club-name" style={{ color: '#8B0000' }}>SPORTING</span>
         </div>
 
         <div className="login-header sporting-header">

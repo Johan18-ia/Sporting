@@ -133,7 +133,7 @@ const SchedulesView = () => {
   return (
     <div style={containerStyles}>
       <div style={headerStyles}>
-        <h2 style={{ color: '#333', margin: 0 }}>📅 Horarios de Entrenamiento</h2>
+        <h2 style={{ color: '#333', margin: 0 }}>Horarios de Entrenamiento</h2>
         <button
           onClick={() => {
             setShowForm(!showForm)

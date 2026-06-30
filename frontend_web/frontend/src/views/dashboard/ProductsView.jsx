@@ -129,7 +129,7 @@ const ProductsView = () => {
   return (
     <div style={containerStyles}>
       <div style={headerStyles}>
-        <h2 style={{ color: '#333', margin: 0 }}>🛒 Gestión de Productos</h2>
+        <h2 style={{ color: '#333', margin: 0 }}> Mis Productos</h2>
         <button
           onClick={() => {
             setEditingProduct(null)
@@ -289,7 +289,7 @@ const ProductsView = () => {
             <th style={thStyles}>Categoría</th>
             <th style={thStyles}>Precio</th>
             <th style={thStyles}>Stock</th>
-            <th style={thStyles}>Acciones</th>
+            <th style={thStyles}>ㅤㅤ</th>
           </tr>
         </thead>
         <tbody>
@@ -322,7 +322,7 @@ const ProductsView = () => {
                 </td>
                 <td style={tdStyles}>
                   <span style={{
-                    color: p.stock > 0 ? '#10b981' : '#dc3545',
+                    color: p.stock > 0 ? '#0ea371' : '#a90202',
                     fontWeight: 600
                   }}>
                     {p.stock || 0}
@@ -332,7 +332,7 @@ const ProductsView = () => {
                   <button
                     onClick={() => handleDelete(p.id, p.nombre)}
                     style={{
-                      background: '#dc3545',
+                      background: '#a90202',
                       color: 'white',
                       border: 'none',
                       padding: '5px 12px',
@@ -341,7 +341,7 @@ const ProductsView = () => {
                       fontSize: '13px'
                     }}
                   >
-                    🗑️
+                    Eliminar
                   </button>
                 </td>
               </tr>

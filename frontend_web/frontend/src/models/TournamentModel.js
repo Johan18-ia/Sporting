@@ -1,48 +1,65 @@
-// frontend_web/frontend/src/models/TournamentModel.js
-import httpService from '../services/httpService'
-import API_CONFIG from '../config/api'
 
+// src/models/TournamentModel.js
 class TournamentModel {
+  static initLocalStorage() {
+    if (!localStorage.getItem('sporting_tournaments')) {
+      localStorage.setItem('sporting_tournaments', JSON.stringify([
+        { id: 1, name: 'Copa Infantil Sporting 2026', category: '2014', status: 'Inscripciones', students: [] },
+        { id: 2, name: 'Torneo Interescuelas Microfútbol', category: '2012', status: 'En Progreso', students: [] }
+      ]));
+    }
+  }
+
   static async getAllTournaments() {
+    this.initLocalStorage();
     try {
-      const response = await httpService.get(API_CONFIG.ENDPOINTS.TOURNAMENTS, true)
-
-      let tournamentsArray = []
-      if (response && response.data && Array.isArray(response.data)) {
-        tournamentsArray = response.data
-      }
-
-      return { success: true, data: tournamentsArray }
+      const data = JSON.parse(localStorage.getItem('sporting_tournaments'));
+      return { success: true, data };
     } catch (error) {
-      return { success: false, error: error.message || 'Error al cargar torneos' }
+      return { success: false, message: 'Error al recuperar los torneos' };
     }
   }
 
   static async createTournament(tournamentData) {
+    this.initLocalStorage();
     try {
-      const response = await httpService.post(
-        API_CONFIG.ENDPOINTS.TOURNAMENT_CREATE,
-        tournamentData,
-        true
-      )
-      return { success: true, data: response.data || response }
+      const tournaments = JSON.parse(localStorage.getItem('sporting_tournaments'));
+      const newTournament = {
+        id: tournaments.length > 0 ? Math.max(...tournaments.map(t => t.id)) + 1 : 1,
+        name: tournamentData.name,
+        category: tournamentData.category,
+        status: 'Inscripciones',
+        students: []
+      };
+      tournaments.push(newTournament);
+      localStorage.setItem('sporting_tournaments', JSON.stringify(tournaments));
+      return { success: true, data: newTournament };
     } catch (error) {
-      return { success: false, error: error.message || 'Error al crear torneo' }
+      return { success: false, message: 'Error al guardar el torneo' };
     }
   }
 
-  static async generateTeams(studentsList) {
+  static async addStudentToTournament(tournamentId, student) {
+    this.initLocalStorage();
     try {
-      const response = await httpService.post(
-        API_CONFIG.ENDPOINTS.TOURNAMENT_GENERATE_TEAMS,
-        { students: studentsList },
-        true
-      )
-      return { success: true, data: response.data || response }
+      const tournaments = JSON.parse(localStorage.getItem('sporting_tournaments'));
+      const index = tournaments.findIndex(t => t.id === parseInt(tournamentId));
+      
+      if (index === -1) return { success: false, message: 'Torneo no encontrado' };
+      
+      // Validar si el estudiante ya está inscrito
+      const alreadyInscribed = tournaments[index].students.some(s => s.id === student.id);
+      if (alreadyInscribed) {
+        return { success: false, message: 'El estudiante ya se encuentra inscrito en este torneo' };
+      }
+
+      tournaments[index].students.push(student);
+      localStorage.setItem('sporting_tournaments', JSON.stringify(tournaments));
+      return { success: true, data: tournaments[index] };
     } catch (error) {
-      return { success: false, error: error.message || 'Error al generar equipos' }
+      return { success: false, message: 'Error al inscribir al estudiante' };
     }
   }
 }
 
-export default TournamentModel
+export default TournamentModel;

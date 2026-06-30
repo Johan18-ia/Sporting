@@ -74,17 +74,17 @@ const UsersView = () => {
 
     const getRoleText = (role) => {
         switch (role) {
-            case 'admin': return '👑 Administrador'
-            case 'seller': return '🛒 Vendedor'
-            case 'customer': return '👤 Cliente'
-            default: return '👤 Usuario'
+            case 'admin': return ' Administrador'
+            case 'seller': return ' Vendedor'
+            case 'customer': return ' Cliente'
+            default: return ' Usuario'
         }
     }
 
     const getStatusBadge = (isActive) => {
         if (isActive === undefined || isActive === null) return null
         return {
-            background: isActive ? '#10b981' : '#ef4444',
+            background: isActive ? '#10b981' : '#8B0000',
             color: 'white',
             padding: '2px 10px',
             borderRadius: '12px',
@@ -185,7 +185,7 @@ const UsersView = () => {
     if (error && (error.includes('No tiene permisos') || error.includes('403'))) {
         return (
             <div className="error-container">
-                <div className="error-icon">🔒</div>
+                <div className="error-icon"></div>
                 <h3>Acceso Denegado</h3>
                 <p>No tiene permisos para ver la lista de usuarios.</p>
                 <p className="error-hint">Contacte al administrador si necesita acceso.</p>
@@ -196,7 +196,7 @@ const UsersView = () => {
     return (
         <div className="users-container">
             <div className="users-header">
-                <h2>👥 Gestión de Usuarios</h2>
+                <h2>Tus estudiantes</h2>
                 {canCreateUser() && (
                     <button
                         className="btn-primary"
@@ -264,7 +264,7 @@ const UsersView = () => {
                                     <td>
                                         <strong>{user.name} {user.lastname || ''}</strong>
                                         <div style={{ fontSize: '11px', color: '#888' }}>
-                                            {user.birth_date ? `📅 ${user.birth_date}` : ''}
+                                            {user.birth_date ? ` ${user.birth_date}` : ''}
                                         </div>
                                     </td>
                                     <td style={{ fontSize: '13px', color: '#666' }}>
@@ -293,7 +293,7 @@ const UsersView = () => {
                                             onClick={() => handleViewDetails(user)}
                                             title="Ver detalles"
                                         >
-                                            👁️
+                                            
                                         </button>
                                         <button
                                             className="btn-edit"
@@ -301,7 +301,7 @@ const UsersView = () => {
                                             title="Editar"
                                             disabled={!canEdit(user)}
                                         >
-                                            ✏️
+                                            
                                         </button>
                                         <button
                                             className="btn-delete"
@@ -309,7 +309,7 @@ const UsersView = () => {
                                             title="Eliminar"
                                             disabled={!canDelete(user)}
                                         >
-                                            🗑️
+                                            
                                         </button>
                                     </td>
                                 </tr>

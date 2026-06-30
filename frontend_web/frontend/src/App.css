@@ -1,19 +1,862 @@
 /* src/App.css */
 * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html, body, #root {
+    width: 100%;
+    min-height: 100vh; 
+    background-color: #ffffff; 
+    color: #333333; 
+    display: block; 
+}
+
+.App {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/*ESTILOS DE COMPONENTES REUTILIZABLES Botones, Enlaces, Tipografía Clases que se usan en múltiples partes de la app.*/
+a {
+    text-decoration: none; 
+    transition: all 0.3s ease; 
+}
+
+button, .btn-primary, .btn-secondary {
+    cursor: pointer;
+    border: none;
+    border-radius: 4px; 
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-block;
+    text-align: center;
+}
+
+/* Botón Primario*/
+.btn-primary {
+    background-color: #8B0000;
+    color: white;
+    padding: 8px 18px;
+}
+
+.btn-primary:hover {
+    background-color: #a00000; 
+}
+
+/* Botón Bloque*/
+.btn-block {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    font-size: 1rem;
+}
+
+/* Enlaces de texto */
+.text-link-bold {
+    color: #333333;
+    font-weight: 600;
+}
+
+.text-link-bold:hover {
+    color: #8B0000; 
+}
+
+/* Separadores */
+.divider {
+    border: 0;
+    border-top: 1px solid #eeeeee;
+    margin: 15px 0;
+}
+
+/* Clases Utilitarias de Texto y Layout */
+.text-center { text-align: center; }
+.text-dark { color: #333333; }
+.text-muted { color: #666666; }
+.fw-bold { font-weight: bold; }
+.align-center { align-items: center; }
+.justify-center { justify-content: center; }
+.inline-flex { display: inline-flex; }
+.ws-nowrap { white-space: nowrap; }
+.cursor-pointer { cursor: pointer; }
+.flex-1 { flex: 1; }
+.gap-10 { gap: 10px; }
+.m-0 { margin: 0; }
+.m-0-b-5 { margin: 0 0 5px 0; }
+.m-0-b-10 { margin: 0 0 10px 0; }
+.mt-4 { margin-top: 1.5rem; }
+.mt-5 { margin-top: 5px; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mb-30 { margin-bottom: 30px; }
+.p-10 { padding: 10px; }
+.height-auto { height: auto; }
+.scroll-y { overflow-y: auto; }
+
+/* Tamaños de fuente */
+.f-xs { font-size: 0.8rem; }
+.f-sm { font-size: 0.85rem; }
+.f-md { font-size: 1.1rem; }
+
+/*ESTILOS DE LA BARRA DE NAVEGACIÓN (HEADER) Reglas para el logo, enlaces de navegación y estados activos.*/
+header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #eeeeee;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 10px 5%; 
+    max-width: 1200px; 
+    margin: 0 auto; 
+}
+
+/* Clase para layout unificado del header */
+.navbar-custom-layout {
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    padding: 10px 20px;
+}
+
+.logo {
+    font-size: 1.3rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px; 
+    color: #333333;
+}
+
+.logo-img-header {
+    height: 60px;
+    width: auto;
+}
+
+.nav-links {
+    list-style: none; 
+    display: flex;
+    gap: 10px; 
+    align-items: center;
+}
+
+/* Navegación de Paneles (Entrenador/Estudiante) */
+.panel-nav {
+    gap: 20px; 
+}
+
+.panel-nav-custom {
+    margin: 0;
+}
+
+/* Layout específico para links públicos */
+.nav-links-publico-layout {
+    margin: 0;
+    gap: 10px;
+}
+
+.nav-item {
+    background: none;
+    border: none;
+    color: #555555;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+    color: #8B0000;
+}
+
+.nav-item.active {
+    color: #333333;
+    font-weight: bold;
+    background-color: #f0f0f0; 
+    border-radius: 4px;
+}
+
+/* Estilos de botones específicos del Nav público */
+.btn-login-nav {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 8px 15px;
+}
+
+.btn-registro-nav {
+    border: none;
+    padding: 8px 15px;
+    color: #fff !important;
+}
+
+/* Información del perfil en el nav */
+.profesor-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: #333333;
+    margin-left: 20px;
+}
+
+.profesor-info-custom-layout {
+    gap: 5px;
+}
+
+.profesor-info-clickable {
+    cursor: pointer;
+}
+
+.btn-salir-transparent {
+    background: none;
+    border: none;
+}
+
+/* Avatares */
+.avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+}
+
+.avatar-entrenador { background-color: #8B0000; }
+.avatar-estudiante { background-color: #4CAF50; }
+
+/*ESTILOS DE VISTAS PÚBLICAS (CATÁLOGO) Banner, grid de productos y tarjetas de producto.*/
+.catalogo-page {
+    flex: 1; 
+}
+
+/* Banner Promocional Principal */
+.banner-promocional {
+    background: linear-gradient(135deg, #8B0000 0%, #FF4B2B 100%);
+    color: white;
+    text-align: center;
+    padding: 50px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.banner-title {
+    margin: 0 0 5px 0;
+    color: white;
+}
+
+.banner-text {
+    margin: 0;
+    font-Size: 0.95rem;
+    color: white;
+}
+
+/* Layout del contenedor principal público */
+.main-container-publico {
+    padding: 10px;
+}
+
+/* Títulos con efecto 'faded' */
+.faded-title-dark {
+    color: #333;
+    text-align: center;
+}
+
+.catalogo-vacio-texto {
+    color: #333;
+    text-align: center;
+}
+
+/* --- TARJETA DE PRODUCTO --- */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  height: 350px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+
+.product-image-placeholder {
+  height: 220px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.product-info-container {
+  padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.product-text-box {
+  overflow: hidden;
+  text-align: center;
+}
+
+.product-title {
+  font-size: 0.95rem;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #333;
+}
+
+.product-description {
+  font-size: 0.8rem;
+  color: #666;
   margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  /* Muestra máx 2 líneas de descripción */
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.product-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.product-price {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Botón Pedir por WhatsApp */
+.btn-order-whatsapp {
+  background-color: #21ad54;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.btn-order-whatsapp:hover {
+  background-color: #24dd65;
+}
+
+/*ESTILOS DE PÁGINAS DE AUTENTICACIÓN (LOGIN/REGISTRO) Define el layout centrado y la caja de login.*/
+.auth-page-container {
+    display: flex;
+    justify-content: center; 
+    align-items: center;    
+    min-height: calc(100vh - 61px); 
+    background-color: #ffffff; 
+    flex: 1;
+}
+
+/* Ajustes específicos para el layout de registro */
+.vista-registro-layout {
+    padding: 40px 0;
+}
+
+.auth-box {
+    background-color: #ffffff;
+    padding: 30px;
+    width: 100%;
+    max-width: 380px; 
+    border: 1px solid #dddddd; 
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Ajustes específicos de la caja de registro */
+.auth-box-registro {
+    max-width: 500px;
+}
+
+.auth-title {
+    font-size: 1.6rem;
+    color: #333;
+    margin-bottom: 25px;
+    font-weight: 400;
+}
+
+/* ESTILOS DE FORMULARIOS DE AUTENTICACIÓN */
+.form-group {
+    margin-bottom: 12px;
+}
+
+.btn-login-submit {
+    color: #fff !important;
+}
+
+.auth-help-text {
+    margin-top: 15px;
+    font-size: 0.85rem;
+}
+
+/* Botones 'Volver' */
+.back-link-dark {
+    display: inline-block;
+    margin-top: 15px;
+    color: #333;
+    background: none;
+}
+
+/* Labels de fecha en registro */
+.label-fecha-nacimiento {
+    font-size: 0.85rem;
+    color: #333;
+    display: block;
+    text-align: center;
+}
+
+/* Grid para selects de fecha */
+.time-selectors-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+/* ESTILOS DEL PANEL DEL ENTRENADOR Y ESTUDIANTE Contenedores de horarios, tablas de datos y layouts de administración.*/
+.main-content-panel {
+    max-width: 1300px;
+    margin: 30px auto;
+    padding: 0 5%;
+    flex: 1;
+}
+
+.horarios-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Caja contenedora de la cuadrícula de datos */
+.horarios-grid-box {
+    background-color: #ffffff;
+    border: 1px solid #eeeeee;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Títulos de sección dentro de paneles */
+.section-title-dark {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Filas de la cuadrícula */
+.grid-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.grid-row:last-child {
+    border-bottom: none;
+}
+
+/* Columnas principales */
+.col-desc {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.col-desc strong {
+    font-size: 0.95rem;
+}
+
+.col-desc p {
+    font-size: 0.85rem;
+}
+
+/* Columnas de Categoría / Precio */
+.col-cat {
+    width: 60px;
+    font-size: 0.95rem;
+}
+
+/* Fila de Encabezado */
+.header-row {
+    background-color: #fbfbfb;
+    color: #888888;
+    font-size: 0.85rem;
+    padding: 8px 20px;
+}
+
+/* Layout específico para filas de torneo */
+.p-torneo {
+    padding: 15px 10px;
+}
+
+/* Cajita de enfrentamiento VS */
+.enfrentamiento-box {
+    margin-top: 10px;
+    background-Color: #f9f9f9;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+/* Footer de la sección de horarios (filtros y añadir) */
+.horarios-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+}
+
+.select-categoria {
+    padding: 8px 15px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: #ffffff;
+    font-size: 0.9rem;
+    color: #555555;
+}
+
+.select-categoria-width {
+    max-width: 200px;
+}
+
+/* Botón '+' para añadir horario */
+.btn-add-horario {
+    font-size: 1.8rem;
+    color: #aaa;
+    background: none;
+}
+
+/* Botones de acción en paneles de Admin */
+.btn-crear-producto-submit, .btn-crear-equipo-submit, .btn-crear-torneo-submit {
+    color: #fff !important;
+}
+
+.btn-crear-equipo-submit {
+    background-color: #2E7D32;
+}
+
+/* Botón Borrar (Pequeño, Rojo) */
+.btn-delete {
+    background-color: #8B0000;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-delete:hover {
+    background-color: #a90202; 
+}
+
+/* --- ESTILOS ESPECÍFICOS PANEL ESTUDIANTE --- */
+.panel-title-dark {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+/* Caja de info del equipo del estudiante */
+.equipo-info-box-estudiante {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #fff;
+    margin-bottom: 20px;
+}
+
+/* Tarjeta de torneo vista estudiante */
+.torneo-card-estudiante {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #fff;
+}
+
+/* Caja de enfrentamiento VS vista estudiante */
+.enfrentamiento-box-estudiante {
+    margin-bottom: 10px;
+    background-color: #f5f5f5;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+/* Badge de estado del torneo */
+.badge-estado-torneo {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+    padding: 4px 10px;
+    border-radius: 15px;
+}
+
+/* ESTILOS DE MODALES (VENTANAS EMERGENTES) Define el overlay oscuro, la caja del modal y formularios internos.*/
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200; 
+}
+
+/* Ajuste de z-index para modal de confirmación de borrado */
+.modal-overlay-borrado {
+    z-index: 2000;
+}
+
+.modal-content {
+    background-color: #ffffff;
+    width: 90%;
+    max-width: 450px;
+    max-height: 90vh; 
+    overflow-y: auto; 
+    padding: 30px;
+    border-radius: 8px;
+    border: 1px solid #cccccc;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Ajustes específicos modal crear equipo */
+.modal-crear-equipo-layout {
+    max-width: 400px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-close {
+    background: none;
+    font-size: 1.2rem;
+}
+
+/* Formulario dentro del modal */
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-form .form-group-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-align: left; 
+}
+
+/* Labels genéricos modal */
+.label-modal-generic {
+    font-size: 0.85rem;
+}
+
+/* Contenedores de selects alienados (enfrentamientos/sangre) */
+.enfrentamiento-selects-layout {
+    display: flex;
+}
+
+/* Caja de placeholder para subir imagen */
+.upload-placeholder-box {
+    border: 1px dashed #ccc;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #fafafa;
+}
+
+
+.modal-body-perfil {
+    padding: 15px 0;
+}
+
+.avatar-perfil {
+    margin: 0 auto 10px auto;
+}
+
+.modal-avatar-layout {
+    font-size: 1.5rem;
+}
+
+.info-perfil-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-divider-light {
+    margin: 20px 0;
+    border: 0;
+    border-top: 1px solid #eee;
+}
+
+.badge-categoria-perfil {
+    background-color: #eee;
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* --- ESTILOS ESPECÍFICOS MODAL CREAR EQUIPO --- */
+.label-modal-check {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+/* Contenedor scrolleable de checks */
+.checkbox-list-container {
+    max-height: 160px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px;
+    background-color: #fff;
+}
+
+/* Item de checkbox */
+.checkbox-item-layout {
+    display: flex;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* --- ESTILOS MODAL CONFIRMACIÓN BORRADO --- */
+.dialog-confirm {
+    text-align: center;
+}
+
+.dialog-actions {
+    margin-top: 20px;
+}
+
+.btn-borrar-confirmar {
+    border: none;
+    color: #fff !important;
+}
+
+.btn-cancelar-confirmar {
+    background-color: #ccc;
+    color: #333;
+    padding: 8px 15px;
+}
+
+/* ESTILOS DEL FOOTER GENERAL Franja negra final profesional con estética del club.*/
+.footer-principal {
+    background-color: #111111; 
+    color: #eeeeee;
+    padding: 10px 0 10px 0;
+    margin-top: auto; 
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Títulos de las columnas del footer */
+.footer-content h4 {
+    color: #ffffff;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Layout de las columnas */
+.footer-col-logo {
+    text-align: center;
+}
+
+.footer-logo-img {
+    height: 70px;
+    width: auto;
+    margin-bottom: 15px;
+    filter: brightness(0.9); 
+}
+
+.footer-eslogan {
+    font-size: 0.85rem;
+    color: #aaaaaa;
+    font-style: italic;
+}
+
+.footer-col-links ul {
+    list-style: none;
+}
+
+.footer-col-links ul li {
+    margin-bottom: 10px;
+}
+
+/* Enlaces del footer */
+.footer-col-links ul li a {
+    color: #cccccc;
+    font-size: 0.9rem;
+}
+
+.footer-col-links ul li a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.footer-col-contacto p {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    color: #cccccc;
+}
+
+/* Barra inferior de copyright */
+.footer-bottom {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #333333;
+    text-align: center;
+}
+
+.footer-bottom p {
+    font-size: 0.8rem;
+    color: #888888;
+}
+
+/*ANIMACIONES Reglas para efectos visuales de entrada de elementos.*/
+.animacion-aparecer {
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
