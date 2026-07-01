@@ -1,190 +1,169 @@
-// src/views/dashboard/CategoriesView.jsx
+// frontend_web/frontend/src/views/dashboard/DashboardView.jsx
+// ====================================================
+// VISTA: DASHBOARD PRINCIPAL (RUTEO POR ROL)
+// ====================================================
 import React, { useState } from 'react';
-import useCategories from '../../hooks/useCategories';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import useAuth from '../../hooks/useAuth';
+import UsersView from './UsersView';
+import CategoriesView from './CategoriesView';
+import SchedulesView from './SchedulesView'; // Asegúrate de que este componente existe
+import TournamentsView from './TournamentsView'; // Asegúrate de que este componente existe
+import ProductsView from './ProductsView'; // Asegúrate de que este componente existe
+import StudentDashboardView from './StudentDashboardView';
+// Importa las vistas para administradores y vendedores si son diferentes
+import AdminDashboardView from './AdminDashboardView';
+import '../../styles/Dashboard.css';
 
-const CategoriesView = () => {
-    const { categories, loading, error, createCategory, deleteCategory } = useCategories();
-    const [year, setYear] = useState('');
-    const [description, setDescription] = useState('');
+const DashboardView = () => {
+    const { currentUser } = useAuth();
+    const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState('dashboard');
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!year || !description) return;
+    // Si no hay usuario autenticado, redirigir al login
+    if (!currentUser) {
+        return <Navigate to="/login" />;
+    }
 
-        const res = await createCategory(year, description);
-        if (res.success) {
-            alert('Categoría creada exitosamente');
-            setYear('');
-            setDescription('');
-        } else {
-            alert(`Error: ${res.message}`);
+    // Determinar que vista renderizar según el rol
+    const renderDashboardHome = () => {
+        if (currentUser.role === 'user') {
+            return <StudentDashboardView />;
         }
+        // Para admin y seller, usar un dashboard de administración
+        return <AdminDashboardView />;
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar esta categoría?')) {
-            const res = await deleteCategory(id);
-            if (!res.success) {
-                alert(`Error al eliminar: ${res.message}`);
-            }
-        }
-    };
-
-    return (
-        <div style={{ padding: '24px', fontFamily: 'system-ui, sans-serif', color: '#333' }}>
-            <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ margin: '0 0 8px 0', color: '#1a1a1a', fontSize: '24px' }}>Gestión de Categorías</h2>
-                <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-                    Administra los rangos de años de nacimiento para la escuela de microfútbol.
-                </p>
-            </div>
-
-            <form onSubmit={handleSubmit} style={{ 
-                marginBottom: '32px', 
-                background: '#ffffff', 
-                padding: '20px', 
-                borderRadius: '10px', 
-                boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                border: '1px solid #eaeaea'
-            }}>
-                <h3 style={{ margin: '0 0 16px 0', color: '#8B0000', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                     Agregar Nueva Categoría
-                </h3>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: '6px', color: '#555' }}>Año de Nacimiento</label>
-                        <input
-                            type="number"
-                            value={year}
-                            onChange={(e) => setYear(e.target.value)}
-                            placeholder="Ej: 2014"
-                            required
-                            style={{
-                                padding: '10px 12px',
-                                borderRadius: '6px',
-                                border: '1px solid #ccc',
-                                fontSize: '14px',
-                                outline: 'none',
-                                transition: 'border-color 0.2s'
-                            }}
-                        />
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '13px', fontWeight: '6px', color: '#555' }}>Descripción de la Categoría</label>
-                        <input
-                            type="text"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Ej: Categoría Benjamín"
-                            required
-                            style={{
-                                padding: '10px 12px',
-                                borderRadius: '6px',
-                                border: '1px solid #ccc',
-                                fontSize: '14px',
-                                outline: 'none',
-                                transition: 'border-color 0.2s'
-                            }}
-                        />
+    // ============================================
+    // SIDEBAR DINAMICO SEGUN ROL
+    // ============================================
+    const renderSidebar = () => {
+        // Para estudiantes, sidebar reducido
+        if (currentUser.role === 'user') {
+            return (
+                <div className="sporting-sidebar">
+                    <div className="sidebar-menu">
+                        <div className="sidebar-separator">NAVEGACION</div>
+                        <button
+                            className={`sidebar-link ${activeTab === 'dashboard' ? 'active' : ''}`}
+                            onClick={() => { setActiveTab('dashboard'); navigate('/dashboard'); }}
+                        >
+                            Mi Panel
+                        </button>
+                        <button
+                            className={`sidebar-link ${activeTab === 'profile' ? 'active' : ''}`}
+                            onClick={() => { setActiveTab('profile'); navigate('/dashboard/profile'); }}
+                        >
+                            Mi Perfil
+                        </button>
                     </div>
                 </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <button type="submit" style={{ 
-                        background: '#8B0000', 
-                        color: 'white', 
-                        padding: '10px 20px', 
-                        border: 'none', 
-                        borderRadius: '6px',
-                        fontWeight: '500',
-                        fontSize: '14px',
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 4px rgba(139, 0, 0, 0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                    }}>
-                        Guardar Categoría
+            );
+        }
+
+        // Sidebar completo para admin y seller
+        return (
+            <div className="sporting-sidebar">
+                <div className="sidebar-menu">
+                    <div className="sidebar-separator">GESTION</div>
+                    <button
+                        className={`sidebar-link ${activeTab === 'dashboard' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('dashboard'); navigate('/dashboard'); }}
+                    >
+                        Inicio
+                    </button>
+                    <button
+                        className={`sidebar-link ${activeTab === 'users' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('users'); navigate('/dashboard/users'); }}
+                    >
+                        Usuarios
+                    </button>
+                    <button
+                        className={`sidebar-link ${activeTab === 'categories' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('categories'); navigate('/dashboard/categories'); }}
+                    >
+                        Categorias
+                    </button>
+                    <button
+                        className={`sidebar-link ${activeTab === 'schedules' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('schedules'); navigate('/dashboard/schedules'); }}
+                    >
+                        Horarios
+                    </button>
+                    <button
+                        className={`sidebar-link ${activeTab === 'tournaments' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('tournaments'); navigate('/dashboard/tournaments'); }}
+                    >
+                        Torneos
+                    </button>
+                    <button
+                        className={`sidebar-link ${activeTab === 'products' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('products'); navigate('/dashboard/products'); }}
+                    >
+                        Productos
                     </button>
                 </div>
-            </form>
+            </div>
+        );
+    };
 
-            <h3 style={{ margin: '0 0 16px 0', color: '#1a1a1a', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                 Categorías Registradas
-            </h3>
-            
-            {loading && <p style={{ color: '#666', fontStyle: 'italic' }}>Cargando categorías...</p>}
-            {error && <p style={{ color: '#dc3545', background: '#fdf2f2', padding: '10px', borderRadius: '6px', border: '1px solid #fde2e2' }}>{error}</p>}
-            
-            {!loading && !error && (
-                <div style={{ background: '#ffffff', borderRadius: '10px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', overflow: 'hidden', border: '1px solid #eaeaea' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-                        <thead>
-                            <tr style={{ background: '#8B0000', color: '#ffffff' }}>
-                                <th style={{ padding: '12px 16px', fontWeight: '600', width: '80px' }}>ID</th>
-                                <th style={{ padding: '12px 16px', fontWeight: '600', width: '150px' }}>Año</th>
-                                <th style={{ padding: '12px 16px', fontWeight: '600' }}>Descripción</th>
-                                <th style={{ padding: '12px 16px', fontWeight: '600', width: '120px', textAlign: 'center' }}>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {categories.map((cat, index) => (
-                                <tr key={cat.id} style={{ 
-                                    background: index % 2 === 0 ? '#ffffff' : '#fcfcfc',
-                                    borderBottom: '1px solid #eee',
-                                    transition: 'background-color 0.2s'
-                                }}>
-                                    <td style={{ padding: '12px 16px', color: '#777' }}>#{cat.id}</td>
-                                    <td style={{ padding: '12px 16px' }}>
-                                        <span style={{ 
-                                            background: '#8B0000', 
-                                            color: 'white', 
-                                            padding: '4px 8px', 
-                                            borderRadius: '4px', 
-                                            fontSize: '12px',
-                                            fontWeight: '600'
-                                        }}>
-                                            {cat.name_year}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '12px 16px', fontWeight: '500', color: '#333' }}>{cat.description}</td>
-                                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                        <button 
-                                            onClick={() => handleDelete(cat.id)} 
-                                            style={{ 
-                                                background: '#8B0000', 
-                                                color: 'white', 
-                                                border: 'none', 
-                                                padding: '6px 12px', 
-                                                borderRadius: '6px',
-                                                cursor: 'pointer',
-                                                fontSize: '12px',
-                                                fontWeight: '500',
-                                                boxShadow: '0 2px 4px rgba(220, 53, 69, 0.15)',
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '4px'
-                                            }}
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {categories.length === 0 && (
-                                <tr>
-                                    <td colSpan="4" style={{ textAlign: 'center', padding: '24px', color: '#888', fontStyle: 'italic' }}>
-                                        No hay categorías registradas en este momento.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+    // ============================================
+    // RENDERIZADO PRINCIPAL
+    // ============================================
+    return (
+        <div className="sporting-layout-master">
+            {/* TOP NAVBAR */}
+            <header className="sporting-top-navbar">
+                <div className="navbar-logo-area">
+                    <span className="logo-placeholder">
+                        <span className="logo-text">SPORTING</span>
+                        <span className="logo-subtext">Club</span>
+                    </span>
                 </div>
-            )}
+                <div className="navbar-user-area">
+                    <span className="user-email-display">
+                        {currentUser.email}
+                    </span>
+                    <button
+                        className="btn-logout-sporting"
+                        onClick={() => {
+                            // Lógica de logout
+                            localStorage.removeItem('auth_token');
+                            localStorage.removeItem('user_data');
+                            window.location.href = '/login';
+                        }}
+                    >
+                        Salir
+                    </button>
+                </div>
+            </header>
+
+            {/* BODY CON SIDEBAR Y CONTENIDO */}
+            <div className="sporting-body-container">
+                {renderSidebar()}
+
+                <div className="sporting-content-workspace">
+                    <Routes>
+                        {/* Ruta raíz del dashboard */}
+                        <Route path="/" element={renderDashboardHome()} />
+
+                        {/* Rutas para administración */}
+                        <Route path="/users" element={<UsersView />} />
+                        <Route path="/categories" element={<CategoriesView />} />
+                        <Route path="/schedules" element={<SchedulesView />} />
+                        <Route path="/tournaments" element={<TournamentsView />} />
+                        <Route path="/products" element={<ProductsView />} />
+
+                        {/* Ruta para el perfil del estudiante (puedes crearla después) */}
+                        <Route path="/profile" element={<div>Perfil del Estudiante</div>} />
+
+                        {/* Redirigir rutas no encontradas */}
+                        <Route path="*" element={<Navigate to="/dashboard" />} />
+                    </Routes>
+                </div>
+            </div>
         </div>
     );
 };
 
-export default CategoriesView;
+export default DashboardView;
