@@ -21,55 +21,8 @@ const Navbar = () => {
         return null
     }
 
-    return (
-        <nav className="navbar">
-            <div className="navbar-container">
-                {/* ============================================
-                LOGO
-                ============================================ */}
-                <div className="navbar-logo">
-                    <Link to="/catalogo">
-                        <h2>Sporting</h2>
-                    </Link>
-                </div>
-
-                {/* ============================================
-                MENÚ
-                ============================================ */}
-                <div className="navbar-menu">
-                    <Link to="/catalogo" className="nav-link">
-                         Catálogo
-                    </Link>
-
-                    {!isAuthenticated ? (
-                        // ============================================
-                        // USUARIO NO AUTENTICADO
-                        // ============================================
-                        <>
-                            <Link to="/login" className="nav-link">
-                                Iniciar Sesión
-                            </Link>
-                        </>
-                    ) : (
-                        // ============================================
-                        // USUARIO AUTENTICADO
-                        // ============================================
-                        <>
-                            <span className="user-welcome">
-                                👋 Hola, {currentUser?.name || currentUser?.email}
-                            </span>
-                            <Link to="/dashboard" className="nav-link">
-                                 Dashboard
-                            </Link>
-                            <button onClick={handleLogout} className="nav-link btn-logout">
-                                 Cerrar Sesión
-                            </button>
-                        </>
-                    )}
-                </div>
-            </div>
-        </nav>
-    )
+   
+    
 }
 
 export default Navbar
