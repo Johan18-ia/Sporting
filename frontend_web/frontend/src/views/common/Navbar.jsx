@@ -20,6 +20,15 @@ const Navbar = () => {
     if (location.pathname.includes('/dashboard')) {
         return null
     }
+    // ============================================
+    // OCULTAR NAVBAR EN PÁGINAS DE AUTENTICACIÓN
+    // ============================================
+    const isAuthPage = ['/login', '/register'].includes(location.pathname)
+    const isDashboard = location.pathname.includes('/dashboard')
+
+    if (isAuthPage || isDashboard) {
+        return null
+    }
 
     // ============================================
     // RENDERIZADO DE NAVBAR SEGUN ROL
