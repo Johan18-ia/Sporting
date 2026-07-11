@@ -1,169 +1,111 @@
-// frontend_web/frontend/src/views/dashboard/DashboardView.jsx
-// ====================================================
-// VISTA: DASHBOARD PRINCIPAL (RUTEO POR ROL)
-// ====================================================
+// src/views/dashboard/CategoriesView.jsx
 import React, { useState } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
-import UsersView from './UsersView';
-import CategoriesView from './CategoriesView';
-import SchedulesView from './SchedulesView'; // Asegúrate de que este componente existe
-import TournamentsView from './TournamentsView'; // Asegúrate de que este componente existe
-import ProductsView from './ProductsView'; // Asegúrate de que este componente existe
-import StudentDashboardView from './StudentDashboardView';
-// Importa las vistas para administradores y vendedores si son diferentes
-import AdminDashboardView from './AdminDashboardView';
-import '../../styles/Dashboard.css';
+import useCategories from '../../hooks/useCategories';
+import PageHeader from '../ui/PageHeader';
+import Card from '../ui/Card';
+import Table from '../ui/Table';
+import Button from '../ui/Button';
 
-const DashboardView = () => {
-    const { currentUser } = useAuth();
-    const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('dashboard');
+const CategoriesView = () => {
+    const { categories, loading, error, createCategory, deleteCategory } = useCategories();
+    const [year, setYear] = useState('');
+    const [description, setDescription] = useState('');
 
-    // Si no hay usuario autenticado, redirigir al login
-    if (!currentUser) {
-        return <Navigate to="/login" />;
-    }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!year || !description) return;
 
-    // Determinar que vista renderizar según el rol
-    const renderDashboardHome = () => {
-        if (currentUser.role === 'user') {
-            return <StudentDashboardView />;
+        const res = await createCategory(year, description);
+        if (res.success) {
+            alert('Categoría creada exitosamente');
+            setYear('');
+            setDescription('');
+        } else {
+            alert(`Error: ${res.message}`);
         }
-        // Para admin y seller, usar un dashboard de administración
-        return <AdminDashboardView />;
     };
 
-    // ============================================
-    // SIDEBAR DINAMICO SEGUN ROL
-    // ============================================
-    const renderSidebar = () => {
-        // Para estudiantes, sidebar reducido
-        if (currentUser.role === 'user') {
-            return (
-                <div className="sporting-sidebar">
-                    <div className="sidebar-menu">
-                        <div className="sidebar-separator">NAVEGACION</div>
-                        <button
-                            className={`sidebar-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-                            onClick={() => { setActiveTab('dashboard'); navigate('/dashboard'); }}
-                        >
-                            Mi Panel
-                        </button>
-                        <button
-                            className={`sidebar-link ${activeTab === 'profile' ? 'active' : ''}`}
-                            onClick={() => { setActiveTab('profile'); navigate('/dashboard/profile'); }}
-                        >
-                            Mi Perfil
-                        </button>
-                    </div>
-                </div>
-            );
+    const handleDelete = async (id) => {
+        if (window.confirm('¿Estás seguro de que deseas eliminar esta categoría?')) {
+            const res = await deleteCategory(id);
+            if (!res.success) {
+                alert(`Error al eliminar: ${res.message}`);
+            }
         }
-
-        // Sidebar completo para admin y seller
-        return (
-            <div className="sporting-sidebar">
-                <div className="sidebar-menu">
-                    <div className="sidebar-separator">GESTION</div>
-                    <button
-                        className={`sidebar-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('dashboard'); navigate('/dashboard'); }}
-                    >
-                        Inicio
-                    </button>
-                    <button
-                        className={`sidebar-link ${activeTab === 'users' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('users'); navigate('/dashboard/users'); }}
-                    >
-                        Usuarios
-                    </button>
-                    <button
-                        className={`sidebar-link ${activeTab === 'categories' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('categories'); navigate('/dashboard/categories'); }}
-                    >
-                        Categorias
-                    </button>
-                    <button
-                        className={`sidebar-link ${activeTab === 'schedules' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('schedules'); navigate('/dashboard/schedules'); }}
-                    >
-                        Horarios
-                    </button>
-                    <button
-                        className={`sidebar-link ${activeTab === 'tournaments' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('tournaments'); navigate('/dashboard/tournaments'); }}
-                    >
-                        Torneos
-                    </button>
-                    <button
-                        className={`sidebar-link ${activeTab === 'products' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('products'); navigate('/dashboard/products'); }}
-                    >
-                        Productos
-                    </button>
-                </div>
-            </div>
-        );
     };
 
-    // ============================================
-    // RENDERIZADO PRINCIPAL
-    // ============================================
     return (
-        <div className="sporting-layout-master">
-            {/* TOP NAVBAR */}
-            <header className="sporting-top-navbar">
-                <div className="navbar-logo-area">
-                    <span className="logo-placeholder">
-                        <span className="logo-text">SPORTING</span>
-                        <span className="logo-subtext">Club</span>
-                    </span>
-                </div>
-                <div className="navbar-user-area">
-                    <span className="user-email-display">
-                        {currentUser.email}
-                    </span>
-                    <button
-                        className="btn-logout-sporting"
-                        onClick={() => {
-                            // Lógica de logout
-                            localStorage.removeItem('auth_token');
-                            localStorage.removeItem('user_data');
-                            window.location.href = '/login';
-                        }}
-                    >
-                        Salir
-                    </button>
-                </div>
-            </header>
+        <div>
+            <PageHeader
+                title="Gestión de Categorías"
+                description="Administra los rangos de años de nacimiento para la escuela de microfútbol."
+            />
 
-            {/* BODY CON SIDEBAR Y CONTENIDO */}
-            <div className="sporting-body-container">
-                {renderSidebar()}
+            <Card title="Agregar Categoría">
+                <form onSubmit={handleSubmit}>
+                    <div className="ui-field">
+                        <label>Año de Nacimiento</label>
+                        <input
+                            type="number"
+                            value={year}
+                            onChange={(e) => setYear(e.target.value)}
+                            placeholder="Ej: 2014"
+                            required
+                        />
+                    </div>
+                    <div className="ui-field">
+                        <label>Descripción</label>
+                        <input
+                            type="text"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Ej: Categoría Benjamín"
+                            required
+                        />
+                    </div>
+                    <Button type="submit">Guardar</Button>
+                </form>
+            </Card>
 
-                <div className="sporting-content-workspace">
-                    <Routes>
-                        {/* Ruta raíz del dashboard */}
-                        <Route path="/" element={renderDashboardHome()} />
+            <h3 className="ui-card-title" style={{ marginBottom: '12px' }}>Categorías Registradas</h3>
+            {loading && <p>Cargando categorías...</p>}
+            {error && <p style={{ color: '#dc3545' }}>{error}</p>}
 
-                        {/* Rutas para administración */}
-                        <Route path="/users" element={<UsersView />} />
-                        <Route path="/categories" element={<CategoriesView />} />
-                        <Route path="/schedules" element={<SchedulesView />} />
-                        <Route path="/tournaments" element={<TournamentsView />} />
-                        <Route path="/products" element={<ProductsView />} />
-
-                        {/* Ruta para el perfil del estudiante (puedes crearla después) */}
-                        <Route path="/profile" element={<div>Perfil del Estudiante</div>} />
-
-                        {/* Redirigir rutas no encontradas */}
-                        <Route path="*" element={<Navigate to="/dashboard" />} />
-                    </Routes>
-                </div>
-            </div>
+            {!loading && !error && (
+                <Table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Año</th>
+                            <th>Descripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {categories.map((cat) => (
+                            <tr key={cat.id}>
+                                <td>{cat.id}</td>
+                                <td><strong>{cat.category_year}</strong></td>
+                                <td>{cat.description}</td>
+                                <td>
+                                    <Button variant="danger" onClick={() => handleDelete(cat.id)}>
+                                        Eliminar
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
+                        {categories.length === 0 && (
+                            <tr>
+                                <td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                                    No hay categorías.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </Table>
+            )}
         </div>
     );
 };
 
-export default DashboardView;
+export default CategoriesView;

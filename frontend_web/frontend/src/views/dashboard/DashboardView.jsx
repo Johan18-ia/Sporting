@@ -1,26 +1,35 @@
 // src/views/dashboard/DashboardView.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
-import DashboardHeader from './DashboardHeader'
+import useDashboard from '../../hooks/useDashboard'
+import MainLayout from '../layouts/MainLayout'
 import DashboardStats from './DashboardStats'
 import UsersView from './UsersView'
 import CategoriesView from './CategoriesView'
 import AlertMessage from '../common/AlertMessage'
-import LoadingSpinner from '../common/LoadingSpinner'
 import SchedulesView from './SchedulesView'
 import CatalogView from './CatalogView'
 import ProductsView from './ProductsView'
 import StudentsView from './StudentsView'
 import TournamentsView from './TournamentsView'
+import StudentDashboardView from './StudentDashboardView'
 import '../../styles/Dashboard.css'
 import '../../styles/Users.css'
 
 const DashboardView = () => {
   const { currentUser, logout } = useAuth()
+  const { stats, loading: statsLoading, loadStats } = useDashboard()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [logoutMessage, setLogoutMessage] = useState('')
   const navigate = useNavigate()
+
+  // Carga las estadisticas reales a traves del hook/controller/modelo
+  // que ya existian en el proyecto (antes no se usaban en ningun lado
+  // y el dashboard mostraba numeros fijos escritos a mano).
+  useEffect(() => {
+    loadStats()
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -34,6 +43,35 @@ const DashboardView = () => {
     }
   }
 
+  // ============================================
+  // ROL "user" (estudiante): panel propio, mas simple.
+  // Esta rama existia en un componente viejo del proyecto que se
+  // superponia con el dashboard nuevo (ver auditoria); se restaura
+  // aqui reutilizando StudentDashboardView.jsx tal cual ya estaba.
+  // ============================================
+  if (currentUser?.role === 'user') {
+    return (
+      <MainLayout
+        activeTab="dashboard"
+        onTabChange={() => {}}
+        user={currentUser}
+        onLogout={handleLogout}
+      >
+        {logoutMessage && (
+          <AlertMessage
+            type="success"
+            message={logoutMessage}
+            onClose={() => setLogoutMessage('')}
+          />
+        )}
+        <StudentDashboardView />
+      </MainLayout>
+    )
+  }
+
+  // ============================================
+  // ROLES "admin" / "seller": panel de administracion
+  // ============================================
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -44,12 +82,15 @@ const DashboardView = () => {
               <p>Panel de administración de Sporting Club</p>
             </div>
 
-            <DashboardStats stats={{
-              activeUsers: 150,
-              todayVisits: 45,
-              activeSessions: 23,
-              successRate: 95
-            }} />
+            <DashboardStats
+              stats={{
+                activeUsers: stats?.activeUsers ?? 0,
+                todayVisits: stats?.todayVisits ?? 0,
+                activeSessions: stats?.activeSessions ?? 0,
+                successRate: stats?.successRate ?? 0
+              }}
+              loading={statsLoading}
+            />
 
             <div className="dashboard-info">
               <div className="info-card">
@@ -93,31 +134,23 @@ const DashboardView = () => {
     }
   }
 
-return (
-  <div className="dashboard-layout"> {/* Usamos la clase contenedora del prototipo visual */}
-    <DashboardHeader 
-      user={currentUser} 
-      onLogout={handleLogout}
+  return (
+    <MainLayout
       activeTab={activeTab}
       onTabChange={setActiveTab}
-    />
-    
-    <div className="dashboard-main-container">
+      user={currentUser}
+      onLogout={handleLogout}
+    >
       {logoutMessage && (
-        <AlertMessage 
-          type="success" 
+        <AlertMessage
+          type="success"
           message={logoutMessage}
           onClose={() => setLogoutMessage('')}
         />
       )}
-      
-      {/* Contenedor principal estilizado del prototipo */}
-      <main className="dashboard-content-wrapper">
-        {renderContent()}
-      </main>
-    </div>
-  </div>
-);
+      {renderContent()}
+    </MainLayout>
+  )
 }
 
 export default DashboardView

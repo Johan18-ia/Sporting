@@ -1,10 +1,10 @@
 // src/views/dashboard/DashboardStats.jsx
-const DashboardStats = ({ stats }) => {
+const DashboardStats = ({ stats, loading }) => {
   const statItems = [
-    { label: 'Usuarios Activos', value: stats?.activeUsers || 0, icon: '👥' },
-    { label: 'Visitas Hoy', value: stats?.todayVisits || 0, icon: '📊' },
-    { label: 'Sesiones Activas', value: stats?.activeSessions || 0, icon: '🟢' },
-    { label: 'Tasa de Éxito', value: `${stats?.successRate || 0}%`, icon: '📈' }
+    { label: 'Usuarios Activos', value: stats?.activeUsers ?? 0, icon: '👥' },
+    { label: 'Visitas Hoy', value: stats?.todayVisits ?? 0, icon: '📊' },
+    { label: 'Sesiones Activas', value: stats?.activeSessions ?? 0, icon: '🟢' },
+    { label: 'Tasa de Éxito', value: `${stats?.successRate ?? 0}%`, icon: '📈' }
   ]
 
   const gridStyles = {
@@ -22,7 +22,8 @@ const DashboardStats = ({ stats }) => {
     alignItems: 'center',
     gap: '15px',
     boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
-    transition: 'transform 0.3s ease'
+    transition: 'transform 0.3s ease',
+    opacity: loading ? 0.6 : 1
   }
 
   return (
@@ -32,7 +33,7 @@ const DashboardStats = ({ stats }) => {
           <div style={{ fontSize: '40px' }}>{item.icon}</div>
           <div style={{ flex: 1 }}>
             <h3 style={{ fontSize: '28px', fontWeight: 700, color: '#333', margin: '0 0 5px 0' }}>
-              {item.value}
+              {loading ? '—' : item.value}
             </h3>
             <p style={{ color: '#666', fontSize: '14px', margin: 0 }}>{item.label}</p>
           </div>

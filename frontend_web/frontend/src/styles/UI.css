@@ -1,0 +1,123 @@
+/* ===== PAGE HEADER ===== */
+.ui-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ui-page-title {
+  margin: 0 0 6px 0;
+  font-size: 22px;
+  color: var(--sporting-text);
+  font-weight: 700;
+}
+
+.ui-page-description {
+  margin: 0;
+  color: var(--sporting-text-muted);
+  font-size: 14px;
+}
+
+.ui-page-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ===== CARD ===== */
+.ui-card {
+  background: var(--sporting-white);
+  border: 1px solid var(--sporting-border);
+  border-radius: var(--sporting-radius-lg);
+  box-shadow: var(--sporting-shadow);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.ui-card-title {
+  margin: 0 0 14px 0;
+  font-size: 15px;
+  color: var(--sporting-red);
+  font-weight: 600;
+}
+
+/* ===== TABLE ===== */
+.ui-table-wrapper {
+  background: var(--sporting-white);
+  border-radius: var(--sporting-radius-lg);
+  border: 1px solid var(--sporting-border);
+  box-shadow: var(--sporting-shadow);
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.ui-table thead th {
+  background: var(--sporting-red);
+  color: white;
+  text-align: left;
+  padding: 12px 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ui-table tbody td {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--sporting-border);
+  color: var(--sporting-text);
+}
+
+.ui-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ui-table tbody tr:hover {
+  background: var(--sporting-light-gray);
+}
+
+/* ===== FORM FIELDS (reutilizable dentro de Cards/Modales) ===== */
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.ui-field label {
+  font-size: 13px;
+  color: var(--sporting-text-muted);
+  font-weight: 500;
+}
+
+.ui-field input,
+.ui-field select,
+.ui-field textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: var(--sporting-radius);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.ui-field input:focus,
+.ui-field select:focus,
+.ui-field textarea:focus {
+  outline: none;
+  border-color: var(--sporting-red);
+}
+
+.ui-btn-full {
+  width: 100%;
+}
+
+.ui-modal-body {
+  padding: 0 20px 20px 20px;
+}
