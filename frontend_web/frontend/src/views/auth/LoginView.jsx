@@ -48,6 +48,14 @@ const LoginView = () => {
   return (
     <div className="login-container">
       <div className="login-card sporting-login-card">
+        <button
+          type="button"
+          className="login-back-btn"
+          onClick={() => navigate('/')}
+        >
+          ← Volver al inicio
+        </button>
+
         <div className="login-logo-text">
            <span className="sporting-club-name" style={{ color: '#8B0000' }}>SPORTING</span>
         </div>

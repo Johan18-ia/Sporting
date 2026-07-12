@@ -5,6 +5,9 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import '../../styles/Navbar.css'
+// Mismo patron de import que ya usa Footer.jsx para su logo.
+// Coloca tu archivo en: src/assets/Logo.png
+import logoSporting from '../../assets/Logo.png'
 
 const Navbar = () => {
     const { isAuthenticated, logout, currentUser } = useAuth()
@@ -16,12 +19,8 @@ const Navbar = () => {
         navigate('/catalogo')
     }
 
-    // No mostrar navbar en dashboard (ya tiene su propio header)
-    if (location.pathname.includes('/dashboard')) {
-        return null
-    }
     // ============================================
-    // OCULTAR NAVBAR EN PÁGINAS DE AUTENTICACIÓN
+    // OCULTAR NAVBAR EN PÁGINAS DE AUTENTICACIÓN Y DASHBOARD
     // ============================================
     const isAuthPage = ['/login', '/register'].includes(location.pathname)
     const isDashboard = location.pathname.includes('/dashboard')
@@ -37,8 +36,17 @@ const Navbar = () => {
         <nav className="navbar">
             <div className="navbar-container">
                 <div className="navbar-logo">
-                    <Link to="/">
-                        <h2>Sporting Club</h2>
+                    <Link to="/" className="navbar-logo-link">
+                        <img
+                            src={logoSporting}
+                            alt="Sporting Club"
+                            className="navbar-logo-img"
+                            onError={(e) => {
+                                e.target.style.display = 'none'
+                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'inline'
+                            }}
+                        />
+                        <h2 className="navbar-logo-fallback" style={{ display: 'none' }}>Sporting Club</h2>
                     </Link>
                 </div>
                 <div className="navbar-menu">

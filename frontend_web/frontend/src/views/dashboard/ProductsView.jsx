@@ -2,8 +2,15 @@
 import React, { useState, useEffect } from 'react'
 import ProductController from '../../controllers/ProductController'
 import AlertMessage from '../common/AlertMessage'
+import PageHeader from '../ui/PageHeader'
+import Card from '../ui/Card'
+import Table from '../ui/Table'
+import Button from '../ui/Button'
 
 const ProductsView = () => {
+  // ============================================
+  // LOGICA SIN CAMBIOS
+  // ============================================
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -89,66 +96,25 @@ const ProductsView = () => {
     }
   }
 
-  const containerStyles = {
-    padding: '20px',
-    maxWidth: '1200px',
-    margin: '0 auto'
-  }
-
-  const headerStyles = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-    flexWrap: 'wrap',
-    gap: '15px'
-  }
-
-  const tableStyles = {
-    width: '100%',
-    borderCollapse: 'collapse',
-    background: 'white',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
-  }
-
-  const thStyles = {
-    background: '#8B0000',
-    color: 'white',
-    padding: '12px 15px',
-    textAlign: 'left',
-    fontWeight: 600
-  }
-
-  const tdStyles = {
-    padding: '12px 15px',
-    borderBottom: '1px solid #e1e5e9'
-  }
-
+  // ============================================
+  // PRESENTACION — unica parte que cambia
+  // ============================================
   return (
-    <div style={containerStyles}>
-      <div style={headerStyles}>
-        <h2 style={{ color: '#333', margin: 0 }}> Mis Productos</h2>
-        <button
-          onClick={() => {
-            setEditingProduct(null)
-            setFormData({ nombre: '', descripcion: '', precio: '', stock: '', categoria: '' })
-            setShowForm(!showForm)
-          }}
-          style={{
-            background: '#8B0000',
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 600
-          }}
-        >
-          {showForm ? '✕ Cancelar' : '+ Nuevo Producto'}
-        </button>
-      </div>
+    <div>
+      <PageHeader
+        title="Mis Productos"
+        actions={
+          <Button
+            onClick={() => {
+              setEditingProduct(null)
+              setFormData({ nombre: '', descripcion: '', precio: '', stock: '', categoria: '' })
+              setShowForm(!showForm)
+            }}
+          >
+            {showForm ? '✕ Cancelar' : '+ Nuevo Producto'}
+          </Button>
+        }
+      />
 
       {message && (
         <AlertMessage
@@ -159,137 +125,55 @@ const ProductsView = () => {
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} style={{
-          background: '#f8f9fa',
-          padding: '20px',
-          borderRadius: '12px',
-          marginBottom: '20px'
-        }}>
-          <h3 style={{ marginBottom: '15px', color: '#333' }}>
-            {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Nombre *</label>
-              <input
-                type="text"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e1e5e9',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
-              />
+        <Card title={editingProduct ? 'Editar Producto' : 'Nuevo Producto'}>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 15px' }}>
+              <div className="ui-field">
+                <label>Nombre *</label>
+                <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required />
+              </div>
+              <div className="ui-field">
+                <label>Categoría</label>
+                <input
+                  type="text"
+                  name="categoria"
+                  value={formData.categoria}
+                  onChange={handleChange}
+                  placeholder="Ej: Calzado, Uniformes..."
+                />
+              </div>
+              <div className="ui-field">
+                <label>Precio ($) *</label>
+                <input type="number" name="precio" value={formData.precio} onChange={handleChange} required min="0" step="0.01" />
+              </div>
+              <div className="ui-field">
+                <label>Stock *</label>
+                <input type="number" name="stock" value={formData.stock} onChange={handleChange} required min="0" />
+              </div>
+              <div className="ui-field" style={{ gridColumn: '1 / -1' }}>
+                <label>Descripción</label>
+                <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} rows="3" />
+              </div>
             </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Categoría</label>
-              <input
-                type="text"
-                name="categoria"
-                value={formData.categoria}
-                onChange={handleChange}
-                placeholder="Ej: Calzado, Uniformes..."
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e1e5e9',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Precio ($) *</label>
-              <input
-                type="number"
-                name="precio"
-                value={formData.precio}
-                onChange={handleChange}
-                required
-                min="0"
-                step="0.01"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e1e5e9',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Stock *</label>
-              <input
-                type="number"
-                name="stock"
-                value={formData.stock}
-                onChange={handleChange}
-                required
-                min="0"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e1e5e9',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>Descripción</label>
-              <textarea
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleChange}
-                rows="3"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '2px solid #e1e5e9',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  resize: 'vertical'
-                }}
-              />
-            </div>
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              background: '#8B0000',
-              color: 'white',
-              border: 'none',
-              padding: '10px 30px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: 600,
-              marginTop: '15px',
-              opacity: loading ? 0.6 : 1
-            }}
-          >
-            {loading ? 'Guardando...' : 'Guardar Producto'}
-          </button>
-        </form>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Guardando...' : 'Guardar Producto'}
+            </Button>
+          </form>
+        </Card>
       )}
 
       {loading && <p>Cargando productos...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p style={{ color: '#dc3545' }}>{error}</p>}
 
-      <table style={tableStyles}>
+      <Table>
         <thead>
           <tr>
-            <th style={thStyles}>ID</th>
-            <th style={thStyles}>Producto</th>
-            <th style={thStyles}>Categoría</th>
-            <th style={thStyles}>Precio</th>
-            <th style={thStyles}>Stock</th>
-            <th style={thStyles}>ㅤㅤ</th>
+            <th>ID</th>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -302,53 +186,32 @@ const ProductsView = () => {
           ) : (
             products.map((p) => (
               <tr key={p.id}>
-                <td style={tdStyles}>#{p.id}</td>
-                <td style={tdStyles}>
+                <td>#{p.id}</td>
+                <td>
                   <strong>{p.nombre}</strong>
                   <div style={{ fontSize: '12px', color: '#666' }}>{p.descripcion}</div>
                 </td>
-                <td style={tdStyles}>
-                  <span style={{
-                    background: '#f0f0f0',
-                    padding: '2px 10px',
-                    borderRadius: '12px',
-                    fontSize: '12px'
-                  }}>
+                <td>
+                  <span className="badge-sporting" style={{ background: '#f0f0f0', color: '#555' }}>
                     {p.categoria || 'Sin categoría'}
                   </span>
                 </td>
-                <td style={tdStyles}>
-                  <strong>${parseFloat(p.precio).toLocaleString('es-CO')}</strong>
-                </td>
-                <td style={tdStyles}>
-                  <span style={{
-                    color: p.stock > 0 ? '#0ea371' : '#a90202',
-                    fontWeight: 600
-                  }}>
+                <td><strong>${parseFloat(p.precio).toLocaleString('es-CO')}</strong></td>
+                <td>
+                  <span style={{ color: p.stock > 0 ? '#0ea371' : '#a90202', fontWeight: 600 }}>
                     {p.stock || 0}
                   </span>
                 </td>
-                <td style={tdStyles}>
-                  <button
-                    onClick={() => handleDelete(p.id, p.nombre)}
-                    style={{
-                      background: '#a90202',
-                      color: 'white',
-                      border: 'none',
-                      padding: '5px 12px',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '13px'
-                    }}
-                  >
+                <td>
+                  <Button variant="danger" onClick={() => handleDelete(p.id, p.nombre)}>
                     Eliminar
-                  </button>
+                  </Button>
                 </td>
               </tr>
             ))
           )}
         </tbody>
-      </table>
+      </Table>
     </div>
   )
 }

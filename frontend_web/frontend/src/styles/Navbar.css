@@ -5,16 +5,25 @@
   position: sticky;
   top: 0;
   z-index: 1000;
+  width: 100%; 
+  display: block;
+  
 }
 
 .navbar-container {
-  max-width: 1200px;
+  max-width: 1900px;
   margin: 0 auto;
-  padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-sizing: border-box;
+  
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  width: 100%;
+  padding: 10px 20px; 
 }
+
 
 .navbar-logo a {
   color: white;
@@ -73,6 +82,25 @@
   padding: 0.5rem 1rem;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 8px;
+}
+
+.navbar-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+ 
+.navbar-logo-img {
+  height: 80px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+ 
+.navbar-logo-fallback {
+  font-size: 1.5rem;
+  margin: 0;
+  color: white;
 }
 
 @media (max-width: 768px) {
