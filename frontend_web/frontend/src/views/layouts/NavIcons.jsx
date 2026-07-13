@@ -1,4 +1,7 @@
 // src/views/layouts/NavIcons.jsx
+// ====================================================
+// ICONOS DEL SIDEBAR — SVG en linea, sin dependencias externas
+// ====================================================
 import React from 'react';
 
 const base = {
@@ -58,4 +61,16 @@ export const IconMenu = () => (
 
 export const IconChevronLeft = () => (
     <svg {...base}><path d="M15 18l-6-6 6-6" /></svg>
+);
+
+export const IconCheckCircle = () => (
+    <svg {...base}><circle cx="12" cy="12" r="9" /><path d="M8.5 12.5l2.5 2.5 5-5" /></svg>
+);
+
+export const IconActivity = () => (
+    <svg {...base}><path d="M3 12h4l2-7 4 14 2-7h6" /></svg>
+);
+
+export const IconLock = () => (
+    <svg {...base}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
 );

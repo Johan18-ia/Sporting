@@ -18,10 +18,6 @@ const StudentsView = () => {
     const [showForm, setShowForm] = useState(false)
     const [filterCategory, setFilterCategory] = useState('')
     const [editingStudent, setEditingStudent] = useState(null)
-
-    // ============================================
-    // ESTADO DEL FORMULARIO
-    // ============================================
     const [formData, setFormData] = useState({
         name: '',
         lastname: '',
@@ -283,7 +279,7 @@ const StudentsView = () => {
             HEADER
             ============================================ */}
             <div style={headerStyles}>
-                <h2 style={{ color: '#333', margin: 0 }}>👟 Gestión de Estudiantes</h2>
+                <h2 style={{ color: '#333', margin: 0 }}>Gestión de Estudiantes</h2>
                 {canCreate() && (
                     <button
                         onClick={() => {
@@ -339,7 +335,7 @@ const StudentsView = () => {
                     animation: 'fadeInUp 0.3s ease'
                 }}>
                     <h3 style={{ marginBottom: '15px', color: '#333' }}>
-                        {editingStudent ? '✏️ Editar Estudiante' : '📝 Registrar Estudiante'}
+                        {editingStudent ? 'Editar Estudiante' : 'Registrar Estudiante'}
                     </h3>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -652,7 +648,7 @@ const StudentsView = () => {
                                     <td style={tdStyles}>
                                         <strong>{s.name} {s.lastname}</strong>
                                         <div style={{ fontSize: '11px', color: '#888' }}>
-                                            {s.birth_date ? `📅 ${s.birth_date}` : ''}
+                                            {s.birth_date ? `${s.birth_date}` : ''}
                                         </div>
                                     </td>
                                     <td style={tdStyles}>{s.document}</td>
@@ -670,10 +666,10 @@ const StudentsView = () => {
                                     </td>
                                     <td style={tdStyles}>
                                         <div style={{ fontSize: '13px' }}>
-                                            {s.phone ? `📞 ${s.phone}` : ''}
+                                            {s.phone ? `${s.phone}` : ''}
                                             {s.emergency_contact && (
                                                 <div style={{ fontSize: '11px', color: '#666' }}>
-                                                    🆘 {s.emergency_contact}
+                                                     {s.emergency_contact}
                                                     {s.emergency_phone ? ` (${s.emergency_phone})` : ''}
                                                 </div>
                                             )}
@@ -696,7 +692,7 @@ const StudentsView = () => {
                                                 }}
                                                 title={canEdit() ? 'Editar' : 'Sin permisos'}
                                             >
-                                                ✏️
+                                                
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(s.id, s.name)}
@@ -713,7 +709,7 @@ const StudentsView = () => {
                                                 }}
                                                 title={canDelete() ? 'Eliminar' : 'Sin permisos'}
                                             >
-                                                🗑️
+                                                
                                             </button>
                                         </div>
                                     </td>

@@ -1,7 +1,4 @@
 // src/App.jsx
-// ====================================================
-// COMPONENTE PRINCIPAL
-// ====================================================
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { ROUTES } from './config/routes'
 import LoginView from './views/auth/LoginView'

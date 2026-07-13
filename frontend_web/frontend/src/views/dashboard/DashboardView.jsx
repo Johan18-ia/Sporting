@@ -2,14 +2,23 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
-import useDashboard from '../../hooks/useDashboard'
+import StudentModel from '../../models/StudentModel'
+import TournamentModel from '../../models/TournamentModel'
+import ProductModel from '../../models/ProductModel'
+import CategoryModel from '../../models/CategoryModel'
+import ScheduleModel from '../../models/ScheduleModel'
 import MainLayout from '../layouts/MainLayout'
 import DashboardStats from './DashboardStats'
+import PageHeader from '../ui/PageHeader'
+import Card from '../ui/Card'
+import {
+  IconGraduate, IconTrophy, IconCheckCircle, IconBag,
+  IconShield, IconTag, IconClock, IconLock
+} from '../layouts/NavIcons'
 import UsersView from './UsersView'
 import CategoriesView from './CategoriesView'
 import AlertMessage from '../common/AlertMessage'
 import SchedulesView from './SchedulesView'
-import CatalogView from './CatalogView'
 import ProductsView from './ProductsView'
 import StudentsView from './StudentsView'
 import TournamentsView from './TournamentsView'
@@ -19,16 +28,44 @@ import '../../styles/Users.css'
 
 const DashboardView = () => {
   const { currentUser, logout } = useAuth()
-  const { stats, loading: statsLoading, loadStats } = useDashboard()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [logoutMessage, setLogoutMessage] = useState('')
   const navigate = useNavigate()
+  const [overview, setOverview] = useState({
+    students: 0,
+    tournaments: 0,
+    activeTournaments: 0,
+    products: 0,
+    categories: 0,
+    schedules: 0
+  })
+  const [overviewLoading, setOverviewLoading] = useState(true)
 
-  // Carga las estadisticas reales a traves del hook/controller/modelo
-  // que ya existian en el proyecto (antes no se usaban en ningun lado
-  // y el dashboard mostraba numeros fijos escritos a mano).
   useEffect(() => {
-    loadStats()
+    const loadOverview = async () => {
+      setOverviewLoading(true)
+      const [studentsRes, tournamentsRes, productsRes, categoriesRes, schedulesRes] = await Promise.all([
+        StudentModel.getAllStudents(),
+        TournamentModel.getAllTournaments(),
+        ProductModel.getAllProducts(),
+        CategoryModel.getAllCategories(),
+        ScheduleModel.getAllSchedules()
+      ])
+
+      const tournaments = tournamentsRes.success ? tournamentsRes.data : []
+
+      setOverview({
+        students: studentsRes.success ? studentsRes.data.length : 0,
+        tournaments: tournaments.length,
+        activeTournaments: tournaments.filter(t => (t.status || 'Activo') === 'Activo').length,
+        products: productsRes.success ? productsRes.data.length : 0,
+        categories: categoriesRes.success ? categoriesRes.data.length : 0,
+        schedules: schedulesRes.success ? schedulesRes.data.length : 0
+      })
+      setOverviewLoading(false)
+    }
+
+    loadOverview()
   }, [])
 
   const handleLogout = async () => {
@@ -43,12 +80,6 @@ const DashboardView = () => {
     }
   }
 
-  // ============================================
-  // ROL "user" (estudiante): panel propio, mas simple.
-  // Esta rama existia en un componente viejo del proyecto que se
-  // superponia con el dashboard nuevo (ver auditoria); se restaura
-  // aqui reutilizando StudentDashboardView.jsx tal cual ya estaba.
-  // ============================================
   if (currentUser?.role === 'user') {
     return (
       <MainLayout
@@ -69,49 +100,62 @@ const DashboardView = () => {
     )
   }
 
-  // ============================================
-  // ROLES "admin" / "seller": panel de administracion
-  // ============================================
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return (
           <>
-            <div className="dashboard-welcome">
-              <h2>Bienvenido, {currentUser?.name || currentUser?.email?.split('@')[0] || 'Usuario'}!</h2>
-              <p>Panel de administración de Sporting Club</p>
-            </div>
-
-            <DashboardStats
-              stats={{
-                activeUsers: stats?.activeUsers ?? 0,
-                todayVisits: stats?.todayVisits ?? 0,
-                activeSessions: stats?.activeSessions ?? 0,
-                successRate: stats?.successRate ?? 0
-              }}
-              loading={statsLoading}
+            <PageHeader
+              title={`Bienvenido, ${currentUser?.name || currentUser?.email?.split('@')[0] || 'Usuario'}`}
+              description="Panel de administración de Sporting Club"
             />
 
-            <div className="dashboard-info">
-              <div className="info-card">
-                <h3>📊 Resumen del Sistema</h3>
-                <p>Gestión completa de la escuela de microfútbol</p>
-                <ul>
-                  <li>👥 Gestión de Usuarios</li>
-                  <li>🏷️ Categorías por año</li>
-                  <li>📅 Horarios de entrenamiento</li>
-                  <li>👟 Gestión de Estudiantes</li>
-                  <li>🏆 Torneos y Equipos</li>
-                  <li>🛒 Catálogo de Productos</li>
-                </ul>
-              </div>
+            <DashboardStats
+              loading={overviewLoading}
+              items={[
+                { label: 'Estudiantes', value: overview.students, icon: IconGraduate },
+                { label: 'Categorías', value: overview.categories, icon: IconTag },
+                { label: 'Horarios', value: overview.schedules, icon: IconClock },
+                { label: 'Torneos', value: overview.tournaments, icon: IconTrophy },
+                { label: 'Torneos Activos', value: overview.activeTournaments, icon: IconCheckCircle },
+                { label: 'Productos', value: overview.products, icon: IconBag },
+                { label: 'Equipos', value: '—', icon: IconShield, note: 'próx.' }
+              ]}
+            />
 
-              <div className="info-card">
-                <h3>🔐 Estado de Autenticación</h3>
-                <p><strong>Token:</strong> {localStorage.getItem('auth_token') ? '✅ Activo' : '❌ No encontrado'}</p>
-                <p><strong>Usuario:</strong> {currentUser?.email}</p>
-                <p><strong>Rol:</strong> <span className="role-badge role-admin">{currentUser?.role}</span></p>
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+              <Card title="Resumen del Sistema">
+                <p style={{ color: 'var(--sporting-text-muted)', fontSize: '14px', marginBottom: '16px' }}>
+                  Gestión completa de la escuela de microfútbol
+                </p>
+                <ul className="ui-summary-list">
+                  <li><span className="dot" />Gestión de Usuarios</li>
+                  <li><span className="dot" />Categorías por año</li>
+                  <li><span className="dot" />Horarios de entrenamiento</li>
+                  <li><span className="dot" />Gestión de Estudiantes</li>
+                  <li><span className="dot" />Torneos y Equipos</li>
+                  <li><span className="dot" />Catálogo de Productos</li>
+                </ul>
+              </Card>
+
+              <Card title="Cuenta">
+                <div className="ui-account-row">
+                  <span className="label">Sesión</span>
+                  <span className="value">
+                    <span className={`status-dot ${localStorage.getItem('auth_token') ? '' : 'off'}`}>
+                      {localStorage.getItem('auth_token') ? 'Activa' : 'No encontrada'}
+                    </span>
+                  </span>
+                </div>
+                <div className="ui-account-row">
+                  <span className="label">Usuario</span>
+                  <span className="value">{currentUser?.email}</span>
+                </div>
+                <div className="ui-account-row">
+                  <span className="label">Rol</span>
+                  <span className="badge-sporting badge-sporting-admin">{currentUser?.role}</span>
+                </div>
+              </Card>
             </div>
           </>
         )
@@ -127,8 +171,6 @@ const DashboardView = () => {
         return <StudentsView />
       case 'tournaments':
         return <TournamentsView />
-      case 'catalog':
-        return <CatalogView />
       default:
         return null
     }

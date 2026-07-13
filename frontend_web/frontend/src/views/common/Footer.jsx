@@ -101,7 +101,7 @@ const Footer = () => {
         {/* Copyright */}
         <div style={bottomStyles}>
           <p>
-            &copy; 2024 Sporting Club Deportivo. Todos los derechos reservados. | 
+            &copy; 2024 Sporting Deportivo. Todos los derechos reservados. | 
             <a href="#" style={{ color: '#888', textDecoration: 'none', marginLeft: '5px' }}>
               Política de Privacidad
             </a>

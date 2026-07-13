@@ -1,6 +1,4 @@
 // src/views/layouts/Sidebar.jsx
-// ====================================================
-// SIDEBAR — navegacion unica del panel administrativo
 import logo from '../../assets/logo.png';
 import React from 'react';
 import {
@@ -8,9 +6,6 @@ import {
     IconShield, IconTrophy, IconBag, IconGrid, IconLogout, IconChevronLeft
 } from './NavIcons';
 
-// Items del menu. "comingSoon" se usa para Equipos mientras se decide
-// su implementacion (ver auditoria Fase 1 / Paso 5) — no rompe nada,
-// solo se muestra visualmente deshabilitado.
 const ADMIN_NAV_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', icon: IconDashboard },
     { id: 'users', label: 'Usuarios', icon: IconUsers },
@@ -20,12 +15,8 @@ const ADMIN_NAV_ITEMS = [
     { id: 'teams', label: 'Equipos', icon: IconShield, comingSoon: true },
     { id: 'tournaments', label: 'Torneos', icon: IconTrophy },
     { id: 'products', label: 'Productos', icon: IconBag },
-    { id: 'catalog', label: 'Catálogo', icon: IconGrid },
 ];
 
-// Menu reducido para el rol "user" (estudiante): su panel es una sola
-// pantalla (StudentDashboardView ya muestra perfil + horarios + torneos),
-// asi que no tiene sentido ofrecer secciones de administracion.
 const STUDENT_NAV_ITEMS = [
     { id: 'dashboard', label: 'Mi Panel', icon: IconDashboard },
 ];

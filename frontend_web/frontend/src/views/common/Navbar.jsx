@@ -1,12 +1,7 @@
 // frontend_web/frontend/src/views/common/Navbar.jsx
-// ====================================================
-// COMPONENTE: NAVBAR (VERSION ACTUALIZADA PARA ROLES)
-// ====================================================
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import '../../styles/Navbar.css'
-// Mismo patron de import que ya usa Footer.jsx para su logo.
-// Coloca tu archivo en: src/assets/Logo.png
 import logoSporting from '../../assets/Logo.png'
 
 const Navbar = () => {
@@ -19,9 +14,6 @@ const Navbar = () => {
         navigate('/catalogo')
     }
 
-    // ============================================
-    // OCULTAR NAVBAR EN PÁGINAS DE AUTENTICACIÓN Y DASHBOARD
-    // ============================================
     const isAuthPage = ['/login', '/register'].includes(location.pathname)
     const isDashboard = location.pathname.includes('/dashboard')
 
@@ -29,9 +21,6 @@ const Navbar = () => {
         return null
     }
 
-    // ============================================
-    // RENDERIZADO DE NAVBAR SEGUN ROL
-    // ============================================
     return (
         <nav className="navbar">
             <div className="navbar-container">
@@ -76,11 +65,6 @@ const Navbar = () => {
                                 </>
                             )}
 
-                            {/* Enlace publico al catalogo */}
-                            <Link to="/catalogo" className="nav-link">
-                                Catalogo
-                            </Link>
-
                             {/* Informacion del usuario */}
                             <span className="user-welcome">
                                 Hola, {currentUser?.name || 'Usuario'}
@@ -92,9 +76,6 @@ const Navbar = () => {
                         </>
                     ) : (
                         <>
-                            <Link to="/catalogo" className="nav-link">
-                                Catalogo
-                            </Link>
                             <Link to="/login" className="nav-link btn-primary">
                                 Iniciar Sesion
                             </Link>

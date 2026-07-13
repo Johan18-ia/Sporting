@@ -9,11 +9,9 @@ const AdminDashboardView = () => {
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        // Redirige al Login de forma segura
         navigate('/login');
     };
 
-    // ==================== ESTILOS EN LÍNEA PROFESIONALES ====================
     const dashboardContainerStyles = {
         display: 'flex',
         minHeight: '100vh',

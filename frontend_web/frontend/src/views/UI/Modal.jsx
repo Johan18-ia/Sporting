@@ -1,10 +1,4 @@
 // src/views/ui/Modal.jsx
-// ====================================================
-// MODAL REUTILIZABLE
-// Reutiliza las clases .modal-overlay / .modal-content / .modal-header
-// que ya existian en styles/Users.css (las mismas que usa UserDetails.jsx),
-// para que todas las vistas que necesiten un modal usen el mismo patron.
-// ====================================================
 import React from 'react';
 
 const Modal = ({ title, onClose, footer, children }) => {

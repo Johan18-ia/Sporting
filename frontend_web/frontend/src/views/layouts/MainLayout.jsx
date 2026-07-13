@@ -1,9 +1,4 @@
 // src/views/layouts/MainLayout.jsx
-// ====================================================
-// LAYOUT UNICO DEL PANEL ADMINISTRATIVO
-// Envuelve Sidebar + Topbar + area de contenido.
-// No contiene logica de negocio: solo estructura visual.
-// ====================================================
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';

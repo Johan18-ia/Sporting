@@ -1,9 +1,4 @@
 // src/views/ui/PageHeader.jsx
-// ====================================================
-// PAGE HEADER REUTILIZABLE
-// Reemplaza el bloque <h2>Titulo</h2><p>Descripcion</p>
-// repetido al inicio de cada vista.
-// ====================================================
 import React from 'react';
 
 const PageHeader = ({ title, description, actions }) => {

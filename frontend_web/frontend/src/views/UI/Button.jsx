@@ -1,10 +1,4 @@
 // src/views/ui/Button.jsx
-// ====================================================
-// BOTON REUTILIZABLE
-// No inventa estilos nuevos: envuelve las clases que ya
-// existian en sporting-theme.css (.btn-sporting-primary,
-// .btn-sporting-secondary, .btn-sporting-danger).
-// ====================================================
 import React from 'react';
 
 const VARIANT_CLASS = {

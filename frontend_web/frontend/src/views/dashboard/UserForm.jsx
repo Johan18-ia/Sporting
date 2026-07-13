@@ -1,7 +1,4 @@
 // src/views/dashboard/UserForm.jsx
-// ====================================================
-// FORMULARIO: USUARIO (CREAR/EDITAR)
-// ====================================================
 import { useState, useEffect } from 'react'
 import useUsers from '../../hooks/useUsers'
 import useAuth from '../../hooks/useAuth'
@@ -11,10 +8,6 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
     const { createUser, updateUser, patchUser } = useUsers()
     const { currentUser } = useAuth()
     const [categories, setCategories] = useState([])
-
-    // ============================================
-    // ESTADO DEL FORMULARIO
-    // ============================================
     const [formData, setFormData] = useState({
         name: '',
         lastname: '',
@@ -53,7 +46,7 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
     }, [])
 
     // ============================================
-    // CARGAR DATOS DEL USUARIO (SI ES EDICIÓN)
+    // CARGAR DATOS DEL USUARIO 
     // ============================================
     useEffect(() => {
         if (user && isEdit) {

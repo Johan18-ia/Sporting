@@ -1,9 +1,4 @@
 // src/views/ui/Card.jsx
-// ====================================================
-// CARD REUTILIZABLE
-// Reemplaza los `<div style={{background:'white', boxShadow...}}>`
-// repetidos en Torneos, Productos, Horarios, etc.
-// ====================================================
 import React from 'react';
 
 const Card = ({ title, className = '', bodyClassName = '', children, ...rest }) => {
