@@ -1,0 +1,166 @@
+GUÍA DE COMMITS DE GIT - VERSIÓN TXT
+================================================================================
+GUÍA COMPLETA DE COMMITS DE GIT
+================================================================================
+
+ESTRUCTURA BÁSICA DE UN COMMIT
+================================================================================
+
+tipo(ámbito): descripción breve
+
+[Descripción detallada opcional]
+
+[Pie de página opcional]
+
+================================================================================
+
+TIPOS DE COMMITS
+================================================================================
+
+TIPO     EMOJI  DESCRIPCIÓN                                   CUÁNDO UTILIZARLO
+
+feat     ✨     Nueva funcionalidad                           Cuando se introduce una nueva característica
+fix      🐛     Corrección de errores                         Cuando se soluciona un fallo o comportamiento inesperado
+docs     📝     Documentación                                 Cuando se actualiza o agrega documentación
+style    🎨     Estilo                                        Cuando se modifican estilos, formato o presentación
+refactor ♻️     Refactorización                               Cuando se mejora el código sin cambiar su comportamiento
+perf     ⚡     Rendimiento                                   Cuando se optimiza el rendimiento
+test     ✅     Pruebas                                       Cuando se agregan o modifican pruebas
+chore    🔧     Tarea de mantenimiento                        Cuando se realizan tareas de mantenimiento, dependencias o configuraciones
+ci       🚀     CI/CD                                         Cuando se modifican pipelines o configuraciones de integración continua
+build    📦     Build                                         Cuando se cambian herramientas o procesos de compilación
+revert   ⏪     Reversión                                     Cuando se deshace un commit previo
+
+================================================================================
+
+EJEMPLOS POR TIPO
+================================================================================
+
+3.1 FEAT – Nueva funcionalidad
+
+Corto:
+feat: agregar login de usuarios
+
+Con ámbito:
+feat(auth): implementar autenticación JWT
+
+Detallado:
+feat(users): agregar CRUD de usuarios
+
+Crear el modelo User con los métodos CRUD.
+Implementar el controlador UserController.
+Agregar las rutas RESTful.
+Conectar la aplicación a la base de datos MySQL.
+
+3.2 FIX – Corrección de errores
+
+Corto:
+fix: corregir error en login
+
+Con ámbito:
+fix(auth): resolver validación de contraseña
+
+Detallado:
+fix(login): corregir redirección tras el inicio de sesión
+
+Corregir la redirección hacia el panel de control.
+Ajustar el manejo de errores en AuthController.
+Agregar validación para campos requeridos.
+
+3.3 DOCS – Documentación
+
+Corto:
+docs: actualizar README
+
+Con ámbito:
+docs(api): documentar endpoints
+
+Detallado:
+docs: agregar informe técnico de QA
+
+Documentar los casos de prueba (8 casos).
+Incluir la matriz de pruebas ISO/IEC 29119.
+Definir los criterios de aceptación.
+Registrar los resultados de las pruebas.
+
+3.4 STYLE – Estilo
+
+Corto:
+style: cambiar colores del login
+
+Con ámbito:
+style(login): adaptar diseño a Sporting Club
+
+Detallado:
+style(login): modificar la paleta de colores de Sporting Club
+
+Cambiar el gradiente morado a rojo (#8B0000).
+Actualizar Login.css y Register.css.
+Agregar una línea decorativa en rojo.
+Optimizar sombras y bordes.
+
+3.5 REFACTOR – Refactorización
+
+Corto:
+refactor: optimizar validaciones
+
+Con ámbito:
+refactor(auth): simplificar el controlador de autenticación
+
+Detallado:
+refactor: mejorar la estructura de carpetas del frontend
+
+Reorganizar los componentes por módulos.
+Separar la lógica de negocio en controladores.
+Unificar los servicios en la carpeta services/.
+Mejorar las importaciones mediante alias.
+
+3.6 CHORE – Mantenimiento
+
+Corto:
+chore: actualizar dependencias
+
+Con ámbito:
+chore(deps): actualizar React a versión 19
+
+Detallado:
+chore: configurar ESLint y Prettier
+
+Agregar reglas de linting.
+Configurar el formateo automático.
+Actualizar el archivo .gitignore.
+Agregar scripts de lint.
+
+3.7 TEST – Pruebas
+
+Corto:
+test: agregar pruebas de login
+
+Con ámbito:
+test(auth): añadir casos de prueba para autenticación
+
+Detallado:
+test: agregar pruebas unitarias para UserController
+
+Probar los métodos CRUD.
+Verificar las validaciones.
+Probar el manejo de errores.
+Agregar mocks de base de datos.
+
+3.8 PERF – Rendimiento
+
+Corto:
+perf: optimizar consultas SQL
+
+Con ámbito:
+perf(api): mejorar el tiempo de respuesta en el listado de usuarios
+
+Detallado:
+perf: implementar lazy loading en imágenes
+
+Agregar loading="lazy" a las imágenes.
+Optimizar los assets con Vite.
+Reducir el tamaño de los recursos multimedia.
+Implementar code splitting.
+
+
