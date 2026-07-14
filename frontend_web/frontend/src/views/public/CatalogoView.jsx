@@ -60,11 +60,10 @@ const CatalogoView = () => {
             <section className="public-hero-v2">
                 <div className="hero-v2-container">
                     <div className="hero-v2-text">
-                        <span className="public-section-eyebrow on-dark">— Escuela de Microfútbol —</span>
-                        <h1>Formando Campeones, Dentro y Fuera de la Cancha</h1>
+                        <span className="public-section-eyebrow on-dark">— Gestión de Escuelas de Microfútbol —</span>
+                        <h1>¡Forma tus campeones ahora!</h1>
                         <p>
-                            Únete a una escuela deportiva enfocada en la disciplina, el trabajo en
-                            equipo y el crecimiento de cada estudiante.
+                            Únete a Sporting y forma parte de una comunidad que inspira esfuerzo, compañerismo y el deseo de alcanzar una meta.
                         </p>
                         <div className="hero-v2-actions">
                             <button className="hero-v2-btn primary" onClick={() => scrollTo('catalogo')}>

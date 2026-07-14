@@ -7,7 +7,7 @@
 // USAR VARIABLE DE ENTORNO CON FALLBACK
 // ============================================
 const API_CONFIG = {
-    BASE_URL: import.meta.env.VITE_API_URL || 'http://192.168.80.14:3000/api',
+    BASE_URL: import.meta.env.VITE_API_URL || 'http://10.1.196.38:3000/api',
     TIMEOUT: 10000,
     ENDPOINTS: {
         // ============================================
