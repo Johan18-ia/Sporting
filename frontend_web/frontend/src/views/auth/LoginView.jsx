@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
 import '../../styles/Login.css'
-import login from '../../assets/login.jpeg'
+import login from '../../assets/login.jpg'
 
 const LoginHeroImage = () => {
   const [failed, setFailed] = useState(false)

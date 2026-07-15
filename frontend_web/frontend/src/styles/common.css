@@ -92,27 +92,6 @@ body {
     font-size: 24px;
   }
 }
-/* ============================================
-   AGREGAR AL FINAL DE src/styles/common.css
-   ------------------------------------------------
-   CAUSA RAIZ del espacio blanco alrededor del navbar (y de
-   toda la pagina): src/index.css trae una regla de plantilla
-   sin limpiar que fija #root a 1126px de ancho centrado:
-
-      #root {
-        width: 1126px;
-        max-width: 100%;
-        margin: 0 auto;
-        border-inline: 1px solid var(--border);
-        ...
-      }
-
-   Esta regla de aqui abajo la neutraliza sin necesidad de
-   editar index.css (por si ese archivo se usa en otro lado).
-   Si prefieres la solucion "limpia", tambien puedes ir a
-   src/index.css y borrar directamente esas 3 lineas
-   (width, margin, border-inline) del selector #root.
-   ============================================ */
 #root {
   width: 100% !important;
   max-width: 100% !important;

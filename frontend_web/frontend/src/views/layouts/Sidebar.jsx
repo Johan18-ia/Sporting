@@ -1,10 +1,10 @@
 // src/views/layouts/Sidebar.jsx
-import logo from '../../assets/logo.png';
 import React from 'react';
 import {
     IconDashboard, IconUsers, IconTag, IconClock, IconGraduate,
-    IconShield, IconTrophy, IconBag, IconGrid, IconLogout, IconChevronLeft
+    IconShield, IconTrophy, IconBag, IconLogout, IconChevronLeft
 } from './NavIcons';
+import logoSporting from '../../assets/logo.png'
 
 const ADMIN_NAV_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', icon: IconDashboard },
@@ -12,7 +12,7 @@ const ADMIN_NAV_ITEMS = [
     { id: 'categories', label: 'Categorías', icon: IconTag },
     { id: 'schedules', label: 'Horarios', icon: IconClock },
     { id: 'students', label: 'Estudiantes', icon: IconGraduate },
-    { id: 'teams', label: 'Equipos', icon: IconShield, comingSoon: true },
+    { id: 'teams', label: 'Equipos', icon: IconShield },
     { id: 'tournaments', label: 'Torneos', icon: IconTrophy },
     { id: 'products', label: 'Productos', icon: IconBag },
 ];
@@ -35,13 +35,19 @@ const Sidebar = ({ activeTab, onTabChange, collapsed, onToggleCollapse, mobileOp
             {mobileOpen && <div className="sidebar-backdrop" onClick={onCloseMobile} />}
 
             <aside className={`app-sidebar ${collapsed ? 'is-collapsed' : ''} ${mobileOpen ? 'is-mobile-open' : ''}`}>
-<div className="app-sidebar-brand">
-    <img
-        src={logo}
-        alt="Sporting Club"
-        className="sidebar-logo"
-    />
-</div>
+                <div className="app-sidebar-brand">
+                    {!collapsed && (
+                        <img
+                            src={logoSporting}
+                            alt="Sporting Club"
+                            className="navbar-logo-img"
+                            onError={(e) => {
+                                e.target.style.display = 'none'
+                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'inline'
+                            }}
+                        />
+                    )}
+                </div>
 
                 <nav className="app-sidebar-nav">
                     {items.map((item) => {
@@ -63,17 +69,6 @@ const Sidebar = ({ activeTab, onTabChange, collapsed, onToggleCollapse, mobileOp
                         );
                     })}
                 </nav>
-
-                <div className="app-sidebar-footer">
-                    <button type="button" className="sidebar-nav-item sidebar-logout" onClick={onLogout} title="Cerrar sesión">
-                        <span className="sidebar-nav-icon"><IconLogout /></span>
-                        {!collapsed && <span className="sidebar-nav-label">Cerrar sesión</span>}
-                    </button>
-
-                    <button type="button" className="sidebar-collapse-btn" onClick={onToggleCollapse} title={collapsed ? 'Expandir' : 'Colapsar'}>
-                        <span className={collapsed ? 'rotate-180' : ''}><IconChevronLeft /></span>
-                    </button>
-                </div>
             </aside>
         </>
     );

@@ -32,8 +32,8 @@
 .app-sidebar-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 1px 16px;
+  gap: 0.5px;
+  padding: 1px 15px;
   border-bottom: 1px solid var(--sporting-border);
   min-height: var(--topbar-height);
   box-sizing: border-box;
