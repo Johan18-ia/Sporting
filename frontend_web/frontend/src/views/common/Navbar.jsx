@@ -2,7 +2,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import '../../styles/Navbar.css'
-import logoSporting from '../../assets/Logo.png'
+import logoSporting from '../../assets/logo.png'
 
 const Navbar = () => {
     const { isAuthenticated, logout, currentUser } = useAuth()
@@ -78,9 +78,6 @@ const Navbar = () => {
                         <>
                             <Link to="/login" className="nav-link btn-primary">
                                 Iniciar Sesion
-                            </Link>
-                            <Link to="/register" className="nav-link btn-primary">
-                                Registrarse
                             </Link>
                         </>
                     )}

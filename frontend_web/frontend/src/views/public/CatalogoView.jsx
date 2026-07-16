@@ -19,16 +19,16 @@ const AboutImage = ({ src, alt }) => {
 
 const FEATURES = [
     {  
-        title: 'Entrenadores Expertos',
-        description: 'Profesores con experiencia en formación deportiva infantil y juvenil te acompañan en cada sesión.',
+        title: 'Asignación de horarios sin complicaciones',
+        description: 'Organiza las jornadas de entrenamiento de cada categoría de forma visual y rápida, optimizando tus espacios y la disponibilidad de tus profesores.',
     },
     { 
-        title: 'Torneos Constantes',
-        description: 'Participa en campeonatos internos organizados por categoría para poner a prueba tu progreso.',
+        title: 'Gestiona tus estudiantes',
+        description: 'Mantén un control más cómodo de tus alumnos.',
     },
     {
-        title: 'Horarios Flexibles',
-        description: 'Entrena en el horario que mejor se adapte a tu categoría, organizados durante toda la semana.',
+        title: 'Creación de equipos y torneos',
+        description: 'Configura tus planteles por niveles o edades, y organiza ligas o campeonatos internos con calendarios automatizados para mantener la motivación al máximo.',
     },
 ];
 
@@ -60,11 +60,10 @@ const CatalogoView = () => {
             <section className="public-hero-v2">
                 <div className="hero-v2-container">
                     <div className="hero-v2-text">
-                        <span className="public-section-eyebrow on-dark">— Escuela de Microfútbol —</span>
-                        <h1>Formando Campeones, Dentro y Fuera de la Cancha</h1>
+                        <span className="public-section-eyebrow on-dark">— Gestión de Escuelas de Microfútbol —</span>
+                        <h1>¡Forma tus campeones ahora!</h1>
                         <p>
-                            Únete a una escuela deportiva enfocada en la disciplina, el trabajo en
-                            equipo y el crecimiento de cada estudiante.
+                            Únete a Sporting y forma parte de una comunidad que inspira esfuerzo, compañerismo y el deseo de alcanzar una meta.
                         </p>
                         <div className="hero-v2-actions">
                             <button className="hero-v2-btn primary" onClick={() => scrollTo('catalogo')}>
@@ -86,7 +85,7 @@ const CatalogoView = () => {
                 <div className="public-section-header">
                     <span className="public-section-eyebrow">Por qué elegirnos</span>
                     <h2>¿Por Qué Unirte a Sporting?</h2>
-                    <p>Descubre los beneficios de formar parte de una comunidad enfocada en el desarrollo deportivo integral.</p>
+                    <p>En Sporting entendemos que tu prioridad es el desarrollo de tus atletas. Por eso, te ofrecemos una plataforma integral diseñada para simplificar el día a día de tu escuela deportiva, permitiéndote gestionar todo en un solo lugar de manera ágil y profesional.</p>
                 </div>
 
                 <div className="features-grid">
@@ -109,10 +108,7 @@ const CatalogoView = () => {
                     <span className="public-section-eyebrow">Quiénes somos</span>
                     <h2>La Próxima Generación del Microfútbol <span className="accent-underline">Empieza Aquí</span></h2>
                     <p>
-                        Sporting Club es una escuela de microfútbol enfocada en la formación técnica,
-                        física y en valores de niños y jóvenes. Contamos con categorías por año de
-                        nacimiento, horarios de entrenamiento organizados y torneos internos para que
-                        cada estudiante compita y crezca dentro del club.
+                 Sporting es la plataforma integral de gestión deportiva diseñada para transformar, simplificar y automatizar por completo la administración de escuelas y clubes. Nuestro software centraliza las herramientas clave del día a día para que entrenadores, coordinadores y directivos puedan dejar atrás las complejas hojas de cálculo y enfocar toda su energía en la formación técnica, física y en valores de sus deportistas. Con el aplicativo, el control de tu institución se vuelve ágil y eficiente; te permite registrar y organizar de manera impecable a tus estudiantes por categorías según su año de nacimiento, manteniendo un historial y fichas técnicas siempre al día, al mismo tiempo que simplifica la planificación de entrenamientos semanales mediante un sistema interactivo de asignación de horarios. Para mantener la competitividad y la motivación al máximo, la plataforma te otorga total autonomía para estructurar planteles, crear equipos y configurar torneos internos de forma directa, permitiéndote decidir exactamente qué enfrentamientos se jugarán en cada jornada. Adicionalmente, Sporting impulsa la proyección comercial de tu club mediante un catálogo digital exclusivo donde los padres de familia y alumnos pueden consultar y adquirir fácilmente tu oferta de servicios, inscripciones, mensualidades, uniformes o cursos de temporada, unificando la administración y la experiencia de usuario en una sola herramienta moderna, fluida y sumamente profesional.
                     </p>
                     <p>
                         Trabajo en equipo, disciplina y respeto son la base de cada sesión de

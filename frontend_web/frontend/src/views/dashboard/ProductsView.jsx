@@ -8,9 +8,6 @@ import Table from '../ui/Table'
 import Button from '../ui/Button'
 
 const ProductsView = () => {
-  // ============================================
-  // LOGICA SIN CAMBIOS
-  // ============================================
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -97,7 +94,7 @@ const ProductsView = () => {
   }
 
   // ============================================
-  // PRESENTACION — unica parte que cambia
+  // PRESENTACION 
   // ============================================
   return (
     <div>

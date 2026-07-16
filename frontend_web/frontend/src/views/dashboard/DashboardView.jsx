@@ -7,13 +7,14 @@ import TournamentModel from '../../models/TournamentModel'
 import ProductModel from '../../models/ProductModel'
 import CategoryModel from '../../models/CategoryModel'
 import ScheduleModel from '../../models/ScheduleModel'
+import TeamModel from '../../models/TeamModel'
 import MainLayout from '../layouts/MainLayout'
 import DashboardStats from './DashboardStats'
 import PageHeader from '../ui/PageHeader'
 import Card from '../ui/Card'
 import {
   IconGraduate, IconTrophy, IconCheckCircle, IconBag,
-  IconShield, IconTag, IconClock, IconLock
+  IconShield, IconTag, IconClock
 } from '../layouts/NavIcons'
 import UsersView from './UsersView'
 import CategoriesView from './CategoriesView'
@@ -22,34 +23,42 @@ import SchedulesView from './SchedulesView'
 import ProductsView from './ProductsView'
 import StudentsView from './StudentsView'
 import TournamentsView from './TournamentsView'
+import TeamsView from './TeamsView'
 import StudentDashboardView from './StudentDashboardView'
 import '../../styles/Dashboard.css'
 import '../../styles/Users.css'
+import logoSporting from '../../assets/logo.png'
 
 const DashboardView = () => {
   const { currentUser, logout } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [logoutMessage, setLogoutMessage] = useState('')
   const navigate = useNavigate()
+
+  // ============================================
+  // METRICAS REALES DEL PANEL
+  // ============================================
   const [overview, setOverview] = useState({
     students: 0,
     tournaments: 0,
     activeTournaments: 0,
     products: 0,
     categories: 0,
-    schedules: 0
+    schedules: 0,
+    teams: 0
   })
   const [overviewLoading, setOverviewLoading] = useState(true)
 
   useEffect(() => {
     const loadOverview = async () => {
       setOverviewLoading(true)
-      const [studentsRes, tournamentsRes, productsRes, categoriesRes, schedulesRes] = await Promise.all([
+      const [studentsRes, tournamentsRes, productsRes, categoriesRes, schedulesRes, teamsRes] = await Promise.all([
         StudentModel.getAllStudents(),
         TournamentModel.getAllTournaments(),
         ProductModel.getAllProducts(),
         CategoryModel.getAllCategories(),
-        ScheduleModel.getAllSchedules()
+        ScheduleModel.getAllSchedules(),
+        TeamModel.getAllTeams()
       ])
 
       const tournaments = tournamentsRes.success ? tournamentsRes.data : []
@@ -60,7 +69,8 @@ const DashboardView = () => {
         activeTournaments: tournaments.filter(t => (t.status || 'Activo') === 'Activo').length,
         products: productsRes.success ? productsRes.data.length : 0,
         categories: categoriesRes.success ? categoriesRes.data.length : 0,
-        schedules: schedulesRes.success ? schedulesRes.data.length : 0
+        schedules: schedulesRes.success ? schedulesRes.data.length : 0,
+        teams: teamsRes.success ? teamsRes.data.length : 0
       })
       setOverviewLoading(false)
     }
@@ -80,6 +90,9 @@ const DashboardView = () => {
     }
   }
 
+  // ============================================
+  // ROL "user" (estudiante)
+  // ============================================
   if (currentUser?.role === 'user') {
     return (
       <MainLayout
@@ -100,6 +113,9 @@ const DashboardView = () => {
     )
   }
 
+  // ============================================
+  // ROLES "admin" / "seller"
+  // ============================================
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -119,7 +135,7 @@ const DashboardView = () => {
                 { label: 'Torneos', value: overview.tournaments, icon: IconTrophy },
                 { label: 'Torneos Activos', value: overview.activeTournaments, icon: IconCheckCircle },
                 { label: 'Productos', value: overview.products, icon: IconBag },
-                { label: 'Equipos', value: '—', icon: IconShield, note: 'próx.' }
+                { label: 'Equipos', value: overview.teams, icon: IconShield }
               ]}
             />
 
@@ -171,6 +187,8 @@ const DashboardView = () => {
         return <StudentsView />
       case 'tournaments':
         return <TournamentsView />
+      case 'teams':
+        return <TeamsView />
       default:
         return null
     }

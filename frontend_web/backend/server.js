@@ -31,8 +31,8 @@ app.use(express.urlencoded({ extended: true }));
 // ============================================
 app.use(cors({
     origin: [
-        'http://192.168.80.14',
-        'http://192.168.80.14',
+        'http://10.1.196.38',
+        'http://10.1.196.38',
         'http://localhost',
         'http://localhost:5173',
         'http://127.0.0.1',
@@ -128,6 +128,6 @@ app.use((req, res) => {
     });
 });
 
-console.log('📚 Swagger disponible en: http://192.168.80.14:3000/api-docs');
+console.log('📚 Swagger disponible en: http://10.1.196.38:3000/api-docs');
 
 module.exports = app;
