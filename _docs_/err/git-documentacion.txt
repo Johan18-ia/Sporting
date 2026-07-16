@@ -30,7 +30,14 @@ chore    🔧     Tarea de mantenimiento                        Cuando se realiz
 ci       🚀     CI/CD                                         Cuando se modifican pipelines o configuraciones de integración continua
 build    📦     Build                                         Cuando se cambian herramientas o procesos de compilación
 revert   ⏪     Reversión                                     Cuando se deshace un commit previo
-
+hotfix	 🚑	    Parche urgente en producción
+wip	     🚧	    Trabajo en progreso (Work In Progress)
+i18n	 🌐	    Internacionalización / Traducciones
+security 🔒	    Parches de seguridad
+db	     🗃️	 Cambios en esquemas de base de datos
+config	 ⚙️	    Cambios en archivos de configuración
+deprecate⚠️	    Marcar código como obsoleto
+remove	 🔥	    Eliminar código o archivos
 ================================================================================
 
 EJEMPLOS POR TIPO

@@ -1,0 +1,138 @@
+|||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\|||
+|||--------------------------------------------------------------------------------------------------------------------------------------------------------------------|||
+|||------------------------------------------------------------ 09. CONFIGURACION Y CONEXION PARA DESARROLLO MOVIL (QR) -----------------------------------------------|||
+|||--------------------------------------------------------------------------------------------------------------------------------------------------------------------|||
+|||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\|||
+
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|-- 09.01.  Configuracion Inicial del Proyecto (package.json / App.tsx): ------------------------------------------------------------------------------------------------|
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+            OBJETIVO: Habilitar la ejecucion de la app en un dispositivo fisico via QR con Expo Go.
+
+            A. package.json (Scripts de inicio optimizados):
+               {
+                 "scripts": {
+                   "start": "expo start --tunnel --clear",
+                   "start:local": "expo start --host lan --clear",
+                   "start:offline": "expo start --offline --clear",
+                   "android": "echo 'NO USAR - Busca emulador' && exit 1",
+                   "ios": "echo 'NO USAR - Busca emulador' && exit 1",
+                   "web": "expo start --web"
+                 }
+               }
+
+            B. App.tsx (Componente de prueba para validar conexion):
+               // Archivo: frontend_mob/App.tsx
+               // Funcion: Componente raiz que se renderiza al iniciar la app.
+
+               import { StatusBar } from 'expo-status-bar';
+               import { StyleSheet, Text, View, Button, Alert } from 'react-native';
+
+               export default function App() {
+                 return (
+                   <View style={styles.container}>
+                     <Text style={styles.title}>Conectado por QR</Text>
+                     <Text style={styles.subtitle}>Sin emulador - Directo a tu celular</Text>
+                     <Button
+                       title="Funciona"
+                       onPress={() => Alert.alert('Exito', 'Tu app movil esta corriendo sin emulador')}
+                       color="#007AFF"
+                     />
+                     <StatusBar style="auto" />
+                   </View>
+                 );
+               }
+
+               const styles = StyleSheet.create({
+                 container: {
+                   flex: 1,
+                   backgroundColor: '#E6F4FE',
+                   alignItems: 'center',
+                   justifyContent: 'center',
+                   padding: 20,
+                   gap: 20,
+                 },
+                 title: {
+                   fontSize: 28,
+                   fontWeight: 'bold',
+                   color: '#1a1a1a',
+                   textAlign: 'center',
+                 },
+                 subtitle: {
+                   fontSize: 16,
+                   color: '#666',
+                   textAlign: 'center',
+                   marginBottom: 10,
+                 },
+               });
+
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|-- 09.02.  Comandos para Copiar y Pegar: -------------------------------------------------------------------------------------------------------------------------------|
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+            COMANDO PRINCIPAL - Conectar por QR (RECOMENDADO):
+            > npx expo start --tunnel --clear
+
+            Alternativa - Conexion local (mas rapida):
+            > npx expo start --host lan --clear
+
+            Si tienes problemas de conexion:
+            > npx expo start --offline --clear
+
+            Limpiar cache y reiniciar:
+            > npx expo start --clear
+
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|-- 09.03.  Para Escanear el QR en tu Celular: --------------------------------------------------------------------------------------------------------------------------|
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+            01. Instala Expo Go en tu celular (Play Store / App Store).
+
+            02. Abre Expo Go y toca "Scan QR Code".
+
+            03. Escanea el QR que aparece en tu terminal.
+
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|-- 09.04.  Solucion de Problemas (Comandos Rapidos): -------------------------------------------------------------------------------------------------------------------|
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+            Si el QR no conecta:
+            > npx expo start --tunnel    // Usa tunel ngrok (recomendado si falla red local)
+            > npx expo start --host lan  // Prueba con IP local (misma red WiFi)
+            > npx expo start --offline   // Modo offline
+
+            Si ves error de emulador:
+            > NUNCA USES: expo start --android  o  expo start --ios
+            > SIEMPRE USA: npx expo start --tunnel  o  npx expo start --host lan
+
+            Ver tu IP local (si necesitas conexion manual):
+            > Windows: ipconfig | findstr "IPv4"
+            > Mac/Linux: ifconfig | grep "inet "
+
+            Conectar manualmente en Expo Go:
+            > exp://[TU_IP]:8081
+
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|-- 09.05.  Verificacion Final: -----------------------------------------------------------------------------------------------------------------------------------------|
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+            Despues de ejecutar:
+            > npx expo start --tunnel --clear
+
+            Deberias ver en tu terminal:
+            > Metro waiting on exp://192.168.x.x:8081
+            > QR: https://expo.dev/...
+            > Scan the QR code with Expo Go
+
+            Tambien veras:
+            > Android Bundled 10995ms index.ts (686 modules)
+            > Android Bundled 80ms index.ts (1 module)
+
+            Esto confirma que la app se compilo correctamente y esta lista en tu dispositivo.
+
+|||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\|||
+|||--------------------------------------------------------------------------------------------------------------------------------------------------------------------|||
+|||------------------------------------------------------------------- FIN DE LA GUIA QR -----------------------------------------------------------------------------|||
+|||--------------------------------------------------------------------------------------------------------------------------------------------------------------------|||
+|||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\|||
