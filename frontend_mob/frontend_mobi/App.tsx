@@ -7,7 +7,7 @@ export default function App() {
       <Text style={styles.title}> ¡Conectado por QR!</Text>
       <Text style={styles.subtitle}>Sin emulador - Directo a tu celular</Text>
       <Button
-        title="✅ ¡Funciona!"
+        title="¡Funciona!"
         onPress={() => Alert.alert('Éxito', 'Tu app móvil está corriendo sin emulador 🎉')}
         color="#000000"
       />
