@@ -4,11 +4,11 @@ import { StyleSheet, Text, View, Button, Alert } from 'react-native';
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}> ¡Conectado por QR!</Text>
+      <Text style={styles.title}>Conectado por QR</Text>
       <Text style={styles.subtitle}>Sin emulador - Directo a tu celular</Text>
       <Button
-        title="¡Funciona!"
-        onPress={() => Alert.alert('Éxito', 'Tu app móvil está corriendo sin emulador 🎉')}
+        title="Funciona"
+        onPress={() => Alert.alert('Éxito', 'Tu app móvil está corriendo sin emulador')}
         color="#000000"
       />
       <StatusBar style="auto" />

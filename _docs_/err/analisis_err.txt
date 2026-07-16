@@ -32,7 +32,7 @@ _docs_\err\analisis_err.txt
 ==                 FRONTEND MOBILE                ==
 ====================================================
 
-cd frontend_mob\frontend_mobi
+cd frontend_mobile
 npm install
 npm i
 COMANDO PRINCIPAL - Conectar por QR (RECOMENDADO):
