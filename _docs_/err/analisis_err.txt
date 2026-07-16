@@ -5,113 +5,42 @@ _docs_\err\analisis_err.txt
 ==                    BACKEND                     ==
 ====================================================
 
-cd frontend_web\backend
-npm install
-npm i
-node index.js
+>cd frontend_web\backend
+>npm install
+>npm i
+>node index.js
 
 ====================================================
 ==                    FRONTEND                    ==
 ====================================================
 
-cd frontend_web\frontend
-nmp install
-npm i
-npm run dev
+>cd frontend_web\frontend
+>nmp install
+>npm i
+>npm run dev
 
 ====================================================
 ==                FRONTEND MAQUETA                ==
 ====================================================
 
-cd sporting-Prot-navegable
+>cd sporting-Prot-navegable
+>npm install
+>npm i
+>npm run dev
+
+====================================================
+==                 FRONTEND MOBILE                ==
+====================================================
+
+cd frontend_mob\frontend_mobi
 npm install
 npm i
-npm run dev
-
-====================================================
-2.          IPS DE SE DEBEN CONFIGURAR            ==
-====================================================
-==                    BACKEND                     ==
-====================================================
-backend/index.js
-
-// frontend_web/backend/index.js
-const http = require('http');
-const app = require('./server');
-const cors = require('cors');
-const port = process.env.PORT || 3000;
-const host = process.env.HOST || '192.168.56.1'; // ← CAMBIAR AQUÍ
-//                                       ↑
-//                          Pon la IP de tu máquina
-//                          Comando: ipconfig (Windows) o ifconfig (Linux/Mac)
-
-// Configuración CORS --
-app.use(cors({
-    origin: [
-        'http://192.168.56.1', // ← CAMBIAR AQUÍ
-        'http://localhost',
-        'http://127.0.0.1'
-    ],
-    // ...
-}));
-====================================================
-backend/config/swagger.js
-====================================================
-
-// frontend_web/backend/config/swagger.js
-const options = {
-  definition: {
-    // ...
-    servers: [
-      {
-        url: 'http://192.168.56.1:3000', // ← CAMBIAR AQUÍ
-        //     ↑
-        //   Misma IP que en index.js
-        description: 'Servidor local'
-      }
-    ],
-    // ...
-  },
-  // ...
-};
-
-====================================================
-==                    FRONTEND                    ==
-====================================================
-frontend/src/config/api.js
-====================================================
-
-// frontend_web/frontend/src/config/api.js
-const API_CONFIG = {
-  // ⚠️ CAMBIAR AQUÍ
-  BASE_URL: 'http://192.168.56.1:3000/api',  // ← MISMA IP
-  //              ↑
-  //        Misma IP que en backend
-  TIMEOUT: 10000,
-  ENDPOINTS: {
-    LOGIN: '/users/login',
-    REGISTER: '/users/create',
-    USERS: '/users',
-    USER_BY_ID: '/users/:id',
-    USER_DELETE: '/users/delete/:id',
-    USER_UPDATE: '/users'
-  }
-}
-====================================================
-frontend/vite.config.js (OPCIONAL)
-====================================================
-
-// frontend_web/frontend/vite.config.js
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 5173,
-    open: true,
-    // 👇 Opcional: Si quieres que el frontend escuche en todas las IPs
-    host: '192.168.56.1', // ← Puedes agregar esto
-  }
-})
+COMANDO PRINCIPAL - Conectar por QR (RECOMENDADO):
+> npx expo start --tunnel --clear
+Alternativa - Conexion local (mas rapida):
+> npx expo start --host lan --clear
+Si tienes problemas de conexion:
+> npx expo start --offline --clear
+Limpiar cache y reiniciar:
+> npx expo start --clear
 ====================================================
