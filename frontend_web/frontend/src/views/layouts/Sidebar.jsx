@@ -1,11 +1,19 @@
 // src/views/layouts/Sidebar.jsx
-import React from 'react';
+// ====================================================
+// SIDEBAR — navegacion unica del panel administrativo
+// ====================================================
+import React, { useState } from 'react';
 import {
     IconDashboard, IconUsers, IconTag, IconClock, IconGraduate,
-    IconShield, IconTrophy, IconBag, IconLogout, IconChevronLeft
+    IconShield, IconTrophy, IconBag, IconLogout, IconChevronLeft, IconUser
 } from './NavIcons';
-import logoSporting from '../../assets/logo.png'
+// Mismo logo que ya usa el Navbar publico.
+// Coloca tu archivo en: src/assets/logo.png
+import logoSporting from '../../assets/logo.png';
 
+// Items del menu. "comingSoon" se usa para Equipos mientras se decide
+// su implementacion (ver auditoria Fase 1 / Paso 5) — no rompe nada,
+// solo se muestra visualmente deshabilitado.
 const ADMIN_NAV_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', icon: IconDashboard },
     { id: 'users', label: 'Usuarios', icon: IconUsers },
@@ -17,12 +25,18 @@ const ADMIN_NAV_ITEMS = [
     { id: 'products', label: 'Productos', icon: IconBag },
 ];
 
+// Menu del rol "user" (estudiante): secciones separadas, con la misma
+// logica que el menu de admin — cada opcion es su propia vista.
 const STUDENT_NAV_ITEMS = [
     { id: 'dashboard', label: 'Mi Panel', icon: IconDashboard },
+    { id: 'profile', label: 'Mi Perfil', icon: IconUser },
+    { id: 'schedules', label: 'Mis Horarios', icon: IconClock },
+    { id: 'tournaments', label: 'Mis Torneos', icon: IconTrophy },
 ];
 
 const Sidebar = ({ activeTab, onTabChange, collapsed, onToggleCollapse, mobileOpen, onCloseMobile, onLogout, role }) => {
     const items = role === 'user' ? STUDENT_NAV_ITEMS : ADMIN_NAV_ITEMS;
+    const [logoFailed, setLogoFailed] = useState(false);
 
     const handleSelect = (item) => {
         if (item.comingSoon) return;
@@ -36,15 +50,14 @@ const Sidebar = ({ activeTab, onTabChange, collapsed, onToggleCollapse, mobileOp
 
             <aside className={`app-sidebar ${collapsed ? 'is-collapsed' : ''} ${mobileOpen ? 'is-mobile-open' : ''}`}>
                 <div className="app-sidebar-brand">
-                    {!collapsed && (
+                    {logoFailed ? (
+                        <span className="brand-mark">SC</span>
+                    ) : (
                         <img
                             src={logoSporting}
                             alt="Sporting Club"
-                            className="navbar-logo-img"
-                            onError={(e) => {
-                                e.target.style.display = 'none'
-                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'inline'
-                            }}
+                            className="brand-logo-img"
+                            onError={() => setLogoFailed(true)}
                         />
                     )}
                 </div>
@@ -69,6 +82,17 @@ const Sidebar = ({ activeTab, onTabChange, collapsed, onToggleCollapse, mobileOp
                         );
                     })}
                 </nav>
+
+                <div className="app-sidebar-footer">
+                    <button type="button" className="sidebar-nav-item sidebar-logout" onClick={onLogout} title="Cerrar sesión">
+                        <span className="sidebar-nav-icon"><IconLogout /></span>
+                        {!collapsed && <span className="sidebar-nav-label">Cerrar sesión</span>}
+                    </button>
+
+                    <button type="button" className="sidebar-collapse-btn" onClick={onToggleCollapse} title={collapsed ? 'Expandir' : 'Colapsar'}>
+                        <span className={collapsed ? 'rotate-180' : ''}><IconChevronLeft /></span>
+                    </button>
+                </div>
             </aside>
         </>
     );

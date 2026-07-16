@@ -71,6 +71,10 @@ export const IconActivity = () => (
     <svg {...base}><path d="M3 12h4l2-7 4 14 2-7h6" /></svg>
 );
 
+export const IconUser = () => (
+    <svg {...base}><circle cx="12" cy="8" r="4" /><path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" /></svg>
+);
+
 export const IconLock = () => (
     <svg {...base}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
 );

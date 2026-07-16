@@ -7,6 +7,7 @@ import PageHeader from '../ui/PageHeader'
 import Card from '../ui/Card'
 import Button from '../ui/Button'
 
+
 const MIN_MEMBERS = 4
 
 const emptyForm = { name: '', description: '', studentIds: [] }
