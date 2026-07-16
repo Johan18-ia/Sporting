@@ -254,5 +254,61 @@
 }
 
 .status-dot.off::before {
-  background: #dc3545;
+  background: #8B0000;
+}
+
+/* ===== TEAM STUDENT PICKER (Equipos) ===== */
+.team-student-picker {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--sporting-border);
+  border-radius: var(--sporting-radius);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.team-student-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--sporting-radius);
+  cursor: pointer;
+  font-size: 13.5px;
+}
+
+.team-student-item:hover {
+  background: var(--sporting-light-gray);
+}
+
+.team-student-item.is-checked {
+  background: rgba(139, 0, 0, 0.07);
+}
+
+.team-student-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--sporting-red);
+}
+
+.team-student-item span {
+  display: flex;
+  flex-direction: column;
+}
+
+.team-student-item small {
+  color: var(--sporting-text-muted);
+  font-size: 11.5px;
+}
+
+.team-member-chip {
+  background: var(--sporting-light-gray);
+  border: 1px solid var(--sporting-border);
+  color: var(--sporting-text);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12.5px;
 }

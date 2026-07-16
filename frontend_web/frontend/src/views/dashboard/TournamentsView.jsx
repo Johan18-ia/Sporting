@@ -9,9 +9,6 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 
 const TournamentsView = () => {
-  // ============================================
-  // LOGICA SIN CAMBIOS
-  // ============================================
   const [tournaments, setTournaments] = useState([]);
   const [students, setStudents] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -80,9 +77,7 @@ const TournamentsView = () => {
     );
   };
 
-  // ============================================
-  // PRESENTACION — unica parte que cambia
-  // ============================================
+
   return (
     <div>
       <PageHeader

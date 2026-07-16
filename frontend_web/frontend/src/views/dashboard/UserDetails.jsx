@@ -95,7 +95,7 @@ const UserDetails = ({ user, onClose, onEdit }) => {
   )
 }
 
-// Función auxiliar para obtener clase CSS del rol
+
 const getRoleBadgeClass = (role) => {
   switch (role) {
     case 'admin': return 'role-admin'

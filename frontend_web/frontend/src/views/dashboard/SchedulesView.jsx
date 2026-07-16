@@ -9,9 +9,6 @@ import Table from '../ui/Table'
 import Button from '../ui/Button'
 
 const SchedulesView = () => {
-  // ============================================
-  // LOGICA SIN CAMBIOS
-  // ============================================
   const [schedules, setSchedules] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(false)
