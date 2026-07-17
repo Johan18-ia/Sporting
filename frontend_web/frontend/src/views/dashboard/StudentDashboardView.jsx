@@ -1,57 +1,49 @@
 // frontend_web/frontend/src/views/dashboard/StudentDashboardView.jsx
 // ====================================================
 // VISTA: DASHBOARD DEL ESTUDIANTE (ROL USER)
+// Recibe "activeTab" para mostrar una seccion a la vez,
+// igual que el panel de administracion.
 // ====================================================
 import React, { useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
-// Asumimos que estos modelos existen para obtener datos reales
-// Si no existen, puedes simularlos con datos de ejemplo o adaptarlos.
 import TournamentModel from '../../models/TournamentModel';
 import ScheduleModel from '../../models/ScheduleModel';
-// import UserModel from '../../models/UserModel'; // Para obtener detalles del perfil
+import PageHeader from '../ui/PageHeader';
+import Card from '../ui/Card';
+import DashboardStats from './DashboardStats';
+import { IconTrophy, IconClock, IconCheckCircle } from '../layouts/NavIcons';
 
-const StudentDashboardView = () => {
+const StudentDashboardView = ({ activeTab = 'dashboard' }) => {
+    // ============================================
+    // LOGICA DE DATOS SIN CAMBIOS (se carga una sola vez,
+    // se reutiliza en todas las secciones/pestañas)
+    // ============================================
     const { currentUser } = useAuth();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [myTournaments, setMyTournaments] = useState([]);
     const [mySchedules, setMySchedules] = useState([]);
-    // const [userProfile, setUserProfile] = useState(null); // Para detalles del perfil
 
-    // Obtener datos del estudiante
     useEffect(() => {
         const fetchStudentData = async () => {
             setLoading(true);
             setError(null);
             try {
-                // 1. Obtener torneos en los que está inscrito (necesitarías un endpoint específico)
-                // Por ahora, simulamos con TournamentModel.getAllTournaments() y filtramos.
                 const tournamentsResult = await TournamentModel.getAllTournaments();
                 if (tournamentsResult.success) {
-                    // Filtrar torneos donde el usuario actual esté inscrito
-                    // Asumiendo que cada torneo tiene un array 'students' con IDs
                     const userTournaments = tournamentsResult.data.filter(t =>
                         t.students && t.students.some(s => s.id === currentUser?.id)
                     );
                     setMyTournaments(userTournaments);
                 }
 
-                // 2. Obtener horarios del estudiante (necesitarías un endpoint)
-                // Usando ScheduleModel.getAllSchedules() como ejemplo.
                 const schedulesResult = await ScheduleModel.getAllSchedules();
                 if (schedulesResult.success) {
-                    // Filtrar horarios relacionados a la categoría del estudiante
-                    // Asumiendo que el usuario tiene un campo category_id
                     const userSchedules = schedulesResult.data.filter(s =>
                         s.id_category === currentUser?.category_id
                     );
                     setMySchedules(userSchedules);
                 }
-
-                // 3. Obtener perfil detallado del usuario
-                // const userResult = await UserModel.getUserById(currentUser.id);
-                // if (userResult.success) setUserProfile(userResult.data);
-
             } catch (err) {
                 setError('No se pudieron cargar los datos del estudiante');
                 console.error(err);
@@ -65,99 +57,146 @@ const StudentDashboardView = () => {
         }
     }, [currentUser]);
 
+    const activeTournaments = myTournaments.filter(t => (t.status || 'Activo') === 'Activo').length;
+
     if (loading) {
-        return <div className="workspace-scrollable-box">Cargando informacion del estudiante...</div>;
+        return <p style={{ color: 'var(--sporting-text-muted)' }}>Cargando información del estudiante...</p>;
     }
 
     if (error) {
-        return <div className="workspace-scrollable-box" style={{ color: '#dc3545' }}>Error: {error}</div>;
+        return <p style={{ color: '#dc3545' }}>Error: {error}</p>;
     }
 
     // ============================================
-    // RENDERIZADO PRINCIPAL
+    // MI PANEL — resumen general
     // ============================================
-    return (
-        <div className="workspace-scrollable-box animacion-aparecer">
-            {/* ===== BANNER DE BIENVENIDA ===== */}
-            <div className="dashboard-welcome-banner">
-                <h2>Bienvenido, {currentUser?.name || 'Estudiante'}!</h2>
-                <p>Este es tu panel de control. Aqui puedes ver tu informacion y actividades.</p>
+    if (activeTab === 'profile') {
+        return (
+            <div>
+                <PageHeader
+                    title="Mi Perfil"
+                    description="Resumen de tu información personal y deportiva."
+                />
+                <Card>
+                    <div className="ui-account-row">
+                        <span className="label">Nombre</span>
+                        <span className="value">{currentUser?.name} {currentUser?.lastname}</span>
+                    </div>
+                    <div className="ui-account-row">
+                        <span className="label">Email</span>
+                        <span className="value">{currentUser?.email}</span>
+                    </div>
+                    <div className="ui-account-row">
+                        <span className="label">Teléfono</span>
+                        <span className="value">{currentUser?.phone || 'No registrado'}</span>
+                    </div>
+                    <div className="ui-account-row">
+                        <span className="label">Categoría (Año)</span>
+                        <span className="value">{currentUser?.category_id || 'Sin asignar'}</span>
+                    </div>
+                    <div className="ui-account-row">
+                        <span className="label">Rol</span>
+                        <span className="badge-sporting badge-sporting-user">Estudiante</span>
+                    </div>
+                </Card>
             </div>
+        );
+    }
 
-            {/* ===== INFORMACION DEL PERFIL ===== */}
-            <div style={{ marginBottom: '30px' }}>
-                <div className="section-title-container">
-                    <h3>Mi Perfil</h3>
-                    <p>Resumen de tu informacion personal y deportiva.</p>
-                </div>
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '15px',
-                    background: 'white',
-                    padding: '20px',
-                    borderRadius: '8px',
-                    border: '1px solid #e0e0e0'
-                }}>
-                    <div><strong>Nombre:</strong> {currentUser?.name} {currentUser?.lastname}</div>
-                    <div><strong>Email:</strong> {currentUser?.email}</div>
-                    <div><strong>Telefono:</strong> {currentUser?.phone || 'No registrado'}</div>
-                    <div><strong>Categoria (Año):</strong> {currentUser?.category_id || 'Sin asignar'}</div>
-                    <div><strong>Rol:</strong> <span className="badge-sporting badge-sporting-user">Estudiante</span></div>
-                </div>
-            </div>
-
-            {/* ===== HORARIOS DE ENTRENAMIENTO ===== */}
-            <div style={{ marginBottom: '30px' }}>
-                <div className="section-title-container">
-                    <h3>Mis Horarios de Entrenamiento</h3>
-                    <p>Consulta los dias y horas de practica para tu categoria.</p>
-                </div>
-                {mySchedules.length === 0 ? (
-                    <p style={{ color: '#666', fontStyle: 'italic' }}>Aun no tienes horarios asignados.</p>
-                ) : (
-                    <div className="horarios-grid-box">
-                        {mySchedules.map((schedule, index) => (
-                            <div key={schedule.id || index} className="grid-row">
-                                <div className="col-desc">
+    if (activeTab === 'schedules') {
+        return (
+            <div>
+                <PageHeader
+                    title="Mis Horarios de Entrenamiento"
+                    description="Consulta los días y horas de práctica para tu categoría."
+                />
+                <Card>
+                    {mySchedules.length === 0 ? (
+                        <p style={{ color: 'var(--sporting-text-muted)', fontStyle: 'italic', fontSize: '13.5px' }}>
+                            Aún no tienes horarios asignados.
+                        </p>
+                    ) : (
+                        <ul className="ui-summary-list">
+                            {mySchedules.map((schedule, index) => (
+                                <li key={schedule.id || index}>
+                                    <span className="dot" />
                                     <strong>{schedule.day_of_week}</strong>
-                                    <p>{schedule.field_name || 'Cancha Principal'}</p>
-                                </div>
-                                <div className="col-cat">
-                                    <span style={{ fontWeight: 'bold' }}>
-                                        {schedule.start_time} - {schedule.end_time}
+                                    &nbsp;— {schedule.start_time} a {schedule.end_time}
+                                    {schedule.field_name && ` · ${schedule.field_name}`}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </Card>
+            </div>
+        );
+    }
+
+    if (activeTab === 'tournaments') {
+        return (
+            <div>
+                <PageHeader
+                    title="Mis Torneos"
+                    description="Lista de torneos en los que participas."
+                />
+                <Card>
+                    {myTournaments.length === 0 ? (
+                        <p style={{ color: 'var(--sporting-text-muted)', fontStyle: 'italic', fontSize: '13.5px' }}>
+                            No estás inscrito en ningún torneo actualmente.
+                        </p>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {myTournaments.map((tournament) => (
+                                <div key={tournament.id} style={{
+                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                    padding: '10px 0', borderBottom: '1px solid var(--sporting-border)'
+                                }}>
+                                    <div>
+                                        <strong style={{ color: 'var(--sporting-text)' }}>{tournament.name}</strong>
+                                        <div style={{ fontSize: '12.5px', color: 'var(--sporting-text-muted)' }}>
+                                            Categoría: {tournament.category || 'N/A'} · Equipos: {tournament.max_teams || 'N/A'}
+                                        </div>
+                                    </div>
+                                    <span className="badge-sporting badge-sporting-admin">
+                                        {tournament.status || 'Activo'}
                                     </span>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                            ))}
+                        </div>
+                    )}
+                </Card>
             </div>
+        );
+    }
 
-            {/* ===== MIS TORNEOS ===== */}
-            <div>
-                <div className="section-title-container">
-                    <h3>Mis Torneos</h3>
-                    <p>Lista de torneos en los que participas.</p>
+    // ============================================
+    // MI PANEL (dashboard) — resumen general, por defecto
+    // ============================================
+    return (
+        <div>
+            <PageHeader
+                title={`Bienvenido, ${currentUser?.name || 'Estudiante'}`}
+                description="Este es tu panel de control. Aquí puedes ver tu información y actividades."
+            />
+
+            <DashboardStats
+                items={[
+                    { label: 'Mis Horarios', value: mySchedules.length, icon: IconClock },
+                    { label: 'Mis Torneos', value: myTournaments.length, icon: IconTrophy },
+                    { label: 'Torneos Activos', value: activeTournaments, icon: IconCheckCircle }
+                ]}
+            />
+
+            <Card title="Cuenta">
+                <div className="ui-account-row">
+                    <span className="label">Usuario</span>
+                    <span className="value">{currentUser?.email}</span>
                 </div>
-                {myTournaments.length === 0 ? (
-                    <p style={{ color: '#666', fontStyle: 'italic' }}>No estas inscrito en ningun torneo actualmente.</p>
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        {myTournaments.map((tournament) => (
-                            <div key={tournament.id} className="torneo-card-estudiante">
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-                                    <h4 style={{ margin: 0, color: '#8B0000' }}>{tournament.name}</h4>
-                                    <span className="badge-estado-torneo">{tournament.status || 'Activo'}</span>
-                                </div>
-                                <p style={{ margin: '8px 0 0 0', color: '#666' }}>
-                                    Categoria: {tournament.category || 'N/A'} | Equipos: {tournament.max_teams || 'N/A'}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                <div className="ui-account-row">
+                    <span className="label">Rol</span>
+                    <span className="badge-sporting badge-sporting-user">Estudiante</span>
+                </div>
+            </Card>
         </div>
     );
 };
