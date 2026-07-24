@@ -1,6 +1,6 @@
-// src/models/CategoryModel.js
+// src/models/CategoryModel.ts
 // ====================================================
-// MODELO: CATEGORÍA - CORREGIDO CON CAMPO category_year
+// MODELO: CATEGORÍA
 // ====================================================
 import httpService from '../services/httpService'
 import API_CONFIG from '../config/api'
@@ -10,7 +10,7 @@ class CategoryModel {
         try {
             const response = await httpService.get(API_CONFIG.ENDPOINTS.CATEGORIES, true)
 
-            let categoriesArray = []
+            let categoriesArray: any[] = []
             if (response && response.data && Array.isArray(response.data)) {
                 categoriesArray = response.data
             } else if (Array.isArray(response)) {
@@ -21,7 +21,7 @@ class CategoryModel {
                 success: true,
                 data: categoriesArray
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error al obtener categorías:', error)
             return {
                 success: false,
@@ -30,24 +30,25 @@ class CategoryModel {
         }
     }
 
-    static async createCategory(categoryData) {
+    static async createCategory(categoryData: any) {
         try {
-            // ============================================
-            // CORREGIDO: USAR category_year (estandarizado)
-            // ============================================
             const payload = {
                 category_year: categoryData.category_year || categoryData.name_year,
                 description: categoryData.description || ''
             }
 
-            const response = await httpService.post(API_CONFIG.ENDPOINTS.CATEGORY_CREATE, payload, true)
+            const response = await httpService.post(
+                API_CONFIG.ENDPOINTS.CATEGORY_CREATE,
+                payload,
+                true
+            )
 
             return {
                 success: true,
                 data: response.data || response,
                 message: 'Categoría creada exitosamente'
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error al crear categoría:', error)
             return {
                 success: false,
@@ -56,9 +57,9 @@ class CategoryModel {
         }
     }
 
-    static async deleteCategory(id) {
+    static async deleteCategory(id: number | string) {
         try {
-            const endpoint = API_CONFIG.ENDPOINTS.CATEGORY_DELETE.replace(':id', id)
+            const endpoint = API_CONFIG.ENDPOINTS.CATEGORY_DELETE.replace(':id', String(id))
             const response = await httpService.delete(endpoint, true)
 
             return {
@@ -66,7 +67,7 @@ class CategoryModel {
                 data: response,
                 message: 'Categoría eliminada exitosamente'
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error al eliminar categoría:', error)
             return {
                 success: false,
