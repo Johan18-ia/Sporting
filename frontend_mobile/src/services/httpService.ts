@@ -1,25 +1,28 @@
-// src/services/httpService.js
+// src/services/httpService.ts
 // ====================================================
-// SERVICIO HTTP - CORREGIDO CON MEJOR MANEJO DE ERRORES
+// SERVICIO HTTP - Adaptado para React Native
 // ====================================================
 import API_CONFIG from '../config/api'
+import storageService from './storageService'
 
 class HttpService {
+    private baseURL: string
+
     constructor() {
         this.baseURL = API_CONFIG.BASE_URL
     }
 
-    getToken() {
-        return localStorage.getItem('auth_token')
+    async getToken(): Promise<string | null> {
+        return await storageService.getToken()
     }
 
-    getHeaders(includeAuth = true) {
-        const headers = {
+    async getHeaders(includeAuth: boolean = true): Promise<HeadersInit> {
+        const headers: HeadersInit = {
             'Content-Type': 'application/json'
         }
 
         if (includeAuth) {
-            const token = this.getToken()
+            const token = await this.getToken()
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`
             }
@@ -28,60 +31,46 @@ class HttpService {
         return headers
     }
 
-    // ============================================
-    // MANEJO DE RESPUESTAS MEJORADO
-    // ============================================
-    async handleResponse(response) {
+    async handleResponse(response: Response): Promise<any> {
         console.log('📡 Response status:', response.status)
 
-        let data = {}
+        let data: any = {}
         let errorMessage = `Error HTTP: ${response.status}`
 
         try {
-            // Intentar parsear como JSON
             data = await response.json()
-            
-            // Si la respuesta tiene un mensaje de error del backend, usarlo
             if (data.message) errorMessage = data.message
             if (data.error) errorMessage = data.error
-            
-            console.log('📡 Response data (JSON):', data)
+            console.log('📡 Response data:', data)
         } catch (e) {
-            // Si no es JSON, leer como texto
             try {
                 const text = await response.text()
                 if (text) errorMessage = text
-                console.warn('📡 Response data (text):', text)
+                console.warn('📡 Response text:', text)
             } catch (textError) {
-                console.error('Error al leer respuesta como texto:', textError)
+                console.error('Error al leer respuesta:', textError)
             }
-            console.warn('⚠️ La respuesta no es un JSON válido:', e)
         }
 
         if (!response.ok) {
-            // Lanzar un error con el mensaje específico
             throw new Error(errorMessage)
         }
 
         return data
     }
 
-    // ============================================
-    // POST
-    // ============================================
-    async post(endpoint, data, includeAuth = true) {
+    async post(endpoint: string, data: any, includeAuth: boolean = true): Promise<any> {
         try {
             const url = `${this.baseURL}${endpoint}`
             console.log(`📡 POST a: ${url}`)
-            console.log('📡 Datos enviados:', data)
+            console.log('📡 Datos:', data)
 
             const response = await fetch(url, {
                 method: 'POST',
-                headers: this.getHeaders(includeAuth),
+                headers: await this.getHeaders(includeAuth),
                 body: JSON.stringify(data)
             })
 
-            console.log('📡 Status:', response.status)
             return await this.handleResponse(response)
         } catch (error) {
             console.error(`❌ POST ${endpoint} error:`, error)
@@ -89,17 +78,16 @@ class HttpService {
         }
     }
 
-    // ============================================
-    // GET
-    // ============================================
-    async get(endpoint, includeAuth = true) {
+    async get(endpoint: string, includeAuth: boolean = true): Promise<any> {
         try {
             const url = `${this.baseURL}${endpoint}`
             console.log(`📡 GET: ${url}`)
+
             const response = await fetch(url, {
                 method: 'GET',
-                headers: this.getHeaders(includeAuth)
+                headers: await this.getHeaders(includeAuth)
             })
+
             return await this.handleResponse(response)
         } catch (error) {
             console.error(`❌ GET ${endpoint} error:`, error)
@@ -107,18 +95,17 @@ class HttpService {
         }
     }
 
-    // ============================================
-    // PUT
-    // ============================================
-    async put(endpoint, data, includeAuth = true) {
+    async put(endpoint: string, data: any, includeAuth: boolean = true): Promise<any> {
         try {
             const url = `${this.baseURL}${endpoint}`
             console.log(`📡 PUT a: ${url}`)
+
             const response = await fetch(url, {
                 method: 'PUT',
-                headers: this.getHeaders(includeAuth),
+                headers: await this.getHeaders(includeAuth),
                 body: JSON.stringify(data)
             })
+
             return await this.handleResponse(response)
         } catch (error) {
             console.error(`❌ PUT ${endpoint} error:`, error)
@@ -126,18 +113,17 @@ class HttpService {
         }
     }
 
-    // ============================================
-    // PATCH
-    // ============================================
-    async patch(endpoint, data, includeAuth = true) {
+    async patch(endpoint: string, data: any, includeAuth: boolean = true): Promise<any> {
         try {
             const url = `${this.baseURL}${endpoint}`
             console.log(`📡 PATCH a: ${url}`)
+
             const response = await fetch(url, {
                 method: 'PATCH',
-                headers: this.getHeaders(includeAuth),
+                headers: await this.getHeaders(includeAuth),
                 body: JSON.stringify(data)
             })
+
             return await this.handleResponse(response)
         } catch (error) {
             console.error(`❌ PATCH ${endpoint} error:`, error)
@@ -145,17 +131,16 @@ class HttpService {
         }
     }
 
-    // ============================================
-    // DELETE
-    // ============================================
-    async delete(endpoint, includeAuth = true) {
+    async delete(endpoint: string, includeAuth: boolean = true): Promise<any> {
         try {
             const url = `${this.baseURL}${endpoint}`
             console.log(`📡 DELETE a: ${url}`)
+
             const response = await fetch(url, {
                 method: 'DELETE',
-                headers: this.getHeaders(includeAuth)
+                headers: await this.getHeaders(includeAuth)
             })
+
             return await this.handleResponse(response)
         } catch (error) {
             console.error(`❌ DELETE ${endpoint} error:`, error)
