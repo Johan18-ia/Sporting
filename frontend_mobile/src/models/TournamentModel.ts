@@ -36,6 +36,20 @@ class TournamentModel {
             return { success: false, error: error.message || 'Error al crear torneo' }
         }
     }
+
+    static async addStudentToTournament(tournamentId: string | number, studentData: any) {
+        try {
+            const response = await httpService.post(
+                `${API_CONFIG.ENDPOINTS.TOURNAMENTS}/${tournamentId}/students`,
+                studentData,
+                true
+            )
+
+            return { success: true, data: response.data || response }
+        } catch (error: any) {
+            return { success: false, error: error.message || 'Error al inscribir estudiante' }
+        }
+    }
 }
 
 export default TournamentModel

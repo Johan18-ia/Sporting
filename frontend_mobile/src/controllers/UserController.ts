@@ -5,11 +5,13 @@
 import UserModel from '../models/UserModel'
 import AuthController from './AuthController'
 
+type UserResponse = { success: boolean; data?: any; error?: string; message?: string }
+
 class UserController {
     // ============================================
     // OBTENER TODOS LOS USUARIOS
     // ============================================
-    static async getAllUsers(onSuccess, onError) {
+    static async getAllUsers(onSuccess: (data: any) => void, onError: (message: string) => void) {
         try {
             if (!AuthController.hasAnyRole(['admin', 'seller'])) {
                 onError('No tiene permisos para ver la lista de usuarios')
@@ -33,7 +35,7 @@ class UserController {
     // ============================================
     // OBTENER USUARIO POR ID
     // ============================================
-    static async getUserById(id, onSuccess, onError) {
+    static async getUserById(id: number | string, onSuccess: (data: any) => void, onError: (message: string) => void) {
         try {
             if (!id) {
                 onError('ID de usuario no proporcionado')
@@ -61,7 +63,7 @@ class UserController {
     // ============================================
     // CREAR USUARIO (SOLO ADMIN/SELLER)
     // ============================================
-    static async createUser(userData, onSuccess, onError) {
+    static async createUser(userData: Record<string, any>, onSuccess: (data: any) => void, onError: (message: string) => void) {
         try {
             // Validaciones de negocio
             if (!userData.email) {
@@ -85,7 +87,7 @@ class UserController {
             }
 
             // Verificar que el usuario tenga permisos
-            if (!AuthController.canCreateUsers()) {
+            if (!(await AuthController.canCreateUsers())) {
                 onError('No tiene permisos para crear usuarios')
                 return
             }
@@ -106,7 +108,7 @@ class UserController {
     // ============================================
     // ACTUALIZAR USUARIO
     // ============================================
-    static async updateUser(id, userData, onSuccess, onError) {
+    static async updateUser(id: number | string, userData: Record<string, any>, onSuccess: (data: any) => void, onError: (message: string) => void) {
         try {
             if (!id || !userData) {
                 onError('Datos incompletos')
@@ -119,8 +121,9 @@ class UserController {
             }
 
             // No permitir que un usuario se actualice a sí mismo a un rol superior
-            const currentUser = AuthController.getAuthState().currentUser
-            if (currentUser && currentUser.id === parseInt(id) && userData.role) {
+            const authState = await AuthController.getAuthState()
+            const currentUser = authState.currentUser
+            if (currentUser && currentUser.id === Number(id) && userData.role) {
                 console.warn('⚠️ Usuario intentando cambiar su propio rol')
                 // Opcional: permitir o denegar según política
             }
@@ -141,7 +144,7 @@ class UserController {
     // ============================================
     // ACTUALIZAR CAMPO ESPECÍFICO (PATCH)
     // ============================================
-    static async patchUser(id, partialData, onSuccess, onError) {
+    static async patchUser(id: number | string, partialData: Record<string, any>, onSuccess: (data: any) => void, onError: (message: string) => void) {
         try {
             if (!id || !partialData) {
                 onError('Datos incompletos')
@@ -169,7 +172,7 @@ class UserController {
     // ============================================
     // ELIMINAR USUARIO (SOLO ADMIN)
     // ============================================
-    static async deleteUser(id, onSuccess, onError) {
+    static async deleteUser(id: number | string, onSuccess: () => void, onError: (message: string) => void) {
         try {
             if (!id) {
                 onError('ID de usuario no proporcionado')
@@ -181,8 +184,9 @@ class UserController {
                 return
             }
 
-            const currentUser = AuthController.getAuthState().currentUser
-            if (currentUser && currentUser.id === parseInt(id)) {
+            const authState = await AuthController.getAuthState()
+            const currentUser = authState.currentUser
+            if (currentUser && currentUser.id === Number(id)) {
                 onError('No puede eliminar su propio usuario')
                 return
             }
@@ -203,7 +207,7 @@ class UserController {
     // ============================================
     // CAMBIAR ESTADO DEL USUARIO (SOLO ADMIN)
     // ============================================
-    static async toggleUserStatus(id, isActive, onSuccess, onError) {
+    static async toggleUserStatus(id: number | string, isActive: boolean, onSuccess: (data: any) => void, onError: (message: string) => void) {
         try {
             if (!id) {
                 onError('ID de usuario no proporcionado')
@@ -215,8 +219,9 @@ class UserController {
                 return
             }
 
-            const currentUser = AuthController.getAuthState().currentUser
-            if (currentUser && currentUser.id === parseInt(id) && !isActive) {
+            const authState = await AuthController.getAuthState()
+            const currentUser = authState.currentUser
+            if (currentUser && currentUser.id === Number(id) && !isActive) {
                 onError('No puede desactivar su propio usuario')
                 return
             }

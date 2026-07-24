@@ -2,19 +2,42 @@
 import React, { useState, useEffect } from 'react'
 import ProductController from '../../controllers/ProductController'
 import AlertMessage from '../common/AlertMessage'
-import PageHeader from '../ui/PageHeader'
-import Card from '../ui/Card'
-import Table from '../ui/Table'
-import Button from '../ui/Button'
+import PageHeader from '../UI/PageHeader'
+import Card from '../UI/Card'
+import Table from '../UI/Table'
+import Button from '../UI/Button'
+
+interface Product {
+  id?: number
+  nombre: string
+  descripcion?: string
+  precio: string | number
+  stock: number | string
+  categoria?: string
+}
+
+interface ProductFormData {
+  nombre: string
+  descripcion: string
+  precio: string
+  stock: string
+  categoria: string
+  imagen?: string
+}
+
+interface MessageState {
+  type: 'success' | 'error'
+  text: string
+}
 
 const ProductsView = () => {
-  const [products, setProducts] = useState([])
+  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [message, setMessage] = useState(null)
+  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<MessageState | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [editingProduct, setEditingProduct] = useState(null)
-  const [formData, setFormData] = useState({
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [formData, setFormData] = useState<ProductFormData>({
     nombre: '',
     descripcion: '',
     precio: '',
@@ -25,11 +48,11 @@ const ProductsView = () => {
   const loadProducts = () => {
     setLoading(true)
     ProductController.getAllProducts(
-      (data) => {
+      (data: Product[]) => {
         setProducts(data)
         setLoading(false)
       },
-      (err) => {
+      (err: string) => {
         setError(err)
         setLoading(false)
       }
@@ -40,12 +63,12 @@ const ProductsView = () => {
     loadProducts()
   }, [])
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
 
@@ -76,7 +99,7 @@ const ProductsView = () => {
     )
   }
 
-  const handleDelete = (id, nombre) => {
+  const handleDelete = (id: number | string, nombre: string) => {
     if (window.confirm(`¿Eliminar el producto "${nombre}"?`)) {
       ProductController.deleteProduct(
         id,
@@ -85,7 +108,7 @@ const ProductsView = () => {
           loadProducts()
           setTimeout(() => setMessage(null), 3000)
         },
-        (err) => {
+        (err: string) => {
           setMessage({ type: 'error', text: err })
           setTimeout(() => setMessage(null), 3000)
         }
@@ -149,10 +172,10 @@ const ProductsView = () => {
               </div>
               <div className="ui-field" style={{ gridColumn: '1 / -1' }}>
                 <label>Descripción</label>
-                <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} rows="3" />
+                <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} rows={3} />
               </div>
             </div>
-            <Button type="submit" disabled={loading}>
+            <Button onClick={() => {}} disabled={loading}>
               {loading ? 'Guardando...' : 'Guardar Producto'}
             </Button>
           </form>
@@ -176,12 +199,12 @@ const ProductsView = () => {
         <tbody>
           {products.length === 0 ? (
             <tr>
-              <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
+              <td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
                 No hay productos registrados
               </td>
             </tr>
           ) : (
-            products.map((p) => (
+            products.map((p: Product) => (
               <tr key={p.id}>
                 <td>#{p.id}</td>
                 <td>
@@ -193,14 +216,14 @@ const ProductsView = () => {
                     {p.categoria || 'Sin categoría'}
                   </span>
                 </td>
-                <td><strong>${parseFloat(p.precio).toLocaleString('es-CO')}</strong></td>
+                <td><strong>${parseFloat(String(p.precio)).toLocaleString('es-CO')}</strong></td>
                 <td>
-                  <span style={{ color: p.stock > 0 ? '#0ea371' : '#a90202', fontWeight: 600 }}>
+                  <span style={{ color: Number(p.stock) > 0 ? '#0ea371' : '#a90202', fontWeight: 600 }}>
                     {p.stock || 0}
                   </span>
                 </td>
                 <td>
-                  <Button variant="danger" onClick={() => handleDelete(p.id, p.nombre)}>
+                  <Button variant="danger" onClick={() => handleDelete(p.id ?? 0, p.nombre)}>
                     Eliminar
                   </Button>
                 </td>

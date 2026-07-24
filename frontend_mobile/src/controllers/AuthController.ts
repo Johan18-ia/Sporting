@@ -4,11 +4,15 @@
 // ====================================================
 import AuthModel from '../models/AuthModel'
 
+type AuthCallback = (data?: any, token?: string) => void
+
+type ErrorCallback = (message: string) => void
+
 class AuthController {
     // ============================================
     // MANEJAR LOGIN
     // ============================================
-    static async handleLogin(credentials, onSuccess, onError) {
+    static async handleLogin(credentials: { email: string; password: string }, onSuccess: AuthCallback, onError: ErrorCallback) {
         try {
             console.log('🔧 AuthController: Procesando login para:', credentials.email)
 
@@ -45,7 +49,7 @@ class AuthController {
     // ============================================
     // MANEJAR REGISTRO (SOLO ADMIN/SELLER)
     // ============================================
-    static async handleRegister(userData, onSuccess, onError) {
+    static async handleRegister(userData: { email: string; password: string; name: string }, onSuccess: AuthCallback, onError: ErrorCallback) {
         try {
             console.log('🔧 AuthController: Procesando registro para:', userData.email)
 
@@ -89,7 +93,7 @@ class AuthController {
     // ============================================
     // MANEJAR LOGOUT
     // ============================================
-    static async handleLogout(onSuccess, onError) {
+    static async handleLogout(onSuccess: () => void, onError: ErrorCallback) {
         try {
             const result = await AuthModel.logout()
             if (result.success) {
@@ -105,11 +109,11 @@ class AuthController {
     // ============================================
     // OBTENER ESTADO DE AUTENTICACIÓN
     // ============================================
-    static getAuthState() {
+    static async getAuthState() {
         return {
-            isAuthenticated: AuthModel.isAuthenticated(),
-            currentUser: AuthModel.getCurrentUser(),
-            currentToken: AuthModel.getCurrentToken()
+            isAuthenticated: await AuthModel.isAuthenticated(),
+            currentUser: await AuthModel.getCurrentUser(),
+            currentToken: await AuthModel.getCurrentToken()
         }
     }
 
@@ -127,31 +131,31 @@ class AuthController {
     // ============================================
     // OBTENER ROL DEL USUARIO ACTUAL
     // ============================================
-    static getUserRole() {
-        const user = AuthModel.getCurrentUser()
+    static async getUserRole() {
+        const user = await AuthModel.getCurrentUser()
         return user?.role || null
     }
 
     // ============================================
     // VERIFICAR SI EL USUARIO TIENE UN ROL ESPECÍFICO
     // ============================================
-    static hasRole(requiredRole) {
-        const userRole = this.getUserRole()
+    static async hasRole(requiredRole: string) {
+        const userRole = await this.getUserRole()
         return userRole === requiredRole
     }
 
     // ============================================
     // VERIFICAR SI EL USUARIO TIENE ALGUNO DE LOS ROLES PERMITIDOS
     // ============================================
-    static hasAnyRole(allowedRoles) {
-        const userRole = this.getUserRole()
+    static async hasAnyRole(allowedRoles: string[]) {
+        const userRole = await this.getUserRole()
         return allowedRoles.includes(userRole)
     }
 
     // ============================================
     // VERIFICAR SI EL USUARIO PUEDE CREAR OTROS USUARIOS
     // ============================================
-    static canCreateUsers() {
+    static async canCreateUsers() {
         return this.hasAnyRole(['admin', 'seller'])
     }
 }

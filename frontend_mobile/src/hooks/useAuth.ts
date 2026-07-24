@@ -69,7 +69,7 @@ export const useAuth = (): UseAuthReturn => {
         try {
             const result = await AuthModel.login(credentials)
             if (result.success) {
-                setCurrentUser(result.user)
+                setCurrentUser(result.user ?? null)
                 setIsAuthenticated(true)
                 return result
             }

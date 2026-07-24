@@ -194,6 +194,17 @@ class UserModel {
         }
     }
 
+    static async patchUser(id: number | string, partialData: any) {
+        try {
+            return await this.updateUser(id, partialData)
+        } catch (error: any) {
+            return {
+                success: false,
+                error: error.message || 'Error al actualizar campo'
+            }
+        }
+    }
+
     // ============================================
     // PATCH - CAMBIAR ESTADO DEL USUARIO
     // ============================================

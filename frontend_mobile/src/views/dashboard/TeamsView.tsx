@@ -3,22 +3,26 @@ import React, { useState, useEffect } from 'react'
 import StudentModel from '../../models/StudentModel'
 import TeamModel from '../../models/TeamModel'
 import AlertMessage from '../common/AlertMessage'
-import PageHeader from '../ui/PageHeader'
-import Card from '../ui/Card'
-import Button from '../ui/Button'
+import PageHeader from '../UI/PageHeader'
+import Card from '../UI/Card'
+import Button from '../UI/Button'
 
 const MIN_MEMBERS = 4
 
 const emptyForm = { name: '', description: '', studentIds: [] }
 
+interface Team { id: number; name: string; description?: string; studentIds: number[] }
+interface Student { id: number; name?: string; lastname?: string; document?: string }
+interface TeamFormData { name: string; description: string; studentIds: number[] }
+
 const TeamsView = () => {
-    const [teams, setTeams] = useState([])
-    const [students, setStudents] = useState([])
+    const [teams, setTeams] = useState<Team[]>([])
+    const [students, setStudents] = useState<Student[]>([])
     const [loading, setLoading] = useState(false)
-    const [message, setMessage] = useState(null)
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
     const [showForm, setShowForm] = useState(false)
-    const [editingTeam, setEditingTeam] = useState(null)
-    const [formData, setFormData] = useState(emptyForm)
+    const [editingTeam, setEditingTeam] = useState<Team | null>(null)
+    const [formData, setFormData] = useState<TeamFormData>(emptyForm)
     const [studentSearch, setStudentSearch] = useState('')
 
     const loadData = async () => {
@@ -27,8 +31,8 @@ const TeamsView = () => {
             TeamModel.getAllTeams(),
             StudentModel.getAllStudents()
         ])
-        if (teamsRes.success) setTeams(teamsRes.data)
-        if (studentsRes.success) setStudents(studentsRes.data)
+        if (teamsRes.success) setTeams((teamsRes.data as Team[] | undefined) || [])
+        if (studentsRes.success) setStudents((studentsRes.data as Student[] | undefined) || [])
         setLoading(false)
     }
 
@@ -36,12 +40,12 @@ const TeamsView = () => {
         loadData()
     }, [])
 
-    const studentsById = students.reduce((acc, s) => {
+    const studentsById = students.reduce<Record<number, Student>>((acc, s) => {
         acc[s.id] = s
         return acc
     }, {})
 
-    const toggleStudent = (id) => {
+    const toggleStudent = (id: number) => {
         setFormData(prev => {
             const isSelected = prev.studentIds.includes(id)
             return {
@@ -60,11 +64,11 @@ const TeamsView = () => {
         setShowForm(true)
     }
 
-    const openEditForm = (team) => {
+    const openEditForm = (team: Team) => {
         setEditingTeam(team)
         setFormData({
             name: team.name,
-            description: team.description,
+            description: team.description || '',
             studentIds: [...team.studentIds]
         })
         setStudentSearch('')
@@ -77,7 +81,7 @@ const TeamsView = () => {
         setFormData(emptyForm)
     }
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
 
         if (formData.studentIds.length < MIN_MEMBERS) {
@@ -101,12 +105,12 @@ const TeamsView = () => {
             closeForm()
             loadData()
         } else {
-            setMessage({ type: 'error', text: result.message })
+            setMessage({ type: 'error', text: result.message || 'No se pudo guardar el equipo' })
         }
         setTimeout(() => setMessage(null), 3500)
     }
 
-    const handleDelete = async (team) => {
+    const handleDelete = async (team: Team) => {
         if (window.confirm(`¿Eliminar el equipo "${team.name}"?`)) {
             await TeamModel.deleteTeam(team.id)
             setMessage({ type: 'success', text: 'Equipo eliminado' })
@@ -115,7 +119,7 @@ const TeamsView = () => {
         }
     }
 
-    const filteredStudents = students.filter(s => {
+    const filteredStudents = students.filter((s: Student) => {
         const term = studentSearch.toLowerCase()
         return (
             s.name?.toLowerCase().includes(term) ||
@@ -129,7 +133,7 @@ const TeamsView = () => {
             <PageHeader
                 title="Equipos"
                 description="Arma equipos con los estudiantes de la escuela (mínimo 4 integrantes por equipo)."
-                actions={<Button onClick={openNewForm}>{showForm ? '✕ Cancelar' : '+ Nuevo Equipo'}</Button>}
+                actions={<Button title={showForm ? '✕ Cancelar' : '+ Nuevo Equipo'} onPress={openNewForm} />}
             />
 
             {message && (
@@ -198,7 +202,7 @@ const TeamsView = () => {
                             </div>
                         </div>
 
-                        <Button type="submit">{editingTeam ? 'Guardar Cambios' : 'Crear Equipo'}</Button>
+                        <Button title={editingTeam ? 'Guardar Cambios' : 'Crear Equipo'} onPress={() => {}} />
                     </form>
                 </Card>
             )}
@@ -238,8 +242,8 @@ const TeamsView = () => {
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '8px' }}>
-                                    <Button variant="secondary" onClick={() => openEditForm(team)}>Editar</Button>
-                                    <Button variant="danger" onClick={() => handleDelete(team)}>Eliminar</Button>
+                                    <Button variant="secondary" title="Editar" onPress={() => openEditForm(team)} />
+                                    <Button variant="danger" title="Eliminar" onPress={() => handleDelete(team)} />
                                 </div>
                             </div>
                         ))}

@@ -3,17 +3,20 @@ import React, { useState, useEffect } from 'react'
 import ScheduleModel from '../../models/ScheduleModel'
 import CategoryModel from '../../models/CategoryModel'
 import AlertMessage from '../common/AlertMessage'
-import PageHeader from '../ui/PageHeader'
-import Card from '../ui/Card'
-import Table from '../ui/Table'
-import Button from '../ui/Button'
+import PageHeader from '../UI/PageHeader'
+import Card from '../UI/Card'
+import Table from '../UI/Table'
+import Button from '../UI/Button'
+
+interface Schedule { id: number; id_category: number; category_name?: string; day_of_week: string; start_time: string; end_time: string }
+interface CategoryOption { id: number; category_year?: string; name_year?: string; description?: string }
 
 const SchedulesView = () => {
-  const [schedules, setSchedules] = useState([])
-  const [categories, setCategories] = useState([])
+  const [schedules, setSchedules] = useState<Schedule[]>([])
+  const [categories, setCategories] = useState<CategoryOption[]>([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [message, setMessage] = useState(null)
+  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [filterCategory, setFilterCategory] = useState('')
   const [formData, setFormData] = useState({
@@ -30,8 +33,8 @@ const SchedulesView = () => {
       CategoryModel.getAllCategories()
     ])
 
-    if (schedulesRes.success) setSchedules(schedulesRes.data)
-    if (categoriesRes.success) setCategories(categoriesRes.data)
+    if (schedulesRes.success) setSchedules((schedulesRes.data || []) as Schedule[])
+    if (categoriesRes.success) setCategories((categoriesRes.data || []) as CategoryOption[])
 
     if (!schedulesRes.success || !categoriesRes.success) {
       setError('Error al cargar datos')
@@ -43,12 +46,12 @@ const SchedulesView = () => {
     loadData()
   }, [])
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!formData.id_category || !formData.day_of_week) {
       setMessage({ type: 'error', text: 'Complete todos los campos' })
@@ -71,7 +74,7 @@ const SchedulesView = () => {
     setTimeout(() => setMessage(null), 3000)
   }
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('¿Eliminar este horario?')) {
       const result = await ScheduleModel.deleteSchedule(id)
       if (result.success) {
@@ -151,9 +154,7 @@ const SchedulesView = () => {
                 <input type="time" name="end_time" value={formData.end_time} onChange={handleChange} required />
               </div>
             </div>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Guardando...' : 'Asignar Horario'}
-            </Button>
+            <Button title={loading ? 'Guardando...' : 'Asignar Horario'} onPress={() => {}} disabled={loading} />
           </form>
         </Card>
       )}
@@ -190,7 +191,7 @@ const SchedulesView = () => {
         <tbody>
           {filteredSchedules.length === 0 ? (
             <tr>
-              <td colSpan="5" style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
+              <td colSpan={5} style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
                 No hay horarios registrados
               </td>
             </tr>
@@ -206,7 +207,7 @@ const SchedulesView = () => {
                 <td><strong>{s.day_of_week}</strong></td>
                 <td>{s.start_time} - {s.end_time}</td>
                 <td>
-                  <Button variant="danger" onClick={() => handleDelete(s.id)}>🗑️</Button>
+                  <Button variant="danger" title="🗑️" onPress={() => handleDelete(s.id)} />
                 </td>
               </tr>
             ))

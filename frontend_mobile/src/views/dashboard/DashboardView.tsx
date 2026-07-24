@@ -1,6 +1,5 @@
 // src/views/dashboard/DashboardView.jsx
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import StudentModel from '../../models/StudentModel'
 import TournamentModel from '../../models/TournamentModel'
@@ -10,8 +9,8 @@ import ScheduleModel from '../../models/ScheduleModel'
 import TeamModel from '../../models/TeamModel'
 import MainLayout from '../layouts/MainLayout'
 import DashboardStats from './DashboardStats'
-import PageHeader from '../ui/PageHeader'
-import Card from '../ui/Card'
+import PageHeader from '../UI/PageHeader'
+import Card from '../UI/Card'
 import {
   IconGraduate, IconTrophy, IconCheckCircle, IconBag,
   IconShield, IconTag, IconClock
@@ -29,11 +28,20 @@ import StudentDashboardView from './StudentDashboardView'
 import '../../styles/Dashboard.css'
 import '../../styles/Users.css'
 
+interface DashboardOverview {
+  students: number
+  tournaments: number
+  activeTournaments: number
+  products: number
+  categories: number
+  schedules: number
+  teams: number
+}
+
 const DashboardView = () => {
   const { currentUser, logout } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [logoutMessage, setLogoutMessage] = useState('')
-  const navigate = useNavigate()
 
   // ============================================
   // METRICAS REALES DEL PANEL
@@ -41,7 +49,7 @@ const DashboardView = () => {
   // TournamentsView y ProductsView/CatalogoView — no se
   // inventa ninguna llamada nueva a la API.
   // ============================================
-  const [overview, setOverview] = useState({
+  const [overview, setOverview] = useState<DashboardOverview>({
     students: 0,
     tournaments: 0,
     activeTournaments: 0,
@@ -64,16 +72,16 @@ const DashboardView = () => {
         TeamModel.getAllTeams()
       ])
 
-      const tournaments = tournamentsRes.success ? tournamentsRes.data : []
+      const tournaments = tournamentsRes.success && Array.isArray(tournamentsRes.data) ? tournamentsRes.data : []
 
       setOverview({
-        students: studentsRes.success ? studentsRes.data.length : 0,
+        students: studentsRes.success && Array.isArray(studentsRes.data) ? studentsRes.data.length : 0,
         tournaments: tournaments.length,
-        activeTournaments: tournaments.filter(t => (t.status || 'Activo') === 'Activo').length,
-        products: productsRes.success ? productsRes.data.length : 0,
-        categories: categoriesRes.success ? categoriesRes.data.length : 0,
-        schedules: schedulesRes.success ? schedulesRes.data.length : 0,
-        teams: teamsRes.success ? teamsRes.data.length : 0
+        activeTournaments: tournaments.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
+        products: productsRes.success && Array.isArray(productsRes.data) ? productsRes.data.length : 0,
+        categories: categoriesRes.success && Array.isArray(categoriesRes.data) ? categoriesRes.data.length : 0,
+        schedules: schedulesRes.success && Array.isArray(schedulesRes.data) ? schedulesRes.data.length : 0,
+        teams: teamsRes.success && Array.isArray(teamsRes.data) ? teamsRes.data.length : 0
       })
       setOverviewLoading(false)
     }
@@ -85,9 +93,6 @@ const DashboardView = () => {
     try {
       await logout()
       setLogoutMessage('Sesión cerrada exitosamente')
-      setTimeout(() => {
-        navigate('/login')
-      }, 1500)
     } catch (error) {
       console.error('Error al cerrar sesión:', error)
     }

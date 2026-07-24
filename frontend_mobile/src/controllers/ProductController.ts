@@ -3,7 +3,7 @@ import ProductModel from '../models/ProductModel'
 import AuthController from './AuthController'
 
 class ProductController {
-  static async getAllProducts(onSuccess, onError) {
+  static async getAllProducts(onSuccess: (data: any) => void, onError: (message: string) => void) {
     try {
       const result = await ProductModel.getAllProducts()
       if (result.success) {
@@ -16,9 +16,9 @@ class ProductController {
     }
   }
 
-  static async createProduct(productData, onSuccess, onError) {
+  static async createProduct(productData: Record<string, unknown>, onSuccess: (data: any) => void, onError: (message: string) => void) {
     try {
-      if (!AuthController.hasAnyRole(['admin', 'seller'])) {
+      if (!(await AuthController.hasAnyRole(['admin', 'seller']))) {
         onError('No tiene permisos para crear productos')
         return
       }
@@ -39,9 +39,9 @@ class ProductController {
     }
   }
 
-  static async deleteProduct(id, onSuccess, onError) {
+  static async deleteProduct(id: number | string, onSuccess: () => void, onError: (message: string) => void) {
     try {
-      if (!AuthController.hasRole('admin')) {
+      if (!(await AuthController.hasRole('admin'))) {
         onError('Solo administradores pueden eliminar productos')
         return
       }

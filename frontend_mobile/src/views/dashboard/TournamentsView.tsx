@@ -4,17 +4,21 @@ import TournamentController from '../../controllers/TournamentController';
 import StudentModel from '../../models/StudentModel';
 import CategoryModel from '../../models/CategoryModel';
 import AlertMessage from '../common/AlertMessage';
-import PageHeader from '../ui/PageHeader';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
+import PageHeader from '../UI/PageHeader';
+import Card from '../UI/Card';
+import Button from '../UI/Button';
+
+interface Tournament { id: number; name: string; category: string; students?: Array<{ id: number; name: string; lastname: string; document: string }> }
+interface Student { id: number; name: string; lastname: string; document: string }
+interface Category { id: number; name_year: string; description: string }
 
 const TournamentsView = () => {
-  const [tournaments, setTournaments] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   const [newTournament, setNewTournament] = useState({ name: '', category: '' });
   const [enrollment, setEnrollment] = useState({ tournamentId: '', studentId: '' });
@@ -24,15 +28,15 @@ const TournamentsView = () => {
     const studentsRes = await StudentModel.getAllStudents();
     const categoriesRes = await CategoryModel.getAllCategories();
 
-    if (studentsRes.success) setStudents(studentsRes.data);
-    if (categoriesRes.success) setCategories(categoriesRes.data);
+    if (studentsRes.success) setStudents((studentsRes.data as Student[] | undefined) || []);
+    if (categoriesRes.success) setCategories((categoriesRes.data as Category[] | undefined) || []);
 
     TournamentController.getTournaments(
-      (data) => {
+      (data: Tournament[]) => {
         setTournaments(data);
         setLoading(false);
       },
-      (err) => {
+      (err: string) => {
         setError(err);
         setLoading(false);
       }
@@ -43,7 +47,7 @@ const TournamentsView = () => {
     loadInitialData();
   }, []);
 
-  const handleCreateTournament = (e) => {
+  const handleCreateTournament = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     TournamentController.create(
       newTournament,
@@ -56,7 +60,7 @@ const TournamentsView = () => {
     );
   };
 
-  const handleEnrollStudent = (e) => {
+  const handleEnrollStudent = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const selectedStudent = students.find(s => s.id === parseInt(enrollment.studentId));
 
@@ -115,7 +119,7 @@ const TournamentsView = () => {
                 ))}
               </select>
             </div>
-            <Button type="submit" fullWidth>Crear Torneo Competitivo</Button>
+            <Button title="Crear Torneo Competitivo" onPress={() => {}} />
           </form>
         </Card>
 
@@ -149,7 +153,7 @@ const TournamentsView = () => {
               </select>
             </div>
 
-            <Button type="submit" fullWidth>Confirmar Inscripcion de Alumno</Button>
+            <Button title="Confirmar Inscripcion de Alumno" onPress={() => {}} />
           </form>
         </Card>
       </div>
@@ -175,13 +179,13 @@ const TournamentsView = () => {
                 <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', color: 'var(--sporting-text-muted)', textTransform: 'uppercase' }}>
                   Jugadores Inscritos para Enfrentamientos
                 </h4>
-                {tournament.students.length === 0 ? (
+                {(tournament.students || []).length === 0 ? (
                   <p style={{ margin: 0, color: '#999', fontSize: '13px', fontStyle: 'italic' }}>
                     No hay estudiantes inscritos en este fixture todavia.
                   </p>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
-                    {tournament.students.map((st, i) => (
+                    {(tournament.students || []).map((st, i) => (
                       <div key={i} style={{
                         background: 'var(--sporting-light-gray)', padding: '10px',
                         borderRadius: 'var(--sporting-radius)', border: '1px solid var(--sporting-border)', fontSize: '13px'

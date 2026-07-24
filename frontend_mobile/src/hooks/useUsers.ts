@@ -76,7 +76,7 @@ export const useUsers = (): UseUsersReturn => {
     }, [])
 
     const createUser = useCallback(async (userData: any) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<{ success: boolean; data?: any }>((resolve, reject) => {
             UserController.createUser(
                 userData,
                 (data: any) => {
@@ -91,7 +91,7 @@ export const useUsers = (): UseUsersReturn => {
     }, [loadUsers])
 
     const updateUser = useCallback(async (id: number, userData: any) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<{ success: boolean; data?: any }>((resolve, reject) => {
             UserController.updateUser(
                 id,
                 userData,
@@ -107,7 +107,7 @@ export const useUsers = (): UseUsersReturn => {
     }, [loadUsers])
 
     const patchUser = useCallback(async (id: number, partialData: any) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<{ success: boolean; data?: any }>((resolve, reject) => {
             UserController.patchUser(
                 id,
                 partialData,
@@ -123,7 +123,7 @@ export const useUsers = (): UseUsersReturn => {
     }, [loadUsers])
 
     const deleteUser = useCallback(async (id: number) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<{ success: boolean }>((resolve, reject) => {
             UserController.deleteUser(
                 id,
                 () => {
@@ -138,7 +138,7 @@ export const useUsers = (): UseUsersReturn => {
     }, [loadUsers])
 
     const toggleUserStatus = useCallback(async (id: number, isActive: boolean) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<{ success: boolean; data?: any }>((resolve, reject) => {
             UserController.toggleUserStatus(
                 id,
                 isActive,

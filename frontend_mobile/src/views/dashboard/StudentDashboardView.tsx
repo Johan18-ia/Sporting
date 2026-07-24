@@ -8,21 +8,25 @@ import React, { useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
 import TournamentModel from '../../models/TournamentModel';
 import ScheduleModel from '../../models/ScheduleModel';
-import PageHeader from '../ui/PageHeader';
-import Card from '../ui/Card';
+import PageHeader from '../UI/PageHeader';
+import Card from '../UI/Card';
 import DashboardStats from './DashboardStats';
 import { IconTrophy, IconClock, IconCheckCircle } from '../layouts/NavIcons';
 
-const StudentDashboardView = ({ activeTab = 'dashboard' }) => {
+interface TournamentItem { id: number; name: string; category?: string; max_teams?: number; status?: string; students?: Array<{ id?: number }> }
+interface ScheduleItem { id?: number; day_of_week?: string; start_time?: string; end_time?: string; field_name?: string; id_category?: number }
+interface UserProfile { id?: number; name?: string; lastname?: string; email?: string; phone?: string; category_id?: number; role?: string }
+
+const StudentDashboardView = ({ activeTab = 'dashboard' }: { activeTab?: string }) => {
     // ============================================
     // LOGICA DE DATOS SIN CAMBIOS (se carga una sola vez,
     // se reutiliza en todas las secciones/pestañas)
     // ============================================
-    const { currentUser } = useAuth();
+    const { currentUser } = useAuth() as { currentUser: UserProfile | null };
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [myTournaments, setMyTournaments] = useState([]);
-    const [mySchedules, setMySchedules] = useState([]);
+    const [error, setError] = useState<string | null>(null);
+    const [myTournaments, setMyTournaments] = useState<TournamentItem[]>([]);
+    const [mySchedules, setMySchedules] = useState<ScheduleItem[]>([]);
 
     useEffect(() => {
         const fetchStudentData = async () => {
@@ -30,16 +34,16 @@ const StudentDashboardView = ({ activeTab = 'dashboard' }) => {
             setError(null);
             try {
                 const tournamentsResult = await TournamentModel.getAllTournaments();
-                if (tournamentsResult.success) {
-                    const userTournaments = tournamentsResult.data.filter(t =>
-                        t.students && t.students.some(s => s.id === currentUser?.id)
+                if (tournamentsResult.success && tournamentsResult.data) {
+                    const userTournaments = tournamentsResult.data.filter((t: TournamentItem) =>
+                        t.students && t.students.some((s) => s.id === currentUser?.id)
                     );
                     setMyTournaments(userTournaments);
                 }
 
                 const schedulesResult = await ScheduleModel.getAllSchedules();
-                if (schedulesResult.success) {
-                    const userSchedules = schedulesResult.data.filter(s =>
+                if (schedulesResult.success && schedulesResult.data) {
+                    const userSchedules = schedulesResult.data.filter((s: ScheduleItem) =>
                         s.id_category === currentUser?.category_id
                     );
                     setMySchedules(userSchedules);

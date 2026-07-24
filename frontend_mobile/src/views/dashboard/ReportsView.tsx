@@ -20,8 +20,8 @@ import TournamentModel from '../../models/TournamentModel'
 import ProductModel from '../../models/ProductModel'
 import UserModel from '../../models/UserModel'
 import TeamModel from '../../models/TeamModel'
-import PageHeader from '../ui/PageHeader'
-import Button from '../ui/Button'
+import PageHeader from '../UI/PageHeader'
+import Button from '../UI/Button'
 import AlertMessage from '../common/AlertMessage'
 import { IconUsers, IconGraduate, IconTag, IconClock, IconTrophy, IconBag, IconShield } from '../layouts/NavIcons'
 
@@ -39,7 +39,7 @@ const REPORTS = [
 // ============================================
 // Convierte un array de objetos a texto CSV, sin librerias.
 // ============================================
-const arrayToCSV = (data) => {
+const arrayToCSV = (data: Array<Record<string, unknown>>) => {
     if (!data || data.length === 0) return ''
 
     // Columnas: union de todas las llaves que aparezcan en los registros
@@ -50,7 +50,7 @@ const arrayToCSV = (data) => {
         }, new Set())
     )
 
-    const escapeCell = (value) => {
+    const escapeCell = (value: unknown) => {
         if (value === null || value === undefined) return ''
         const str = typeof value === 'object' ? JSON.stringify(value) : String(value)
         if (str.includes(',') || str.includes('"') || str.includes('\n')) {
@@ -60,7 +60,7 @@ const arrayToCSV = (data) => {
     }
 
     const headerRow = headers.map(escapeCell).join(',')
-    const dataRows = data.map((row) => headers.map((h) => escapeCell(row[h])).join(','))
+    const dataRows = data.map((row) => headers.map((h) => escapeCell((row as Record<string, unknown>)[h as string])).join(','))
 
     return [headerRow, ...dataRows].join('\n')
 }
@@ -70,7 +70,7 @@ const arrayToCSV = (data) => {
 // El BOM (\uFEFF) al inicio hace que Excel muestre bien
 // las tildes y la "ñ" en vez de caracteres raros.
 // ============================================
-const downloadCSV = (data, filename) => {
+const downloadCSV = (data: Array<Record<string, unknown>>, filename: string) => {
     const csv = arrayToCSV(data)
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -86,10 +86,10 @@ const downloadCSV = (data, filename) => {
 const todayStamp = () => new Date().toISOString().slice(0, 10)
 
 const ReportsView = () => {
-    const [loadingId, setLoadingId] = useState(null)
-    const [message, setMessage] = useState(null)
+    const [loadingId, setLoadingId] = useState<string | null>(null)
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-    const handleExport = async (report) => {
+    const handleExport = async (report: { id: string; label: string; fetcher: () => Promise<{ success: boolean; data?: Array<Record<string, unknown>> | undefined; error?: unknown }> }) => {
         setLoadingId(report.id)
         try {
             const result = await report.fetcher()
@@ -135,7 +135,7 @@ const ReportsView = () => {
                             <Button
                                 variant="secondary"
                                 fullWidth
-                                onClick={() => handleExport(report)}
+                                onClick={() => handleExport(report as any)}
                                 disabled={loadingId !== null}
                             >
                                 {loadingId === report.id ? 'Generando...' : 'Descargar Excel'}

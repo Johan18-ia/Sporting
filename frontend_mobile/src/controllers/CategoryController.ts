@@ -3,7 +3,7 @@ import CategoryModel from '../models/CategoryModel'
 import AuthController from './AuthController'
 
 class CategoryController {
-  static async getAllCategories(onSuccess, onError) {
+  static async getAllCategories(onSuccess: (data: any) => void, onError: (message: string) => void) {
     try {
       if (!AuthController.hasAnyRole(['admin', 'seller'])) {
         onError('No tiene permisos para ver categorías')
@@ -21,7 +21,7 @@ class CategoryController {
     }
   }
 
-  static async createCategory(categoryData, onSuccess, onError) {
+  static async createCategory(categoryData: { name_year: string }, onSuccess: (data: any) => void, onError: (message: string) => void) {
     try {
       if (!AuthController.hasAnyRole(['admin', 'seller'])) {
         onError('No tiene permisos para crear categorías')
@@ -44,9 +44,9 @@ class CategoryController {
     }
   }
 
-  static async deleteCategory(id, onSuccess, onError) {
+  static async deleteCategory(id: number | string, onSuccess: () => void, onError: (message: string) => void) {
     try {
-      if (!AuthController.hasRole('admin')) {
+      if (!(await AuthController.hasRole('admin'))) {
         onError('Solo administradores pueden eliminar categorías')
         return
       }

@@ -1,21 +1,27 @@
 // src/views/dashboard/CategoriesView.jsx
 import React, { useState } from 'react';
 import useCategories from '../../hooks/useCategories';
-import PageHeader from '../ui/PageHeader';
-import Card from '../ui/Card';
-import Table from '../ui/Table';
-import Button from '../ui/Button';
+import PageHeader from '../UI/PageHeader';
+import Card from '../UI/Card';
+import Table from '../UI/Table';
+import Button from '../UI/Button';
+
+interface CategoryItem {
+    id: number
+    category_year: number | string
+    description: string
+}
 
 const CategoriesView = () => {
     const { categories, loading, error, createCategory, deleteCategory } = useCategories();
     const [year, setYear] = useState('');
     const [description, setDescription] = useState('');
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!year || !description) return;
 
-        const res = await createCategory(year, description);
+        const res = await createCategory(Number(year), description);
         if (res.success) {
             alert('Categoría creada exitosamente');
             setYear('');
@@ -25,7 +31,7 @@ const CategoriesView = () => {
         }
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (id: number) => {
         if (window.confirm('¿Estás seguro de que deseas eliminar esta categoría?')) {
             const res = await deleteCategory(id);
             if (!res.success) {
@@ -63,7 +69,7 @@ const CategoriesView = () => {
                             required
                         />
                     </div>
-                    <Button type="submit">Guardar</Button>
+                    <Button onClick={() => {}}>Guardar</Button>
                 </form>
             </Card>
 
@@ -82,7 +88,7 @@ const CategoriesView = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {categories.map((cat) => (
+                        {categories.map((cat: CategoryItem) => (
                             <tr key={cat.id}>
                                 <td>{cat.id}</td>
                                 <td><strong>{cat.category_year}</strong></td>
@@ -96,7 +102,7 @@ const CategoriesView = () => {
                         ))}
                         {categories.length === 0 && (
                             <tr>
-                                <td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                                <td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
                                     No hay categorías.
                                 </td>
                             </tr>

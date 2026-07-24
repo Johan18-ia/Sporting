@@ -10,20 +10,25 @@ import {
 } from 'react-native'
 
 interface ButtonProps {
-    title: string
-    onPress: () => void
+    title?: string
+    children?: React.ReactNode
+    onPress?: () => void
+    onClick?: () => void
     variant?: 'primary' | 'secondary' | 'danger' | 'success'
     size?: 'small' | 'medium' | 'large'
     loading?: boolean
     disabled?: boolean
     fullWidth?: boolean
-    style?: ViewStyle
-    textStyle?: TextStyle
+    style?: ViewStyle | ViewStyle[]
+    textStyle?: TextStyle | TextStyle[]
+    type?: 'button' | 'submit' | 'reset'
 }
 
 const Button: React.FC<ButtonProps> = ({
     title,
+    children,
     onPress,
+    onClick,
     variant = 'primary',
     size = 'medium',
     loading = false,
@@ -59,6 +64,17 @@ const Button: React.FC<ButtonProps> = ({
         }
     }
 
+    const handlePress = () => {
+        if (disabled || loading) return
+        if (onPress) {
+            onPress()
+        } else if (onClick) {
+            onClick()
+        }
+    }
+
+    const label = title ?? (typeof children === 'string' ? children : '')
+
     return (
         <TouchableOpacity
             style={[
@@ -68,7 +84,7 @@ const Button: React.FC<ButtonProps> = ({
                 fullWidth && styles.fullWidth,
                 style,
             ]}
-            onPress={onPress}
+            onPress={handlePress}
             disabled={disabled || loading}
             activeOpacity={0.7}
         >
@@ -82,7 +98,7 @@ const Button: React.FC<ButtonProps> = ({
                         textStyle,
                     ]}
                 >
-                    {title}
+                    {label}
                 </Text>
             )}
         </TouchableOpacity>
