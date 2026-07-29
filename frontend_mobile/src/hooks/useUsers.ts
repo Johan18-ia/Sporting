@@ -54,22 +54,22 @@ export const useUsers = (): UseUsersReturn => {
         )
     }, [])
 
-    const getUserById = useCallback(async (id: number) => {
+    const getUserById = useCallback(async (id: number): Promise<User | null> => {
         setLoading(true)
         setError(null)
 
-        return new Promise<void>((resolve) => {
+        return new Promise<User | null>((resolve) => {
             UserController.getUserById(
                 id,
                 (data: User) => {
                     setSelectedUser(data)
                     setLoading(false)
-                    resolve()
+                    resolve(data)
                 },
                 (err: string) => {
                     setError(err)
                     setLoading(false)
-                    resolve()
+                    resolve(null)
                 }
             )
         })

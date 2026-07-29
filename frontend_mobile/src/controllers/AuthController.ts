@@ -149,7 +149,7 @@ class AuthController {
     // ============================================
     static async hasAnyRole(allowedRoles: string[]) {
         const userRole = await this.getUserRole()
-        return allowedRoles.includes(userRole)
+        return userRole !== null && allowedRoles.includes(userRole)
     }
 
     // ============================================

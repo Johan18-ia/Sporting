@@ -1,91 +1,69 @@
-// src/hooks/useStudents.ts
+// src/hooks/useTournaments.ts
 // ====================================================
-// HOOK: ESTUDIANTES
+// HOOK: TORNEOS
 // ====================================================
 import { useState, useEffect, useCallback } from 'react'
-import StudentModel from '../models/StudentModel'
+import TournamentModel from '../models/TournamentModel'
+import type { Tournament } from '../types'
 
-export const useStudents = () => {
-    const [students, setStudents] = useState<any[]>([])
+export const useTournaments = () => {
+    const [tournaments, setTournaments] = useState<Tournament[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string | null>(null)
 
-    const loadStudents = useCallback(async () => {
+    const loadTournaments = useCallback(async () => {
         setLoading(true)
         setError(null)
         try {
-            const result = await StudentModel.getAllStudents()
+            const result = await TournamentModel.getAllTournaments()
             if (result.success) {
-                setStudents(result.data || [])
+                setTournaments(result.data || [])
             } else {
-                setError(result.error || 'Error al cargar estudiantes')
+                setError(result.error || 'Error al cargar torneos')
             }
         } catch (err: any) {
-            setError(err.message || 'Error al cargar estudiantes')
+            setError(err.message || 'Error al cargar torneos')
         } finally {
             setLoading(false)
         }
     }, [])
 
-    const createStudent = useCallback(async (data: any) => {
-        setLoading(true)
+    const createTournament = useCallback(async (data: { name: string; category: string | number }) => {
         try {
-            const result = await StudentModel.createStudent(data)
+            const result = await TournamentModel.createTournament(data)
             if (result.success) {
-                await loadStudents()
+                await loadTournaments()
                 return { success: true, data: result.data }
             }
             return { success: false, error: result.error }
         } catch (err: any) {
             return { success: false, error: err.message }
-        } finally {
-            setLoading(false)
         }
-    }, [loadStudents])
+    }, [loadTournaments])
 
-    const updateStudent = useCallback(async (id: number | string, data: any) => {
-        setLoading(true)
+    const addStudent = useCallback(async (tournamentId: string | number, studentData: any) => {
         try {
-            const result = await StudentModel.updateStudent(id, data)
-            if (result.success) {
-                await loadStudents()
-                return { success: true, data: result.data }
-            }
-            return { success: false, error: result.error }
+            const result = await TournamentModel.addStudentToTournament(tournamentId, studentData)
+            return result.success
+                ? { success: true, data: result.data }
+                : { success: false, error: result.error }
         } catch (err: any) {
             return { success: false, error: err.message }
-        } finally {
-            setLoading(false)
         }
-    }, [loadStudents])
-
-    const deleteStudent = useCallback(async (id: number | string) => {
-        setLoading(true)
-        try {
-            const result = await StudentModel.deleteStudent(id)
-            if (result.success) {
-                await loadStudents()
-                return { success: true }
-            }
-            return { success: false, error: result.error }
-        } catch (err: any) {
-            return { success: false, error: err.message }
-        } finally {
-            setLoading(false)
-        }
-    }, [loadStudents])
+    }, [])
 
     useEffect(() => {
-        loadStudents()
-    }, [loadStudents])
+        loadTournaments()
+    }, [loadTournaments])
 
     return {
-        students,
+        tournaments,
         loading,
         error,
-        loadStudents,
-        createStudent,
-        updateStudent,
-        deleteStudent
+        loadTournaments,
+        createTournament,
+        addStudent,
     }
 }
+
+export default useTournaments
