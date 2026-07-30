@@ -1,24 +1,20 @@
-// App.tsx
-// ====================================================
-// ENTRYPOINT — Sporting Club Mobile
-// ====================================================
-// Equivalente a src/main.jsx + src/App.jsx del web
-// Usa el RootNavigator para decidir Auth vs Main.
-// ====================================================
-import 'react-native-gesture-handler'
-import React from 'react'
-import { StatusBar } from 'expo-status-bar'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { RootNavigator } from './src/navigation/RootNavigator'
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <StatusBar style="light" />
-        <RootNavigator />
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
-  )
+    <View style={styles.container}>
+      <Text>Open up App.tsx to start working on your app!</Text>
+      <StatusBar style="auto" />
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
