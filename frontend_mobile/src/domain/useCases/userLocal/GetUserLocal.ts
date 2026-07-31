@@ -1,7 +1,8 @@
-export class GetUserLocal {
-  constructor(private userLocalRepository: { getUser: () => Promise<unknown> }) {}
+// src/domain/useCases/userLocal/GetUserLocal.ts
+import { UserLocalRepositoryImpl } from '../../../data/repositories/UserLocalRepository';
 
-  async execute() {
-    return this.userLocalRepository.getUser();
-  }
-}
+const { getUser } = new UserLocalRepositoryImpl();
+
+export const GetUserLocalUseCase = async () => {
+    return await getUser();
+};

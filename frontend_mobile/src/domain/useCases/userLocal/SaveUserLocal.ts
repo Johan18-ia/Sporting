@@ -1,7 +1,9 @@
-export class SaveUserLocal {
-  constructor(private userLocalRepository: { saveUser: () => Promise<boolean> }) {}
+// src/domain/useCases/userLocal/SaveUserLocal.ts
+import { UserLocalRepositoryImpl } from '../../../data/repositories/UserLocalRepository';
+import { User } from '../../entities/User';
 
-  async execute() {
-    return this.userLocalRepository.saveUser();
-  }
-}
+const { save } = new UserLocalRepositoryImpl();
+
+export const SaveUserLocalUseCase = async (user: User) => {
+    return await save(user);
+};

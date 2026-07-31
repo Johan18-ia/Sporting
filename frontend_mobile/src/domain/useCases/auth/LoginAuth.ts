@@ -1,7 +1,9 @@
-export class LoginAuth {
-  constructor(private authRepository: { login: () => Promise<unknown> }) {}
+// src/domain/useCases/auth/LoginAuth.ts
+import { AuthRepositoryImpl } from '../../../data/repositories/AuthRepository';
+import { UserLogin } from '../../entities/User';
 
-  async execute() {
-    return this.authRepository.login();
-  }
-}
+const { login } = new AuthRepositoryImpl();
+
+export const LoginAuthUseCase = async (credentials: UserLogin) => {
+    return await login(credentials);
+};

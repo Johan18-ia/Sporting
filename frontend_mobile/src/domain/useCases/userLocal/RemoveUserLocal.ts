@@ -1,7 +1,8 @@
-export class RemoveUserLocal {
-  constructor(private userLocalRepository: { removeUser: () => Promise<boolean> }) {}
+// src/domain/useCases/userLocal/RemoveUserLocal.ts
+import { UserLocalRepositoryImpl } from '../../../data/repositories/UserLocalRepository';
 
-  async execute() {
-    return this.userLocalRepository.removeUser();
-  }
-}
+const { remove } = new UserLocalRepositoryImpl();
+
+export const RemoveUserLocalUseCase = async () => {
+    return await remove();
+};
