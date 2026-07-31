@@ -6,21 +6,21 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 // Importación de screens
-import LoginScreen from '../presentation/views/auth/LoginScreen';
-import RegisterScreen from '../presentation/views/auth/RegisterScreen';
-import DashboardScreen from '../presentation/views/dashboard/DashboardScreen';
-import UsersScreen from '../presentation/views/users/UsersScreen';
-import UserDetailScreen from '../presentation/views/users/UserDetailScreen';
-import UserFormScreen from '../presentation/views/users/UserFormScreen';
-import CategoriesScreen from '../presentation/views/categories/CategoriesScreen';
-import SchedulesScreen from '../presentation/views/schedules/SchedulesScreen';
-import ProductsScreen from '../presentation/views/products/ProductsScreen';
-import StudentsScreen from '../presentation/views/students/StudentsScreen';
-import StudentFormScreen from '../presentation/views/students/StudentFormScreen';
-import TournamentsScreen from '../presentation/views/tournaments/TournamentsScreen';
-import TeamsScreen from '../presentation/views/teams/TeamsScreen';
-import ReportsScreen from '../presentation/views/reports/ReportsScreen';
-import ProfileScreen from '../presentation/views/profile/ProfileScreen';
+import { LoginScreen } from '../presentation/views/auth/LoginScreen';
+import { RegisterScreen } from '../presentation/views/auth/RegisterScreen';
+import { DashboardScreen } from '../presentation/views/dashboard/DashboardScreen';
+import { UsersScreen } from '../presentation/views/users/UsersScreen';
+import { UserDetailScreen } from '../presentation/views/users/UserDetailScreen';
+import { UserFormScreen } from '../presentation/views/users/UserFormScreen';
+import { CategoriesScreen } from '../presentation/views/categories/CategoriesScreen';
+import { SchedulesScreen } from '../presentation/views/schedules/SchedulesScreen';
+import { ProductsScreen } from '../presentation/views/products/ProductsScreen';
+import { StudentsScreen } from '../presentation/views/students/StudentsScreen';
+import { StudentFormScreen } from '../presentation/views/students/StudentFormScreen';
+import { TournamentsScreen } from '../presentation/views/tournaments/TournamentsScreen';
+import { TeamsScreen } from '../presentation/views/teams/TeamsScreen';
+import { ReportsScreen } from '../presentation/views/reports/ReportsScreen';
+import { ProfileScreen } from '../presentation/views/profile/ProfileScreen';
 
 import { RootStackParamList } from './RootStackParamList';
 import { useAuth } from '../hooks/useAuth';

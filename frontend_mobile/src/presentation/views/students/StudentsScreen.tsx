@@ -123,7 +123,7 @@ export const StudentsScreen = () => {
     const renderStudentItem = ({ item }: { item: Student }) => (
         <TouchableOpacity
             style={styles.studentCard}
-            onPress={() => navigation.navigate('StudentForm' as never, { student: item, mode: 'edit' })}
+            onPress={() => navigation.navigate('StudentForm', { student: item, mode: 'edit' })}
             activeOpacity={0.7}
         >
             <View style={styles.studentAvatar}>
@@ -178,7 +178,7 @@ export const StudentsScreen = () => {
                 </View>
                 <TouchableOpacity
                     style={styles.addButton}
-                    onPress={() => navigation.navigate('StudentForm' as never, { mode: 'create' })}
+                    onPress={() => navigation.navigate('StudentForm', { mode: 'create' })}
                 >
                     <Ionicons name="add" size={24} color="#fff" />
                 </TouchableOpacity>

@@ -168,9 +168,9 @@ export const TeamsScreen = () => {
     });
 
     const renderTeamItem = ({ item }: { item: Team }) => {
-        const teamStudents = item.studentIds?.map(id => 
+        const teamStudents: Student[] = item.studentIds?.map(id => 
             students.find(s => s.id === id)
-        ).filter(Boolean) || [];
+        ).filter((s): s is Student => Boolean(s)) || [];
 
         return (
             <View style={styles.teamCard}>

@@ -13,13 +13,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { useAuth } from '../../../hooks/useAuth';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
-
-type UsersNavigationProp = StackNavigationProp<RootStackParamList, 'Users'>;
 
 interface User {
     id: number;
@@ -33,7 +29,7 @@ interface User {
 }
 
 export const UsersScreen = () => {
-    const navigation = useNavigation<UsersNavigationProp>();
+    const navigation = useNavigation<any>();
     const { user: currentUser } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -121,7 +117,7 @@ export const UsersScreen = () => {
                     styles.userCard,
                     isCurrentUser && styles.currentUserCard
                 ]}
-                onPress={() => navigation.navigate('UserDetail' as never, { userId: item.id })}
+                onPress={() => navigation.navigate('UserDetail', { userId: item.id })}
                 activeOpacity={0.7}
             >
                 <View style={styles.userAvatar}>
@@ -155,7 +151,7 @@ export const UsersScreen = () => {
                 </View>
                 <TouchableOpacity
                     style={styles.userActions}
-                    onPress={() => navigation.navigate('UserForm' as never, { user: item, mode: 'edit' })}
+                    onPress={() => navigation.navigate('UserForm', { user: item, mode: 'edit' })}
                 >
                     <Ionicons name="ellipsis-vertical" size={20} color="#666" />
                 </TouchableOpacity>
@@ -193,7 +189,7 @@ export const UsersScreen = () => {
                 </View>
                 <TouchableOpacity
                     style={styles.addButton}
-                    onPress={() => navigation.navigate('UserForm' as never, { mode: 'create' })}
+                    onPress={() => navigation.navigate('UserForm', { mode: 'create' })}
                 >
                     <Ionicons name="add" size={24} color="#fff" />
                 </TouchableOpacity>

@@ -13,14 +13,12 @@ import {
     Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 import { useAuth } from '../../../hooks/useAuth';
 
-type UserFormNavigationProp = StackNavigationProp<RootStackParamList, 'UserForm'>;
 type UserFormRouteProp = RouteProp<RootStackParamList, 'UserForm'>;
 
 interface FormData {
@@ -34,7 +32,7 @@ interface FormData {
 }
 
 export const UserFormScreen = () => {
-    const navigation = useNavigation<UserFormNavigationProp>();
+    const navigation = useNavigation<any>();
     const route = useRoute<UserFormRouteProp>();
     const { user, mode } = route.params || { mode: 'create' };
     const { user: currentUser } = useAuth();
@@ -109,6 +107,9 @@ export const UserFormScreen = () => {
             if (mode === 'create') {
                 response = await ApiDelivery.post('/users/create', payload);
             } else {
+                if (!user) {
+                    throw new Error('Usuario no encontrado');
+                }
                 response = await ApiDelivery.put('/users', { ...payload, id: user.id });
             }
 
@@ -138,6 +139,11 @@ export const UserFormScreen = () => {
                     text: 'Eliminar',
                     style: 'destructive',
                     onPress: async () => {
+                        if (!user) {
+                            setLoading(false);
+                            Alert.alert('Error', 'Usuario no encontrado');
+                            return;
+                        }
                         setLoading(true);
                         try {
                             await ApiDelivery.delete(`/users/delete/${user.id}`);

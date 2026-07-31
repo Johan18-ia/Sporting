@@ -11,13 +11,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { useAuth } from '../../../hooks/useAuth';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
-
-type DashboardNavigationProp = StackNavigationProp<RootStackParamList, 'Dashboard'>;
 
 interface DashboardStats {
     students: number;
@@ -31,7 +27,7 @@ interface DashboardStats {
 }
 
 export const DashboardScreen = () => {
-    const navigation = useNavigation<DashboardNavigationProp>();
+    const navigation = useNavigation<any>();
     const { user } = useAuth();
     const [stats, setStats] = useState<DashboardStats>({
         students: 0,
@@ -125,7 +121,7 @@ export const DashboardScreen = () => {
                 </View>
                 <TouchableOpacity 
                     style={styles.profileButton}
-                    onPress={() => navigation.navigate('Profile' as never)}
+                    onPress={() => navigation.navigate('Profile')}
                 >
                     <Ionicons name="person-circle" size={40} color={MyColors.primary} />
                 </TouchableOpacity>
@@ -138,42 +134,42 @@ export const DashboardScreen = () => {
                     label="Usuarios"
                     value={stats.users}
                     color="#8B0000"
-                    onPress={() => navigation.navigate('Users' as never)}
+                    onPress={() => navigation.navigate('Users')}
                 />
                 <StatCard
                     icon="school"
                     label="Estudiantes"
                     value={stats.students}
                     color="#2196F3"
-                    onPress={() => navigation.navigate('Students' as never)}
+                    onPress={() => navigation.navigate('Students')}
                 />
                 <StatCard
                     icon="trophy"
                     label="Torneos"
                     value={stats.tournaments}
                     color="#FF9800"
-                    onPress={() => navigation.navigate('Tournaments' as never)}
+                    onPress={() => navigation.navigate('Tournaments')}
                 />
                 <StatCard
                     icon="bag"
                     label="Productos"
                     value={stats.products}
                     color="#4CAF50"
-                    onPress={() => navigation.navigate('Products' as never)}
+                    onPress={() => navigation.navigate('Products')}
                 />
                 <StatCard
                     icon="pricetag"
                     label="Categorías"
                     value={stats.categories}
                     color="#9C27B0"
-                    onPress={() => navigation.navigate('Categories' as never)}
+                    onPress={() => navigation.navigate('Categories')}
                 />
                 <StatCard
                     icon="time"
                     label="Horarios"
                     value={stats.schedules}
                     color="#00BCD4"
-                    onPress={() => navigation.navigate('Schedules' as never)}
+                    onPress={() => navigation.navigate('Schedules')}
                 />
             </View>
 
@@ -184,37 +180,37 @@ export const DashboardScreen = () => {
                     <QuickAction
                         icon="person-add"
                         label="Nuevo Usuario"
-                        onPress={() => navigation.navigate('UserForm' as never, { mode: 'create' })}
+                        onPress={() => navigation.navigate('UserForm', { mode: 'create' })}
                         color="#8B0000"
                     />
                     <QuickAction
                         icon="school-outline"
                         label="Nuevo Estudiante"
-                        onPress={() => navigation.navigate('StudentForm' as never, { mode: 'create' })}
+                        onPress={() => navigation.navigate('StudentForm', { mode: 'create' })}
                         color="#2196F3"
                     />
                     <QuickAction
                         icon="trophy-outline"
                         label="Nuevo Torneo"
-                        onPress={() => navigation.navigate('Tournaments' as never)}
+                        onPress={() => navigation.navigate('Tournaments')}
                         color="#FF9800"
                     />
                     <QuickAction
                         icon="calendar-outline"
                         label="Horarios"
-                        onPress={() => navigation.navigate('Schedules' as never)}
+                        onPress={() => navigation.navigate('Schedules')}
                         color="#00BCD4"
                     />
                     <QuickAction
                         icon="people-outline"
                         label="Equipos"
-                        onPress={() => navigation.navigate('Teams' as never)}
+                        onPress={() => navigation.navigate('Teams')}
                         color="#4CAF50"
                     />
                     <QuickAction
                         icon="bar-chart-outline"
                         label="Reportes"
-                        onPress={() => navigation.navigate('Reports' as never)}
+                        onPress={() => navigation.navigate('Reports')}
                         color="#9C27B0"
                     />
                 </View>

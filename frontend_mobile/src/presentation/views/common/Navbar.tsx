@@ -1,4 +1,4 @@
-// src/presentation/views/common/Footer.tsx
+﻿// src/presentation/views/common/Navbar.tsx
 import React from 'react';
 import {
     View,
@@ -6,210 +6,178 @@ import {
     StyleSheet,
     TouchableOpacity,
     Image,
-    Linking
+    SafeAreaView,
+    Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../../navigation/RootStackParamList';
+import { useAuth } from '../../../hooks/useAuth';
 import { MyColors } from '../../theme/AppTheme';
 
-interface FooterProps {
-    showSocial?: boolean;
+type NavigationProp = StackNavigationProp<RootStackParamList>;
+
+interface NavbarProps {
+    showBack?: boolean;
+    title?: string;
+    rightComponent?: React.ReactNode;
 }
 
-export const Footer = ({ showSocial = true }: FooterProps) => {
-    const currentYear = new Date().getFullYear();
+export const Navbar = ({ showBack = false, title, rightComponent }: NavbarProps) => {
+    const navigation = useNavigation<NavigationProp>();
+    const route = useRoute();
+    const { user } = useAuth();
 
-    const openLink = (url: string) => {
-        Linking.openURL(url).catch(() => {});
+    const getScreenTitle = () => {
+        if (title) return title;
+
+        const routeName = route.name;
+        const titles: Record<string, string> = {
+            Dashboard: 'Dashboard',
+            Users: 'Usuarios',
+            UserDetail: 'Detalles',
+            UserForm: 'Formulario',
+            Categories: 'Categorías',
+            Schedules: 'Horarios',
+            Products: 'Productos',
+            Students: 'Estudiantes',
+            StudentForm: 'Estudiante',
+            Tournaments: 'Torneos',
+            Teams: 'Equipos',
+            Reports: 'Reportes',
+            Profile: 'Mi Perfil',
+            Login: 'Iniciar Sesión',
+            Register: 'Registro',
+        };
+
+        return titles[routeName] || routeName;
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.content}>
-                {/* Logo */}
-                <View style={styles.logoSection}>
-                    <Image
-                        source={require('../../../assets/logo.png')}
-                        style={styles.logoImage}
-                        resizeMode="contain"
-                    />
-                    <Text style={styles.logoText}>SPORTING CLUB</Text>
-                    <Text style={styles.slogan}>"Formando campeones para la vida"</Text>
+        <SafeAreaView style={styles.safeArea}>
+            <View style={styles.container}>
+                <View style={styles.leftSection}>
+                    {showBack ? (
+                        <TouchableOpacity
+                            style={styles.backButton}
+                            onPress={() => navigation.goBack()}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="arrow-back" size={24} color="#fff" />
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.logoButton}
+                            onPress={() => navigation.navigate('Dashboard')}
+                            activeOpacity={0.7}
+                        >
+                            <Image
+                                source={require('../../../../assets/logo.png')}
+                                style={styles.logoImage}
+                                resizeMode="contain"
+                            />
+                            <Text style={styles.logoText}>SPORTING</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
 
-                {/* Social Links */}
-                {showSocial && (
-                    <View style={styles.socialSection}>
-                        <Text style={styles.socialTitle}>Síguenos</Text>
-                        <View style={styles.socialIcons}>
-                            <TouchableOpacity
-                                style={styles.socialIcon}
-                                onPress={() => openLink('https://facebook.com')}
-                            >
-                                <Ionicons name="logo-facebook" size={24} color="#ccc" />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.socialIcon}
-                                onPress={() => openLink('https://instagram.com')}
-                            >
-                                <Ionicons name="logo-instagram" size={24} color="#ccc" />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.socialIcon}
-                                onPress={() => openLink('https://youtube.com')}
-                            >
-                                <Ionicons name="logo-youtube" size={24} color="#ccc" />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.socialIcon}
-                                onPress={() => openLink('https://twitter.com')}
-                            >
-                                <Ionicons name="logo-twitter" size={24} color="#ccc" />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                )}
+                <View style={styles.centerSection}>
+                    <Text style={styles.title} numberOfLines={1}>
+                        {getScreenTitle()}
+                    </Text>
+                </View>
 
-                {/* Contact */}
-                <View style={styles.contactSection}>
-                    <Text style={styles.contactTitle}>Contáctanos</Text>
-                    <TouchableOpacity
-                        style={styles.contactItem}
-                        onPress={() => openLink('tel:+573001234567')}
-                    >
-                        <Ionicons name="call-outline" size={16} color="#aaa" />
-                        <Text style={styles.contactText}>+57 300 123 4567</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.contactItem}
-                        onPress={() => openLink('mailto:contacto@sporting.com')}
-                    >
-                        <Ionicons name="mail-outline" size={16} color="#aaa" />
-                        <Text style={styles.contactText}>contacto@sporting.com</Text>
-                    </TouchableOpacity>
-                    <View style={styles.contactItem}>
-                        <Ionicons name="location-outline" size={16} color="#aaa" />
-                        <Text style={styles.contactText}>Calle 123 #45-67, Bogotá</Text>
-                    </View>
+                <View style={styles.rightSection}>
+                    {rightComponent ? (
+                        rightComponent
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.profileButton}
+                            onPress={() => navigation.navigate('Profile')}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.profileAvatar}>
+                                <Text style={styles.profileAvatarText}>
+                                    {user?.name?.charAt(0) || 'U'}
+                                    {user?.lastname?.charAt(0) || ''}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
-
-            {/* Copyright */}
-            <View style={styles.bottomBar}>
-                <Text style={styles.copyright}>
-                    © {currentYear} Sporting Club. Todos los derechos reservados.
-                </Text>
-                <View style={styles.bottomLinks}>
-                    <TouchableOpacity>
-                        <Text style={styles.bottomLink}>Términos</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.bottomSeparator}>•</Text>
-                    <TouchableOpacity>
-                        <Text style={styles.bottomLink}>Privacidad</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+    safeArea: {
+        backgroundColor: MyColors.primary,
+    },
     container: {
-        backgroundColor: '#1a1a1a',
-        paddingTop: 24,
-        paddingBottom: 12,
-    },
-    content: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-around',
-        paddingHorizontal: 20,
-        paddingBottom: 20,
-    },
-    logoSection: {
         alignItems: 'center',
-        minWidth: 120,
-        marginBottom: 16,
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        minHeight: 56,
+        backgroundColor: MyColors.primary,
     },
-    logoImage: {
-        width: 50,
-        height: 50,
-        marginBottom: 6,
-    },
-    logoText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: MyColors.primary,
-        letterSpacing: 1,
-    },
-    slogan: {
-        fontSize: 11,
-        color: '#888',
-        fontStyle: 'italic',
-        marginTop: 2,
-    },
-    socialSection: {
-        alignItems: 'center',
-        minWidth: 100,
-        marginBottom: 16,
-    },
-    socialTitle: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#888',
-        marginBottom: 8,
-    },
-    socialIcons: {
+    leftSection: {
         flexDirection: 'row',
-        gap: 12,
+        alignItems: 'center',
+        minWidth: 60,
     },
-    socialIcon: {
+    backButton: {
         padding: 4,
     },
-    contactSection: {
-        minWidth: 120,
-        marginBottom: 16,
+    logoButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
-    contactTitle: {
-        fontSize: 13,
+    logoImage: {
+        width: 32,
+        height: 32,
+    },
+    logoText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#fff',
+        letterSpacing: 1,
+    },
+    centerSection: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    title: {
+        fontSize: 17,
         fontWeight: '600',
-        color: '#888',
-        marginBottom: 8,
+        color: '#fff',
     },
-    contactItem: {
+    rightSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        marginBottom: 4,
+        minWidth: 60,
+        justifyContent: 'flex-end',
     },
-    contactText: {
-        fontSize: 12,
-        color: '#aaa',
+    profileButton: {
+        padding: 2,
     },
-    bottomBar: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
+    profileAvatar: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        alignItems: 'center',
         justifyContent: 'center',
-        alignItems: 'center',
-        borderTopWidth: 1,
-        borderTopColor: '#333',
-        paddingTop: 12,
-        gap: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.3)',
     },
-    copyright: {
-        fontSize: 11,
-        color: '#666',
-    },
-    bottomLinks: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
-    bottomLink: {
-        fontSize: 11,
-        color: '#888',
-    },
-    bottomSeparator: {
-        fontSize: 11,
-        color: '#555',
+    profileAvatarText: {
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: '#fff',
     },
 });

@@ -1,4 +1,4 @@
-// src/presentation/views/common/Navbar.tsx
+﻿// src/presentation/views/common/Footer.tsx
 import React from 'react';
 import {
     View,
@@ -6,180 +6,206 @@ import {
     StyleSheet,
     TouchableOpacity,
     Image,
-    SafeAreaView,
-    Platform
+    Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../../../navigation/RootStackParamList';
-import { useAuth } from '../../../hooks/useAuth';
 import { MyColors } from '../../theme/AppTheme';
 
-type NavigationProp = StackNavigationProp<RootStackParamList>;
-
-interface NavbarProps {
-    showBack?: boolean;
-    title?: string;
-    rightComponent?: React.ReactNode;
+interface FooterProps {
+    showSocial?: boolean;
 }
 
-export const Navbar = ({ showBack = false, title, rightComponent }: NavbarProps) => {
-    const navigation = useNavigation<NavigationProp>();
-    const route = useRoute();
-    const { user } = useAuth();
+export const Footer = ({ showSocial = true }: FooterProps) => {
+    const currentYear = new Date().getFullYear();
 
-    const getScreenTitle = () => {
-        if (title) return title;
-        
-        const routeName = route.name;
-        const titles: Record<string, string> = {
-            'Dashboard': 'Dashboard',
-            'Users': 'Usuarios',
-            'UserDetail': 'Detalles',
-            'UserForm': 'Formulario',
-            'Categories': 'Categorías',
-            'Schedules': 'Horarios',
-            'Products': 'Productos',
-            'Students': 'Estudiantes',
-            'StudentForm': 'Estudiante',
-            'Tournaments': 'Torneos',
-            'Teams': 'Equipos',
-            'Reports': 'Reportes',
-            'Profile': 'Mi Perfil',
-            'Login': 'Iniciar Sesión',
-            'Register': 'Registro'
-        };
-        return titles[routeName] || routeName;
+    const openLink = (url: string) => {
+        Linking.openURL(url).catch(() => {});
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.container}>
-                {/* Left Section */}
-                <View style={styles.leftSection}>
-                    {showBack ? (
-                        <TouchableOpacity
-                            style={styles.backButton}
-                            onPress={() => navigation.goBack()}
-                            activeOpacity={0.7}
-                        >
-                            <Ionicons name="arrow-back" size={24} color="#fff" />
-                        </TouchableOpacity>
-                    ) : (
-                        <TouchableOpacity
-                            style={styles.logoButton}
-                            onPress={() => navigation.navigate('Dashboard' as never)}
-                            activeOpacity={0.7}
-                        >
-                            <Image
-                                source={require('../../../assets/logo.png')}
-                                style={styles.logoImage}
-                                resizeMode="contain"
-                            />
-                            <Text style={styles.logoText}>SPORTING</Text>
-                        </TouchableOpacity>
-                    )}
+        <View style={styles.container}>
+            <View style={styles.content}>
+                <View style={styles.logoSection}>
+                    <Image
+                        source={require('../../../../assets/logo.png')}
+                        style={styles.logoImage}
+                        resizeMode="contain"
+                    />
+                    <Text style={styles.logoText}>SPORTING CLUB</Text>
+                    <Text style={styles.slogan}>"Formando campeones para la vida"</Text>
                 </View>
 
-                {/* Center Section */}
-                <View style={styles.centerSection}>
-                    <Text style={styles.title} numberOfLines={1}>
-                        {getScreenTitle()}
-                    </Text>
-                </View>
+                {showSocial && (
+                    <View style={styles.socialSection}>
+                        <Text style={styles.socialTitle}>Síguenos</Text>
+                        <View style={styles.socialIcons}>
+                            <TouchableOpacity
+                                style={styles.socialIcon}
+                                onPress={() => openLink('https://facebook.com')}
+                            >
+                                <Ionicons name="logo-facebook" size={24} color="#ccc" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.socialIcon}
+                                onPress={() => openLink('https://instagram.com')}
+                            >
+                                <Ionicons name="logo-instagram" size={24} color="#ccc" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.socialIcon}
+                                onPress={() => openLink('https://youtube.com')}
+                            >
+                                <Ionicons name="logo-youtube" size={24} color="#ccc" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.socialIcon}
+                                onPress={() => openLink('https://twitter.com')}
+                            >
+                                <Ionicons name="logo-twitter" size={24} color="#ccc" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
 
-                {/* Right Section */}
-                <View style={styles.rightSection}>
-                    {rightComponent ? (
-                        rightComponent
-                    ) : (
-                        <TouchableOpacity
-                            style={styles.profileButton}
-                            onPress={() => navigation.navigate('Profile' as never)}
-                            activeOpacity={0.7}
-                        >
-                            <View style={styles.profileAvatar}>
-                                <Text style={styles.profileAvatarText}>
-                                    {user?.name?.charAt(0) || 'U'}
-                                    {user?.lastname?.charAt(0) || ''}
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                    )}
+                <View style={styles.contactSection}>
+                    <Text style={styles.contactTitle}>Contáctanos</Text>
+                    <TouchableOpacity
+                        style={styles.contactItem}
+                        onPress={() => openLink('tel:+573001234567')}
+                    >
+                        <Ionicons name="call-outline" size={16} color="#aaa" />
+                        <Text style={styles.contactText}>+57 300 123 4567</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.contactItem}
+                        onPress={() => openLink('mailto:contacto@sporting.com')}
+                    >
+                        <Ionicons name="mail-outline" size={16} color="#aaa" />
+                        <Text style={styles.contactText}>contacto@sporting.com</Text>
+                    </TouchableOpacity>
+                    <View style={styles.contactItem}>
+                        <Ionicons name="location-outline" size={16} color="#aaa" />
+                        <Text style={styles.contactText}>Calle 123 #45-67, Bogotá</Text>
+                    </View>
                 </View>
             </View>
-        </SafeAreaView>
+
+            <View style={styles.bottomBar}>
+                <Text style={styles.copyright}>
+                    © {currentYear} Sporting Club. Todos los derechos reservados.
+                </Text>
+                <View style={styles.bottomLinks}>
+                    <TouchableOpacity>
+                        <Text style={styles.bottomLink}>Términos</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.bottomSeparator}>•</Text>
+                    <TouchableOpacity>
+                        <Text style={styles.bottomLink}>Privacidad</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
-    safeArea: {
-        backgroundColor: MyColors.primary,
-    },
     container: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        minHeight: 56,
-        backgroundColor: MyColors.primary,
+        backgroundColor: '#1a1a1a',
+        paddingTop: 24,
+        paddingBottom: 12,
     },
-    leftSection: {
+    content: {
         flexDirection: 'row',
-        alignItems: 'center',
-        minWidth: 60,
+        flexWrap: 'wrap',
+        justifyContent: 'space-around',
+        paddingHorizontal: 20,
+        paddingBottom: 20,
     },
-    backButton: {
+    logoSection: {
+        alignItems: 'center',
+        minWidth: 120,
+        marginBottom: 16,
+    },
+    logoImage: {
+        width: 50,
+        height: 50,
+        marginBottom: 6,
+    },
+    logoText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: MyColors.primary,
+        letterSpacing: 1,
+    },
+    slogan: {
+        fontSize: 11,
+        color: '#888',
+        fontStyle: 'italic',
+        marginTop: 2,
+    },
+    socialSection: {
+        alignItems: 'center',
+        minWidth: 100,
+        marginBottom: 16,
+    },
+    socialTitle: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#888',
+        marginBottom: 8,
+    },
+    socialIcons: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    socialIcon: {
         padding: 4,
     },
-    logoButton: {
+    contactSection: {
+        minWidth: 120,
+        marginBottom: 16,
+    },
+    contactTitle: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#888',
+        marginBottom: 8,
+    },
+    contactItem: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
+        marginBottom: 4,
     },
-    logoImage: {
-        width: 32,
-        height: 32,
+    contactText: {
+        fontSize: 12,
+        color: '#aaa',
     },
-    logoText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#fff',
-        letterSpacing: 1,
-    },
-    centerSection: {
-        flex: 1,
+    bottomBar: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
         alignItems: 'center',
+        borderTopWidth: 1,
+        borderTopColor: '#333',
+        paddingTop: 12,
+        gap: 8,
     },
-    title: {
-        fontSize: 17,
-        fontWeight: '600',
-        color: '#fff',
+    copyright: {
+        fontSize: 11,
+        color: '#666',
     },
-    rightSection: {
+    bottomLinks: {
         flexDirection: 'row',
         alignItems: 'center',
-        minWidth: 60,
-        justifyContent: 'flex-end',
+        gap: 6,
     },
-    profileButton: {
-        padding: 2,
+    bottomLink: {
+        fontSize: 11,
+        color: '#888',
     },
-    profileAvatar: {
-        width: 34,
-        height: 34,
-        borderRadius: 17,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
-    },
-    profileAvatarText: {
-        fontSize: 13,
-        fontWeight: 'bold',
-        color: '#fff',
+    bottomSeparator: {
+        fontSize: 11,
+        color: '#555',
     },
 });

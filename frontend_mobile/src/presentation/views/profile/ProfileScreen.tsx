@@ -38,7 +38,7 @@ export const ProfileScreen = () => {
                         setLogoutLoading(false);
                         navigation.reset({
                             index: 0,
-                            routes: [{ name: 'Login' as never }],
+                            routes: [{ name: 'Login' }],
                         });
                     }
                 }
@@ -105,22 +105,22 @@ export const ProfileScreen = () => {
                 <MenuItem
                     icon="people-outline"
                     label="Usuarios"
-                    onPress={() => navigation.navigate('Users' as never)}
+                    onPress={() => navigation.navigate('Users')}
                 />
                 <MenuItem
                     icon="school-outline"
                     label="Estudiantes"
-                    onPress={() => navigation.navigate('Students' as never)}
+                    onPress={() => navigation.navigate('Students')}
                 />
                 <MenuItem
                     icon="trophy-outline"
                     label="Torneos"
-                    onPress={() => navigation.navigate('Tournaments' as never)}
+                    onPress={() => navigation.navigate('Tournaments')}
                 />
                 <MenuItem
                     icon="calendar-outline"
                     label="Horarios"
-                    onPress={() => navigation.navigate('Schedules' as never)}
+                    onPress={() => navigation.navigate('Schedules')}
                 />
 
                 <View style={styles.divider} />

@@ -10,14 +10,12 @@ import {
     Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 import { useAuth } from '../../../hooks/useAuth';
 
-type UserDetailNavigationProp = StackNavigationProp<RootStackParamList, 'UserDetail'>;
 type UserDetailRouteProp = RouteProp<RootStackParamList, 'UserDetail'>;
 
 interface User {
@@ -34,7 +32,7 @@ interface User {
 }
 
 export const UserDetailScreen = () => {
-    const navigation = useNavigation<UserDetailNavigationProp>();
+    const navigation = useNavigation<any>();
     const route = useRoute<UserDetailRouteProp>();
     const { userId } = route.params;
     const { user: currentUser } = useAuth();
@@ -143,7 +141,7 @@ export const UserDetailScreen = () => {
             <View style={styles.actionsContainer}>
                 <TouchableOpacity
                     style={styles.actionButton}
-                    onPress={() => navigation.navigate('UserForm' as never, { user, mode: 'edit' })}
+                    onPress={() => navigation.navigate('UserForm', { user, mode: 'edit' })}
                 >
                     <Ionicons name="create-outline" size={20} color="#fff" />
                     <Text style={styles.actionButtonText}>Editar</Text>
