@@ -24,10 +24,10 @@ import ProductsView from './ProductsView'
 import StudentsView from './StudentsView'
 import TournamentsView from './TournamentsView'
 import TeamsView from './TeamsView'
+import ReportsView from './ReportsView'
 import StudentDashboardView from './StudentDashboardView'
 import '../../styles/Dashboard.css'
 import '../../styles/Users.css'
-import logoSporting from '../../assets/logo.png'
 
 const DashboardView = () => {
   const { currentUser, logout } = useAuth()
@@ -37,6 +37,9 @@ const DashboardView = () => {
 
   // ============================================
   // METRICAS REALES DEL PANEL
+  // Reutiliza los mismos modelos que ya usan StudentsView,
+  // TournamentsView y ProductsView/CatalogoView — no se
+  // inventa ninguna llamada nueva a la API.
   // ============================================
   const [overview, setOverview] = useState({
     students: 0,
@@ -91,13 +94,14 @@ const DashboardView = () => {
   }
 
   // ============================================
-  // ROL "user" (estudiante)
+  // ROL "user" (estudiante): mismas secciones separadas
+  // que el admin, con su propio activeTab.
   // ============================================
   if (currentUser?.role === 'user') {
     return (
       <MainLayout
-        activeTab="dashboard"
-        onTabChange={() => {}}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         user={currentUser}
         onLogout={handleLogout}
       >
@@ -108,13 +112,13 @@ const DashboardView = () => {
             onClose={() => setLogoutMessage('')}
           />
         )}
-        <StudentDashboardView />
+        <StudentDashboardView activeTab={activeTab} />
       </MainLayout>
     )
   }
 
   // ============================================
-  // ROLES "admin" / "seller"
+  // ROLES "admin" / "seller": panel de administracion
   // ============================================
   const renderContent = () => {
     switch (activeTab) {
@@ -189,6 +193,8 @@ const DashboardView = () => {
         return <TournamentsView />
       case 'teams':
         return <TeamsView />
+      case 'reports':
+        return <ReportsView />
       default:
         return null
     }
