@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 // Importación de screens
+import { HomeScreen } from '../presentation/views/home/HomeScreen';
 import { LoginScreen } from '../presentation/views/auth/LoginScreen';
 import { RegisterScreen } from '../presentation/views/auth/RegisterScreen';
 import { DashboardScreen } from '../presentation/views/dashboard/DashboardScreen';
@@ -114,9 +115,14 @@ export const AppNavigator = () => {
             >
                 {!isAuthenticated ? (
                     // ============================================
-                    // AUTH STACK
+                    // AUTH STACK (con Home como pantalla publica inicial)
                     // ============================================
                     <>
+                        <Stack.Screen
+                            name="Home"
+                            component={HomeScreen}
+                            options={{ headerShown: false }}
+                        />
                         <Stack.Screen 
                             name="Login" 
                             component={LoginScreen}
