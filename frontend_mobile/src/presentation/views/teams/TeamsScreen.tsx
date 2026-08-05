@@ -57,8 +57,8 @@ export const TeamsScreen = () => {
                 ApiDelivery.get('/students')
             ]);
 
-            setTeams(teamsRes.data || []);
-            setStudents(studentsRes.data || []);
+            setTeams(teamsRes.data?.data || []);
+            setStudents(studentsRes.data?.data || []);
         } catch (error) {
             Alert.alert('Error', 'No se pudieron cargar los datos');
         } finally {

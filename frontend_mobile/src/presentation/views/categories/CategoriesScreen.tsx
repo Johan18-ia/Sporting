@@ -31,17 +31,17 @@ export const CategoriesScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
 
-    const loadCategories = async () => {
-        try {
-            const response = await ApiDelivery.get('/categories');
-            setCategories(response.data || []);
-        } catch (error) {
-            Alert.alert('Error', 'No se pudieron cargar las categorías');
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+const loadCategories = async () => {
+    try {
+        const response = await ApiDelivery.get('/categories');
+        setCategories(response.data?.data || []);
+    } catch (error) {
+        Alert.alert('Error', 'No se pudieron cargar las categorías');
+    } finally {
+        setLoading(false);
+        setRefreshing(false);
+    }
+};
 
     useEffect(() => {
         loadCategories();

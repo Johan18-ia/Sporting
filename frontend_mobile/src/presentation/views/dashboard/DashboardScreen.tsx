@@ -43,33 +43,38 @@ export const DashboardScreen = () => {
     // ============================================
     // LOGICA DE DATOS SIN CAMBIOS — mismos endpoints
     // ============================================
-    const loadStats = async () => {
-        try {
-            const [students, tournaments, products, categories, schedules] = await Promise.all([
-                ApiDelivery.get('/students'),
-                ApiDelivery.get('/tournaments'),
-                ApiDelivery.get('/products'),
-                ApiDelivery.get('/categories'),
-                ApiDelivery.get('/schedules')
-            ]);
+const loadStats = async () => {
+    try {
+        const [students, tournaments, products, categories, schedules] = await Promise.all([
+            ApiDelivery.get('/students'),
+            ApiDelivery.get('/tournaments'),
+            ApiDelivery.get('/products'),
+            ApiDelivery.get('/categories'),
+            ApiDelivery.get('/schedules')
+        ]);
 
-            const tournamentsData = tournaments.data || [];
-            setStats({
-                students: students.data?.length || 0,
-                tournaments: tournamentsData.length,
-                activeTournaments: tournamentsData.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
-                products: products.data?.length || 0,
-                categories: categories.data?.length || 0,
-                schedules: schedules.data?.length || 0,
-                teams: 0 // no existe todavia un endpoint de Equipos en el backend
-            });
-        } catch (error) {
-            console.error('Error loading stats:', error);
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+        const studentsData = students.data?.data || [];
+        const tournamentsData = tournaments.data?.data || [];
+        const productsData = products.data?.data || [];
+        const categoriesData = categories.data?.data || [];
+        const schedulesData = schedules.data?.data || [];
+
+        setStats({
+            students: studentsData.length || 0,
+            tournaments: tournamentsData.length,
+            activeTournaments: tournamentsData.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
+            products: productsData.length || 0,
+            categories: categoriesData.length || 0,
+            schedules: schedulesData.length || 0,
+            teams: 0
+        });
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    } finally {
+        setLoading(false);
+        setRefreshing(false);
+    }
+};
 
     useEffect(() => {
         loadStats();
