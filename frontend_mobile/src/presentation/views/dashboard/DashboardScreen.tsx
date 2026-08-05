@@ -23,7 +23,6 @@ interface DashboardStats {
     categories: number;
     schedules: number;
     teams: number;
-    users: number;
 }
 
 export const DashboardScreen = () => {
@@ -36,33 +35,33 @@ export const DashboardScreen = () => {
         products: 0,
         categories: 0,
         schedules: 0,
-        teams: 0,
-        users: 0
+        teams: 0
     });
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
+    // ============================================
+    // LOGICA DE DATOS SIN CAMBIOS — mismos endpoints
+    // ============================================
     const loadStats = async () => {
         try {
-            const [students, tournaments, products, categories, schedules, users] = await Promise.all([
+            const [students, tournaments, products, categories, schedules] = await Promise.all([
                 ApiDelivery.get('/students'),
                 ApiDelivery.get('/tournaments'),
                 ApiDelivery.get('/products'),
                 ApiDelivery.get('/categories'),
-                ApiDelivery.get('/schedules'),
-                ApiDelivery.get('/users')
+                ApiDelivery.get('/schedules')
             ]);
 
             const tournamentsData = tournaments.data || [];
             setStats({
                 students: students.data?.length || 0,
                 tournaments: tournamentsData.length,
-                activeTournaments: tournamentsData.filter((t: any) => t.status === 'Activo').length,
+                activeTournaments: tournamentsData.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
                 products: products.data?.length || 0,
                 categories: categories.data?.length || 0,
                 schedules: schedules.data?.length || 0,
-                teams: 0,
-                users: users.data?.length || 0
+                teams: 0 // no existe todavia un endpoint de Equipos en el backend
             });
         } catch (error) {
             console.error('Error loading stats:', error);
@@ -81,26 +80,32 @@ export const DashboardScreen = () => {
         loadStats();
     };
 
-    const StatCard = ({ icon, label, value, color = MyColors.primary, onPress }: any) => (
-        <TouchableOpacity 
-            style={[styles.statCard, { borderLeftColor: color }]}
+    // ============================================
+    // PRESENTACION — icono en caja roja tenue,
+    // igual al estilo que ya usa la web (stat-card-icon)
+    // ============================================
+    const StatCard = ({ icon, label, value, onPress, note }: any) => (
+        <TouchableOpacity
+            style={styles.statCard}
             onPress={onPress}
             activeOpacity={0.7}
         >
-            <View style={styles.statIconContainer}>
-                <Ionicons name={icon} size={28} color={color} />
+            <View style={styles.statIconBox}>
+                <Ionicons name={icon} size={22} color={MyColors.primary} />
             </View>
             <View style={styles.statContent}>
-                <Text style={styles.statValue}>{loading ? '...' : value}</Text>
-                <Text style={styles.statLabel}>{label}</Text>
+                <Text style={styles.statValue}>{loading ? '—' : value}</Text>
+                <Text style={styles.statLabel}>
+                    {label}{note ? ` (${note})` : ''}
+                </Text>
             </View>
         </TouchableOpacity>
     );
 
-    const QuickAction = ({ icon, label, onPress, color = MyColors.primary }: any) => (
+    const QuickAction = ({ icon, label, onPress }: any) => (
         <TouchableOpacity style={styles.quickAction} onPress={onPress} activeOpacity={0.7}>
-            <View style={[styles.quickActionIcon, { backgroundColor: color + '20' }]}>
-                <Ionicons name={icon} size={24} color={color} />
+            <View style={styles.quickActionIcon}>
+                <Ionicons name={icon} size={22} color={MyColors.primary} />
             </View>
             <Text style={styles.quickActionLabel}>{label}</Text>
         </TouchableOpacity>
@@ -113,63 +118,64 @@ export const DashboardScreen = () => {
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[MyColors.primary]} />
             }
         >
-            {/* Header */}
+            {/* Header — mismo texto que usa la web */}
             <View style={styles.header}>
-                <View>
-                    <Text style={styles.greeting}>¡Hola, {user?.name || 'Usuario'}!</Text>
-                    <Text style={styles.greetingSub}>Bienvenido a Sporting Club</Text>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.greeting}>Bienvenido, {user?.name || 'Usuario'}</Text>
+                    <Text style={styles.greetingSub}>Panel de administración de Sporting Club</Text>
                 </View>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.profileButton}
                     onPress={() => navigation.navigate('Profile')}
                 >
-                    <Ionicons name="person-circle" size={40} color={MyColors.primary} />
+                    <Ionicons name="person-circle" size={38} color={MyColors.primary} />
                 </TouchableOpacity>
             </View>
 
-            {/* Stats Grid */}
+            {/* Stats Grid — mismo set de 7 metricas que la web */}
             <View style={styles.statsGrid}>
                 <StatCard
-                    icon="people"
-                    label="Usuarios"
-                    value={stats.users}
-                    color="#8B0000"
-                    onPress={() => navigation.navigate('Users')}
-                />
-                <StatCard
-                    icon="school"
+                    icon="school-outline"
                     label="Estudiantes"
                     value={stats.students}
-                    color="#2196F3"
                     onPress={() => navigation.navigate('Students')}
                 />
                 <StatCard
-                    icon="trophy"
-                    label="Torneos"
-                    value={stats.tournaments}
-                    color="#FF9800"
-                    onPress={() => navigation.navigate('Tournaments')}
-                />
-                <StatCard
-                    icon="bag"
-                    label="Productos"
-                    value={stats.products}
-                    color="#4CAF50"
-                    onPress={() => navigation.navigate('Products')}
-                />
-                <StatCard
-                    icon="pricetag"
+                    icon="pricetag-outline"
                     label="Categorías"
                     value={stats.categories}
-                    color="#9C27B0"
                     onPress={() => navigation.navigate('Categories')}
                 />
                 <StatCard
-                    icon="time"
+                    icon="time-outline"
                     label="Horarios"
                     value={stats.schedules}
-                    color="#00BCD4"
                     onPress={() => navigation.navigate('Schedules')}
+                />
+                <StatCard
+                    icon="trophy-outline"
+                    label="Torneos"
+                    value={stats.tournaments}
+                    onPress={() => navigation.navigate('Tournaments')}
+                />
+                <StatCard
+                    icon="checkmark-circle-outline"
+                    label="Torneos Activos"
+                    value={stats.activeTournaments}
+                    onPress={() => navigation.navigate('Tournaments')}
+                />
+                <StatCard
+                    icon="bag-outline"
+                    label="Productos"
+                    value={stats.products}
+                    onPress={() => navigation.navigate('Products')}
+                />
+                <StatCard
+                    icon="shield-outline"
+                    label="Equipos"
+                    value="—"
+                    note="próx."
+                    onPress={() => navigation.navigate('Teams')}
                 />
             </View>
 
@@ -178,40 +184,34 @@ export const DashboardScreen = () => {
                 <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
                 <View style={styles.quickActionsGrid}>
                     <QuickAction
-                        icon="person-add"
+                        icon="person-add-outline"
                         label="Nuevo Usuario"
                         onPress={() => navigation.navigate('UserForm', { mode: 'create' })}
-                        color="#8B0000"
                     />
                     <QuickAction
                         icon="school-outline"
                         label="Nuevo Estudiante"
                         onPress={() => navigation.navigate('StudentForm', { mode: 'create' })}
-                        color="#2196F3"
                     />
                     <QuickAction
                         icon="trophy-outline"
-                        label="Nuevo Torneo"
+                        label="Torneos"
                         onPress={() => navigation.navigate('Tournaments')}
-                        color="#FF9800"
                     />
                     <QuickAction
                         icon="calendar-outline"
                         label="Horarios"
                         onPress={() => navigation.navigate('Schedules')}
-                        color="#00BCD4"
                     />
                     <QuickAction
                         icon="people-outline"
                         label="Equipos"
                         onPress={() => navigation.navigate('Teams')}
-                        color="#4CAF50"
                     />
                     <QuickAction
                         icon="bar-chart-outline"
                         label="Reportes"
                         onPress={() => navigation.navigate('Reports')}
-                        color="#9C27B0"
                     />
                 </View>
             </View>
@@ -234,12 +234,12 @@ const styles = StyleSheet.create({
         borderBottomColor: '#eee',
     },
     greeting: {
-        fontSize: 20,
+        fontSize: 19,
         fontWeight: 'bold',
         color: '#333',
     },
     greetingSub: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#666',
         marginTop: 2,
     },
@@ -260,26 +260,31 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        borderLeftWidth: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
     },
-    statIconContainer: {
+    statIconBox: {
+        width: 40,
+        height: 40,
+        borderRadius: 8,
+        backgroundColor: 'rgba(139, 0, 0, 0.08)',
+        alignItems: 'center',
+        justifyContent: 'center',
         marginRight: 12,
     },
     statContent: {
         flex: 1,
     },
     statValue: {
-        fontSize: 20,
+        fontSize: 19,
         fontWeight: 'bold',
         color: '#333',
     },
     statLabel: {
-        fontSize: 12,
+        fontSize: 11.5,
         color: '#666',
         marginTop: 2,
     },
@@ -316,6 +321,7 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 24,
+        backgroundColor: 'rgba(139, 0, 0, 0.08)',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 6,
