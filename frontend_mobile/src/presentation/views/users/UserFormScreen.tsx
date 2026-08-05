@@ -29,6 +29,7 @@ interface FormData {
     confirmPassword: string;
     phone: string;
     role: string;
+    category_id: string;
 }
 
 export const UserFormScreen = () => {
@@ -44,10 +45,31 @@ export const UserFormScreen = () => {
         password: '',
         confirmPassword: '',
         phone: '',
-        role: 'user'
+        role: 'user',
+        category_id: ''
     });
+    const [categories, setCategories] = useState<any[]>([]);
+    const [loadingCategories, setLoadingCategories] = useState(true);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // ============================================
+    // CARGAR CATEGORÍAS (mismo endpoint que ya usa
+    // CategoriesScreen y StudentFormScreen)
+    // ============================================
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const response = await ApiDelivery.get('/categories');
+                setCategories(response.data || []);
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            } finally {
+                setLoadingCategories(false);
+            }
+        };
+        loadCategories();
+    }, []);
 
     useEffect(() => {
         if (user && mode === 'edit') {
@@ -58,7 +80,8 @@ export const UserFormScreen = () => {
                 password: '',
                 confirmPassword: '',
                 phone: user.phone || '',
-                role: user.role || 'user'
+                role: user.role || 'user',
+                category_id: user.category_id ? String(user.category_id) : ''
             });
         }
     }, [user, mode]);
@@ -100,6 +123,7 @@ export const UserFormScreen = () => {
                 email: formData.email,
                 phone: formData.phone || '',
                 role: formData.role,
+                category_id: formData.category_id ? Number(formData.category_id) : null,
                 ...(mode === 'create' && { password: formData.password })
             };
 
@@ -266,6 +290,53 @@ export const UserFormScreen = () => {
                         </View>
                     </View>
 
+                    {/* ============================================
+                        CATEGORÍA (AÑO) — mismo patron visual de chips
+                        que ya usa StudentFormScreen para consistencia
+                        ============================================ */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Categoría (Año)</Text>
+                        <View style={styles.categoryContainer}>
+                            {loadingCategories ? (
+                                <ActivityIndicator color={MyColors.primary} />
+                            ) : (
+                                <>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.categoryOption,
+                                            formData.category_id === '' && styles.categoryOptionSelected
+                                        ]}
+                                        onPress={() => setFormData({ ...formData, category_id: '' })}
+                                    >
+                                        <Text style={[
+                                            styles.categoryOptionText,
+                                            formData.category_id === '' && styles.categoryOptionTextSelected
+                                        ]}>
+                                            Sin categoría
+                                        </Text>
+                                    </TouchableOpacity>
+                                    {categories.map((cat) => (
+                                        <TouchableOpacity
+                                            key={cat.id}
+                                            style={[
+                                                styles.categoryOption,
+                                                formData.category_id === String(cat.id) && styles.categoryOptionSelected
+                                            ]}
+                                            onPress={() => setFormData({ ...formData, category_id: String(cat.id) })}
+                                        >
+                                            <Text style={[
+                                                styles.categoryOptionText,
+                                                formData.category_id === String(cat.id) && styles.categoryOptionTextSelected
+                                            ]}>
+                                                {cat.category_year}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </>
+                            )}
+                        </View>
+                    </View>
+
                     <TouchableOpacity
                         style={[styles.submitButton, loading && styles.submitButtonDisabled]}
                         onPress={handleSubmit}
@@ -356,6 +427,31 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     roleOptionTextSelected: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+    categoryContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    categoryOption: {
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        backgroundColor: '#f8f9fa',
+    },
+    categoryOptionSelected: {
+        backgroundColor: MyColors.primary,
+        borderColor: MyColors.primary,
+    },
+    categoryOptionText: {
+        fontSize: 13,
+        color: '#666',
+    },
+    categoryOptionTextSelected: {
         color: '#fff',
         fontWeight: '600',
     },
