@@ -1,4 +1,5 @@
-// src/hooks/useAuth.ts
+// frontend_mobile/src/hooks/useAuth.ts
+
 import { useState, useEffect } from 'react';
 import { User } from '../domain/entities/User';
 import { GetUserLocalUseCase } from '../domain/useCases/userLocal/GetUserLocal';
@@ -15,9 +16,9 @@ export const useAuth = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    const { getItem } = LocalStorage();
+    const { getItem, save } = LocalStorage();
 
-    // Verificar sesión al iniciar
+    // Verificar sesion al iniciar
     useEffect(() => {
         checkAuth();
     }, []);
@@ -28,12 +29,18 @@ export const useAuth = () => {
             const token = await getItem('auth_token');
             const userData = await GetUserLocalUseCase();
             
+            console.log('Verificando autenticacion:');
+            console.log('  Token:', token ? 'Existe' : 'No existe');
+            console.log('  Usuario:', userData ? 'Existe' : 'No existe');
+            
             if (token && userData) {
                 setUser(userData);
                 setIsAuthenticated(true);
+                console.log('Sesion activa para:', userData.name);
             } else {
                 setUser(null);
                 setIsAuthenticated(false);
+                console.log('No hay sesion activa');
             }
         } catch (error) {
             console.error('Error checking auth:', error);
@@ -47,14 +54,24 @@ export const useAuth = () => {
     const login = async (credentials: UserLogin) => {
         setLoading(true);
         setError(null);
+        console.log('Intentando login para:', credentials.email);
+        
         try {
             const response = await LoginAuthUseCase(credentials);
+            console.log('Respuesta del login:', JSON.stringify(response, null, 2));
             
             if (response.success && response.data) {
-                // Guardar token
-                const { save } = LocalStorage();
+                // Extraer token
                 const token = response.data.session_token?.replace('JWT ', '') || response.data.token;
+                console.log('Token extraido:', token ? token.substring(0, 20) + '...' : 'No hay token');
+                
+                // Guardar token
                 await save('auth_token', token);
+                console.log('Token guardado en AsyncStorage');
+                
+                // Verificar que se guardo correctamente
+                const savedToken = await getItem('auth_token');
+                console.log('Verificando token guardado:', savedToken ? 'Si' : 'No');
                 
                 // Guardar usuario
                 const userData: User = {
@@ -69,16 +86,25 @@ export const useAuth = () => {
                     session_token: token
                 };
                 await SaveUserLocalUseCase(userData);
+                console.log('Usuario guardado:', userData.name);
+                
+                // Verificar usuario guardado
+                const savedUser = await GetUserLocalUseCase();
+                console.log('Usuario guardado verificado:', savedUser ? savedUser.name : 'No encontrado');
                 
                 setUser(userData);
                 setIsAuthenticated(true);
+                console.log('Login exitoso para:', userData.name);
+                
                 return { success: true, data: userData };
             } else {
-                setError(response.message || 'Error al iniciar sesión');
+                console.log('Login fallo:', response.message);
+                setError(response.message || 'Error al iniciar sesion');
                 return { success: false, error: response.message };
             }
         } catch (error: any) {
-            setError(error.message || 'Error al iniciar sesión');
+            console.error('Error en login:', error);
+            setError(error.message || 'Error al iniciar sesion');
             return { success: false, error: error.message };
         } finally {
             setLoading(false);
@@ -92,12 +118,15 @@ export const useAuth = () => {
             const response = await RegisterAuthUseCase(userData);
             
             if (response.success) {
+                console.log('Registro exitoso para:', userData.name);
                 return { success: true, data: response.data };
             } else {
+                console.log('Registro fallo:', response.message);
                 setError(response.message || 'Error al registrar usuario');
                 return { success: false, error: response.message };
             }
         } catch (error: any) {
+            console.error('Error en registro:', error);
             setError(error.message || 'Error al registrar usuario');
             return { success: false, error: error.message };
         } finally {
@@ -111,6 +140,7 @@ export const useAuth = () => {
             await RemoveUserLocalUseCase();
             setUser(null);
             setIsAuthenticated(false);
+            console.log('Sesion cerrada');
             return { success: true };
         } catch (error) {
             console.error('Error logging out:', error);
