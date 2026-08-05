@@ -1,16 +1,28 @@
 // frontend_mobile/src/hooks/useAuth.ts
 
-import { useState, useEffect } from 'react';
-import { User } from '../domain/entities/User';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, UserLogin, UserRegister } from '../domain/entities/User';
 import { GetUserLocalUseCase } from '../domain/useCases/userLocal/GetUserLocal';
 import { SaveUserLocalUseCase } from '../domain/useCases/userLocal/SaveUserLocal';
 import { RemoveUserLocalUseCase } from '../domain/useCases/userLocal/RemoveUserLocal';
 import { LoginAuthUseCase } from '../domain/useCases/auth/LoginAuth';
 import { RegisterAuthUseCase } from '../domain/useCases/auth/RegisterAuth';
-import { UserLogin, UserRegister } from '../domain/entities/User';
 import { LocalStorage } from '../data/sources/local/LocalStorage';
 
-export const useAuth = () => {
+interface AuthContextType {
+    user: User | null;
+    isAuthenticated: boolean;
+    loading: boolean;
+    error: string | null;
+    login: (credentials: UserLogin) => Promise<{ success: boolean; data?: User; error?: string }>;
+    register: (userData: UserRegister) => Promise<{ success: boolean; data?: unknown; error?: string }>;
+    logout: () => Promise<{ success: boolean }>;
+    checkAuth: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
@@ -18,7 +30,6 @@ export const useAuth = () => {
 
     const { getItem, save } = LocalStorage();
 
-    // Verificar sesion al iniciar
     useEffect(() => {
         checkAuth();
     }, []);
@@ -29,11 +40,11 @@ export const useAuth = () => {
             const storedToken = await getItem('auth_token');
             const userData = await GetUserLocalUseCase();
             const token = storedToken || userData?.session_token || null;
-            
+
             console.log('Verificando autenticacion:');
             console.log('  Token:', token ? 'Existe' : 'No existe');
             console.log('  Usuario:', userData ? 'Existe' : 'No existe');
-            
+
             if (token && userData) {
                 setUser(userData);
                 setIsAuthenticated(true);
@@ -43,8 +54,8 @@ export const useAuth = () => {
                 setIsAuthenticated(false);
                 console.log('No hay sesion activa');
             }
-        } catch (error) {
-            console.error('Error checking auth:', error);
+        } catch (err) {
+            console.error('Error checking auth:', err);
             setUser(null);
             setIsAuthenticated(false);
         } finally {
@@ -56,22 +67,19 @@ export const useAuth = () => {
         setLoading(true);
         setError(null);
         console.log('Intentando login para:', credentials.email);
-        
+
         try {
             const response = await LoginAuthUseCase(credentials);
             console.log('Respuesta del login:', JSON.stringify(response, null, 2));
-            
+
             if (response.success && response.data) {
                 const payload = response.data;
                 const token = payload?.session_token?.replace(/^JWT\s+/i, '').trim() || payload?.token || '';
                 console.log('Token extraido:', token ? token.substring(0, 20) + '...' : 'No hay token');
-                
+
                 await save('auth_token', token);
                 console.log('Token guardado en AsyncStorage');
-                
-                const savedToken = await getItem('auth_token');
-                console.log('Verificando token guardado:', savedToken ? 'Si' : 'No');
-                
+
                 const userData: User = {
                     id: payload?.id,
                     name: payload?.name || '',
@@ -85,25 +93,21 @@ export const useAuth = () => {
                 };
                 await SaveUserLocalUseCase(userData);
                 console.log('Usuario guardado:', userData.name);
-                
-                // Verificar usuario guardado
-                const savedUser = await GetUserLocalUseCase();
-                console.log('Usuario guardado verificado:', savedUser ? savedUser.name : 'No encontrado');
-                
+
                 setUser(userData);
                 setIsAuthenticated(true);
                 console.log('Login exitoso para:', userData.name);
-                
+
                 return { success: true, data: userData };
-            } else {
-                console.log('Login fallo:', response.message);
-                setError(response.message || 'Error al iniciar sesion');
-                return { success: false, error: response.message };
             }
-        } catch (error: any) {
-            console.error('Error en login:', error);
-            setError(error.message || 'Error al iniciar sesion');
-            return { success: false, error: error.message };
+
+            console.log('Login fallo:', response.message);
+            setError(response.message || 'Error al iniciar sesion');
+            return { success: false, error: response.message };
+        } catch (err: any) {
+            console.error('Error en login:', err);
+            setError(err.message || 'Error al iniciar sesion');
+            return { success: false, error: err.message };
         } finally {
             setLoading(false);
         }
@@ -114,19 +118,19 @@ export const useAuth = () => {
         setError(null);
         try {
             const response = await RegisterAuthUseCase(userData);
-            
+
             if (response.success) {
                 console.log('Registro exitoso para:', userData.name);
                 return { success: true, data: response.data };
-            } else {
-                console.log('Registro fallo:', response.message);
-                setError(response.message || 'Error al registrar usuario');
-                return { success: false, error: response.message };
             }
-        } catch (error: any) {
-            console.error('Error en registro:', error);
-            setError(error.message || 'Error al registrar usuario');
-            return { success: false, error: error.message };
+
+            console.log('Registro fallo:', response.message);
+            setError(response.message || 'Error al registrar usuario');
+            return { success: false, error: response.message };
+        } catch (err: any) {
+            console.error('Error en registro:', err);
+            setError(err.message || 'Error al registrar usuario');
+            return { success: false, error: err.message };
         } finally {
             setLoading(false);
         }
@@ -140,15 +144,15 @@ export const useAuth = () => {
             setIsAuthenticated(false);
             console.log('Sesion cerrada');
             return { success: true };
-        } catch (error) {
-            console.error('Error logging out:', error);
+        } catch (err) {
+            console.error('Error logging out:', err);
             return { success: false };
         } finally {
             setLoading(false);
         }
     };
 
-    return {
+    const value: AuthContextType = {
         user,
         isAuthenticated,
         loading,
@@ -158,4 +162,14 @@ export const useAuth = () => {
         logout,
         checkAuth
     };
+
+    return React.createElement(AuthContext.Provider, { value }, children);
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth debe usarse dentro de AuthProvider');
+    }
+    return context;
 };
