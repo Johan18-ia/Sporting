@@ -2,6 +2,9 @@
 import { User } from '../domain/entities/User';
 
 export type RootStackParamList = {
+    // Public
+    Home: undefined;
+
     // Auth
     Login: undefined;
     Register: undefined;
