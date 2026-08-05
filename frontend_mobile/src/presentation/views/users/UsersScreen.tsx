@@ -40,9 +40,9 @@ export const UsersScreen = () => {
     const loadUsers = async () => {
         try {
             const response = await ApiDelivery.get('/users');
-            const usersData = response.data || [];
-            setUsers(usersData);
-            setFilteredUsers(usersData);
+            const usersData = response.data?.data ?? response.data ?? [];
+            setUsers(Array.isArray(usersData) ? usersData : []);
+            setFilteredUsers(Array.isArray(usersData) ? usersData : []);
         } catch (error) {
             console.error('Error loading users:', error);
             Alert.alert('Error', 'No se pudieron cargar los usuarios');

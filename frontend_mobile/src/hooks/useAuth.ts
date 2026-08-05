@@ -26,8 +26,9 @@ export const useAuth = () => {
     const checkAuth = async () => {
         setLoading(true);
         try {
-            const token = await getItem('auth_token');
+            const storedToken = await getItem('auth_token');
             const userData = await GetUserLocalUseCase();
+            const token = storedToken || userData?.session_token || null;
             
             console.log('Verificando autenticacion:');
             console.log('  Token:', token ? 'Existe' : 'No existe');
@@ -61,28 +62,25 @@ export const useAuth = () => {
             console.log('Respuesta del login:', JSON.stringify(response, null, 2));
             
             if (response.success && response.data) {
-                // Extraer token
-                const token = response.data.session_token?.replace('JWT ', '') || response.data.token;
+                const payload = response.data;
+                const token = payload?.session_token?.replace(/^JWT\s+/i, '').trim() || payload?.token || '';
                 console.log('Token extraido:', token ? token.substring(0, 20) + '...' : 'No hay token');
                 
-                // Guardar token
                 await save('auth_token', token);
                 console.log('Token guardado en AsyncStorage');
                 
-                // Verificar que se guardo correctamente
                 const savedToken = await getItem('auth_token');
                 console.log('Verificando token guardado:', savedToken ? 'Si' : 'No');
                 
-                // Guardar usuario
                 const userData: User = {
-                    id: response.data.id,
-                    name: response.data.name || '',
-                    lastname: response.data.lastname || '',
-                    email: response.data.email || '',
+                    id: payload?.id,
+                    name: payload?.name || '',
+                    lastname: payload?.lastname || '',
+                    email: payload?.email || '',
                     password: '',
-                    phone: response.data.phone || '',
-                    role: response.data.role || 'user',
-                    image: response.data.image || '',
+                    phone: payload?.phone || '',
+                    role: payload?.role || 'user',
+                    image: payload?.image || '',
                     session_token: token
                 };
                 await SaveUserLocalUseCase(userData);

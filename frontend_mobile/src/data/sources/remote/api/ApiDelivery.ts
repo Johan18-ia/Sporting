@@ -15,18 +15,18 @@ const ApiDelivery = axios.create({
 // Interceptor para verificar token
 ApiDelivery.interceptors.request.use(
     async (config) => {
-        const token = await AsyncStorage.getItem('auth_token');
+        const token = await AsyncStorage.getItem('auth_token') || '';
+        const normalizedToken = token.replace(/^bearer\s+/i, '').replace(/^jwt\s+/i, '').trim();
         
         console.log('Peticion a:', config.url);
-        console.log('Token en interceptor:', token ? 'Existe' : 'No existe');
+        console.log('Token en interceptor:', normalizedToken ? 'Existe' : 'No existe');
         
-        if (token) {
-            // Verificar que el token no este vacio
-            if (token.length < 10) {
-                console.warn('Token demasiado corto:', token);
+        if (normalizedToken) {
+            if (normalizedToken.length < 10) {
+                console.warn('Token demasiado corto:', normalizedToken);
             } else {
-                console.log('Token:', token.substring(0, 20) + '...');
-                config.headers.Authorization = `Bearer ${token}`;
+                console.log('Token:', normalizedToken.substring(0, 20) + '...');
+                config.headers.Authorization = `Bearer ${normalizedToken}`;
                 console.log('Token agregado al header Authorization');
             }
         } else {

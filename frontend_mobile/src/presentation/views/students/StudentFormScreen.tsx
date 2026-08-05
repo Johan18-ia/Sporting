@@ -75,7 +75,8 @@ export const StudentFormScreen = () => {
     const loadCategories = async () => {
         try {
             const response = await ApiDelivery.get('/categories');
-            setCategories(response.data || []);
+            const categoriesData = response.data?.data ?? response.data ?? [];
+            setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         } catch (error) {
             console.error('Error loading categories:', error);
         } finally {
