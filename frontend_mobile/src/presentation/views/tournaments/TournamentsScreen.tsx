@@ -59,16 +59,16 @@ export const TournamentsScreen = () => {
                 ApiDelivery.get('/categories')
             ]);
 
-            setTournaments(tournamentsRes.data || []);
-            setStudents(studentsRes.data || []);
-            setCategories(categoriesRes.data || []);
+            setTournaments(tournamentsRes.data?.data || []);
+            setStudents(studentsRes.data?.data || []);
+            setCategories(categoriesRes.data?.data || []);
         } catch (error) {
             Alert.alert('Error', 'No se pudieron cargar los datos');
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+};
 
     useEffect(() => {
         loadData();

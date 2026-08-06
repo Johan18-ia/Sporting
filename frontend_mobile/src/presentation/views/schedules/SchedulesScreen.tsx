@@ -51,28 +51,27 @@ export const SchedulesScreen = () => {
     });
 
     const loadData = async () => {
-        try {
-            const [schedulesRes, categoriesRes] = await Promise.all([
-                ApiDelivery.get('/schedules'),
-                ApiDelivery.get('/categories')
-            ]);
-
-            const categoriesData = categoriesRes.data || [];
-            setCategories(categoriesData);
-
-            const schedulesData = schedulesRes.data || [];
-            // Enriquecer con nombre de categoría
-            const enriched = schedulesData.map((s: any) => ({
-                ...s,
-                category_name: categoriesData.find((c: any) => c.id === s.category_id)?.category_year || 'Sin categoría'
-            }));
-            setSchedules(enriched);
-        } catch (error) {
-            Alert.alert('Error', 'No se pudieron cargar los horarios');
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
+    try {
+        const [schedulesRes, categoriesRes] = await Promise.all([
+            ApiDelivery.get('/schedules'),
+            ApiDelivery.get('/categories')
+        ]);
+    
+        const categoriesData = categoriesRes.data?.data || [];
+        setCategories(categoriesData);
+    
+        const schedulesData = schedulesRes.data?.data || [];
+        const enriched = schedulesData.map((s: any) => ({
+            ...s,
+            category_name: categoriesData.find((c: any) => c.id === s.category_id)?.category_year || 'Sin categoría'
+        }));
+        setSchedules(enriched);
+    } catch (error) {
+        Alert.alert('Error', 'No se pudieron cargar los horarios');
+    } finally {
+        setLoading(false);
+        setRefreshing(false);
+    }
     };
 
     useEffect(() => {

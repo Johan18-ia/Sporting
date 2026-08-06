@@ -39,7 +39,10 @@ export const LoginScreen = () => {
 
         const result = await login({ email, password });
         if (result.success) {
-            // Navegación automática por el AppNavigator
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'MainTabs' }]
+            });
         } else {
             setLocalError(result.error || 'Error al iniciar sesión');
         }

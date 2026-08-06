@@ -47,7 +47,8 @@ export const UserDetailScreen = () => {
     const loadUser = async () => {
         try {
             const response = await ApiDelivery.get(`/users/${userId}`);
-            setUser(response.data);
+            const userData = response.data?.data ?? response.data ?? null;
+            setUser(userData);
         } catch (error) {
             Alert.alert('Error', 'No se pudo cargar la información del usuario');
             navigation.goBack();

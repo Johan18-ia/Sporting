@@ -31,12 +31,22 @@ app.use(express.urlencoded({ extended: true }));
 // ============================================
 app.use(cors({
     origin: [
-        'http://192.168.80.22',
-        'http://192.168.80.22',
+        'http://10.1.202.216',
+        'http://10.1.202.216:3000',        // ← Backend
+        'http://10.1.202.216:5173',        // ← Web
+        'http://10.1.202.216:8081',        // ← Expo Metro
+        'http://10.1.202.216:19000',       // ← Expo Go
+        'http://10.1.202.216:19001',       // ← Expo Go
         'http://localhost',
         'http://localhost:5173',
+        'http://localhost:8081',
+        'http://localhost:19000',
+        'http://localhost:19001',
         'http://127.0.0.1',
-        'http://127.0.0.1:5173'
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:8081',
+        'http://127.0.0.1:19000',
+        'http://127.0.0.1:19001',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -128,6 +138,6 @@ app.use((req, res) => {
     });
 });
 console.log(`========================================================`);
-console.log('Swagger disponible en: http://192.168.80.22:3000/api-docs');
+console.log('Swagger disponible en: http://10.1.202.216:3000/api-docs');
 
 module.exports = app;

@@ -1,6 +1,6 @@
 // src/config/api.ts
 export const API_CONFIG = {
-    BASE_URL: 'http://192.168.80.22:3000/api', // Cambia por tu IP local
+    BASE_URL: 'http://10.1.202.216:3000/api', // Cambia por tu IP local
     TIMEOUT: 10000,
     ENDPOINTS: {
         // AUTH

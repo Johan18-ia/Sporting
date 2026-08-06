@@ -48,17 +48,16 @@ export const StudentsScreen = () => {
                 ApiDelivery.get('/categories')
             ]);
 
-            const studentsData = studentsRes.data || [];
-            const categoriesData = categoriesRes.data || [];
-            
+            const studentsData = studentsRes.data?.data ?? studentsRes.data ?? [];
+            const categoriesData = categoriesRes.data?.data ?? categoriesRes.data ?? [];
+
             setCategories(categoriesData);
-            
-            // Enriquecer estudiantes con nombre de categoría
+
             const enrichedStudents = studentsData.map((s: any) => ({
                 ...s,
                 category_name: categoriesData.find((c: any) => c.id === s.category_id)?.category_year || 'Sin categoría'
             }));
-            
+
             setStudents(enrichedStudents);
             setFilteredStudents(enrichedStudents);
         } catch (error) {

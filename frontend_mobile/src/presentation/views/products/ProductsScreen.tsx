@@ -44,20 +44,17 @@ export const ProductsScreen = () => {
         imagen: ''
     });
 
-    const loadProducts = async () => {
-        try {
-            const response = await ApiDelivery.get('/products');
-            // El backend envuelve la respuesta como { success, message, data }.
-            // Antes se asumia que response.data YA era el array.
-            const productsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-            setProducts(productsData);
-        } catch (error) {
-            Alert.alert('Error', 'No se pudieron cargar los productos');
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+const loadProducts = async () => {
+    try {
+        const response = await ApiDelivery.get('/products');
+        setProducts(response.data?.data || []);
+    } catch (error) {
+        Alert.alert('Error', 'No se pudieron cargar los productos');
+    } finally {
+        setLoading(false);
+        setRefreshing(false);
+    }
+};
 
     useEffect(() => {
         loadProducts();

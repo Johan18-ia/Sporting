@@ -44,13 +44,12 @@ export const HomeScreen = () => {
     const loadProducts = async () => {
         setError(null);
         try {
-            // Mismo endpoint publico que ya usa la web (CatalogoView.jsx),
-            // no requiere sesion iniciada.
             const response = await ApiDelivery.get('/products');
             // El backend envuelve la respuesta como { success, message, data }.
             const productsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
             setProducts(productsData);
         } catch (err) {
+            console.error('Error loading products:', err);
             setError('No se pudieron cargar los productos');
         } finally {
             setLoading(false);
