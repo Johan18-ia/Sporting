@@ -45,7 +45,7 @@ const {
 router.get(
     '/',
     verifyToken,
-    authorizeRoles(['admin', 'seller']),
+    authorizeRoles(['admin', 'seller', 'user']),
     tournamentController.getAll
 );
 

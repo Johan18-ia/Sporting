@@ -45,7 +45,7 @@ const {
 router.get(
     '/',
     verifyToken,
-    authorizeRoles(['admin', 'seller']),
+    authorizeRoles(['admin', 'seller', 'user']),
     scheduleController.getAllSchedules
 );
 
@@ -128,7 +128,7 @@ router.post(
 router.get(
     '/category/:id_category',
     verifyToken,
-    authorizeRoles(['admin', 'seller']),
+    authorizeRoles(['admin', 'seller', 'user']),
     scheduleController.getByCategory
 );
 

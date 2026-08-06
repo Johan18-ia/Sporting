@@ -10,7 +10,7 @@ export type RootStackParamList = {
     Register: undefined;
     
     // Main
-    MainTabs: undefined;
+    MainTabs: { screen?: 'Dashboard' | 'Users' | 'Students' | 'Products' | 'Profile' } | undefined;
     
     // Dashboard
     Dashboard: undefined;
@@ -44,4 +44,6 @@ export type RootStackParamList = {
     
     // Profile
     Profile: undefined;
+    ProfileDetail: undefined;
+    Settings: undefined;
 };

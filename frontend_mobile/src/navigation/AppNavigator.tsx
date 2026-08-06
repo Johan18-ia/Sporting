@@ -1,6 +1,7 @@
 // src/navigation/AppNavigator.tsx
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { TouchableOpacity } from 'react-native';
+import { NavigationContainer, RouteProp } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +23,8 @@ import { TournamentsScreen } from '../presentation/views/tournaments/Tournaments
 import { TeamsScreen } from '../presentation/views/teams/TeamsScreen';
 import { ReportsScreen } from '../presentation/views/reports/ReportsScreen';
 import { ProfileScreen } from '../presentation/views/profile/ProfileScreen';
+import { ProfileDetailScreen } from '../presentation/views/profile/ProfileDetailScreen';
+import { SettingsScreen } from '../presentation/views/profile/SettingsScreen';
 
 import { RootStackParamList } from './RootStackParamList';
 import { useAuth } from '../hooks/useAuth';
@@ -33,9 +36,12 @@ const Tab = createBottomTabNavigator();
 // ============================================
 // TAB NAVIGATOR
 // ============================================
-const MainTabs = () => {
+const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> }) => {
+    const initialRouteName = route?.params?.screen || 'Dashboard';
+
     return (
         <Tab.Navigator
+            initialRouteName={initialRouteName}
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: keyof typeof Ionicons.glyphMap = 'home';
@@ -46,6 +52,9 @@ const MainTabs = () => {
                             break;
                         case 'Users':
                             iconName = focused ? 'people' : 'people-outline';
+                            break;
+                        case 'Students':
+                            iconName = focused ? 'school' : 'school-outline';
                             break;
                         case 'Products':
                             iconName = focused ? 'bag' : 'bag-outline';
@@ -81,10 +90,39 @@ const MainTabs = () => {
                 },
             })}
         >
-            <Tab.Screen name="Dashboard" component={DashboardScreen} />
-            <Tab.Screen name="Users" component={UsersScreen} />
-            <Tab.Screen name="Products" component={ProductsScreen} />
-            <Tab.Screen name="Profile" component={ProfileScreen} />
+            <Tab.Screen
+                name="Dashboard"
+                component={DashboardScreen}
+                options={{ title: 'Inicio', tabBarLabel: 'Inicio' }}
+            />
+            <Tab.Screen
+                name="Users"
+                component={UsersScreen}
+                options={{ title: 'Usuarios', tabBarLabel: 'Usuarios' }}
+            />
+            <Tab.Screen
+                name="Students"
+                component={StudentsScreen}
+                options={({ navigation }) => ({
+                    title: 'Estudiantes',
+                    tabBarLabel: 'Estudiantes',
+                    headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ marginLeft: 10 }}>
+                            <Ionicons name="arrow-back" size={24} color="#fff" />
+                        </TouchableOpacity>
+                    ),
+                })}
+            />
+            <Tab.Screen
+                name="Products"
+                component={ProductsScreen}
+                options={{ title: 'Productos', tabBarLabel: 'Productos' }}
+            />
+            <Tab.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{ title: 'Perfil', tabBarLabel: 'Perfil' }}
+            />
         </Tab.Navigator>
     );
 };
@@ -186,6 +224,16 @@ export const AppNavigator = () => {
                             name="Reports" 
                             component={ReportsScreen}
                             options={{ title: 'Reportes' }}
+                        />
+                        <Stack.Screen 
+                            name="ProfileDetail" 
+                            component={ProfileDetailScreen}
+                            options={{ title: 'Mi Perfil' }}
+                        />
+                        <Stack.Screen 
+                            name="Settings" 
+                            component={SettingsScreen}
+                            options={{ title: 'Configuración' }}
                         />
                     </>
                 )}
