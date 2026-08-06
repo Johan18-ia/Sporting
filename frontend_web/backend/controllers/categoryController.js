@@ -1,6 +1,6 @@
 // Encargado: Gestión de Categorías (Año de Nacimiento)
 // Importar modelo Category
-const Category = require('../models/category');
+const Category = require('../models/Category');
 module.exports = {
     // ============================================
     // LISTAR TODAS LAS CATEGORÍAS

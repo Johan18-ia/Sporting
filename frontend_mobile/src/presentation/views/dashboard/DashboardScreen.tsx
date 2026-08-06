@@ -43,38 +43,47 @@ export const DashboardScreen = () => {
     // ============================================
     // LOGICA DE DATOS SIN CAMBIOS — mismos endpoints
     // ============================================
-const loadStats = async () => {
-    try {
-        const [students, tournaments, products, categories, schedules] = await Promise.all([
-            ApiDelivery.get('/students'),
-            ApiDelivery.get('/tournaments'),
-            ApiDelivery.get('/products'),
-            ApiDelivery.get('/categories'),
-            ApiDelivery.get('/schedules')
-        ]);
+    // Extrae el array real de la respuesta, sin importar si el
+    // backend lo manda envuelto como { success, message, data } o directo.
+    const extractArray = (result: PromiseSettledResult<any>, label: string): any[] => {
+        if (result.status === 'rejected') {
+            console.error(`Error cargando ${label}:`, result.reason?.message || result.reason);
+            return [];
+        }
+        const data = result.value?.data;
+        return Array.isArray(data) ? data : (data?.data || []);
+    };
 
-        const studentsData = students.data?.data || [];
-        const tournamentsData = tournaments.data?.data || [];
-        const productsData = products.data?.data || [];
-        const categoriesData = categories.data?.data || [];
-        const schedulesData = schedules.data?.data || [];
+    const loadStats = async () => {
+        try {
+            // Promise.allSettled en vez de Promise.all: si UN endpoint falla
+            // (ej. Horarios o Torneos con error 501 del backend), los demas
+            // igual cargan en vez de tumbar todo el dashboard.
+            const [studentsRes, tournamentsRes, productsRes, categoriesRes, schedulesRes] = await Promise.allSettled([
+                ApiDelivery.get('/students'),
+                ApiDelivery.get('/tournaments'),
+                ApiDelivery.get('/products'),
+                ApiDelivery.get('/categories'),
+                ApiDelivery.get('/schedules')
+            ]);
 
-        setStats({
-            students: studentsData.length || 0,
-            tournaments: tournamentsData.length,
-            activeTournaments: tournamentsData.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
-            products: productsData.length || 0,
-            categories: categoriesData.length || 0,
-            schedules: schedulesData.length || 0,
-            teams: 0
-        });
-    } catch (error) {
-        console.error('Error loading stats:', error);
-    } finally {
-        setLoading(false);
-        setRefreshing(false);
-    }
-};
+            const tournamentsData = extractArray(tournamentsRes, 'torneos');
+            setStats({
+                students: extractArray(studentsRes, 'estudiantes').length,
+                tournaments: tournamentsData.length,
+                activeTournaments: tournamentsData.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
+                products: extractArray(productsRes, 'productos').length,
+                categories: extractArray(categoriesRes, 'categorías').length,
+                schedules: extractArray(schedulesRes, 'horarios').length,
+                teams: 0 // no existe todavia un endpoint de Equipos en el backend
+            });
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
     useEffect(() => {
         loadStats();

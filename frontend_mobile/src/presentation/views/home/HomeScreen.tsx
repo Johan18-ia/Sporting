@@ -45,9 +45,9 @@ export const HomeScreen = () => {
         setError(null);
         try {
             const response = await ApiDelivery.get('/products');
-            const productsData = response.data?.data || [];
-            setProducts(Array.isArray(productsData) ? productsData : []);
-
+            // El backend envuelve la respuesta como { success, message, data }.
+            const productsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+            setProducts(productsData);
         } catch (err) {
             console.error('Error loading products:', err);
             setError('No se pudieron cargar los productos');

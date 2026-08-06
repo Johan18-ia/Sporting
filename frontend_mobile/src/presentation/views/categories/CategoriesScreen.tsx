@@ -7,6 +7,7 @@ import {
     FlatList,
     TouchableOpacity,
     TextInput,
+    ScrollView,
     RefreshControl,
     ActivityIndicator,
     Alert
@@ -22,6 +23,19 @@ interface Category {
     created_at?: string;
 }
 
+// ============================================
+// Rango de años disponibles para elegir al crear una
+// categoría (años de nacimiento de los estudiantes).
+// Ajusta CURRENT_YEAR o el rango si tu escuela maneja
+// otras edades.
+// ============================================
+const CURRENT_YEAR = new Date().getFullYear();
+const MIN_YEAR = 2005;
+const YEAR_OPTIONS = Array.from(
+    { length: CURRENT_YEAR - MIN_YEAR + 1 },
+    (_, i) => String(MIN_YEAR + i)
+);
+
 export const CategoriesScreen = () => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
@@ -31,17 +45,20 @@ export const CategoriesScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
 
-const loadCategories = async () => {
-    try {
-        const response = await ApiDelivery.get('/categories');
-        setCategories(response.data?.data || []);
-    } catch (error) {
-        Alert.alert('Error', 'No se pudieron cargar las categorías');
-    } finally {
-        setLoading(false);
-        setRefreshing(false);
-    }
-};
+    const loadCategories = async () => {
+        try {
+            const response = await ApiDelivery.get('/categories');
+            // El backend envuelve la respuesta como { success, message, data }.
+            // Antes se asumia que response.data YA era el array.
+            const categoriesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+            setCategories(categoriesData);
+        } catch (error) {
+            Alert.alert('Error', 'No se pudieron cargar las categorías');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
     useEffect(() => {
         loadCategories();
@@ -52,18 +69,24 @@ const loadCategories = async () => {
         loadCategories();
     };
 
+    // Años ya usados por otra categoría (para no dejar crear duplicados).
+    // Si se esta editando, el año actual de esa categoría sigue disponible.
+    const usedYears = categories
+        .filter((c) => !(isEditing && c.id === editingId))
+        .map((c) => c.category_year);
+
     const handleSubmit = async () => {
-        if (!formData.category_year.trim()) {
-            Alert.alert('Error', 'El año de la categoría es requerido');
+        if (!formData.category_year) {
+            Alert.alert('Error', 'Selecciona el año de la categoría');
             return;
         }
 
         try {
             if (isEditing && editingId) {
-                await ApiDelivery.put('/categories', { 
-                    id: editingId, 
+                await ApiDelivery.put('/categories', {
+                    id: editingId,
                     category_year: formData.category_year,
-                    description: formData.description 
+                    description: formData.description
                 });
             } else {
                 await ApiDelivery.post('/categories/create', formData);
@@ -158,23 +181,45 @@ const loadCategories = async () => {
 
             {showForm && (
                 <View style={styles.formContainer}>
-                    <View style={styles.formRow}>
-                        <TextInput
-                            style={[styles.formInput, { flex: 1, marginRight: 8 }]}
-                            placeholder="Año (ej: 2014)"
-                            placeholderTextColor="#999"
-                            value={formData.category_year}
-                            onChangeText={(text) => setFormData({ ...formData, category_year: text })}
-                            keyboardType="numeric"
-                        />
-                        <TextInput
-                            style={[styles.formInput, { flex: 1.5 }]}
-                            placeholder="Descripción"
-                            placeholderTextColor="#999"
-                            value={formData.description}
-                            onChangeText={(text) => setFormData({ ...formData, description: text })}
-                        />
-                    </View>
+                    <Text style={styles.formLabel}>Año de nacimiento</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yearScroll}>
+                        <View style={styles.yearContainer}>
+                            {YEAR_OPTIONS.map((year) => {
+                                const disabled = usedYears.includes(year);
+                                const selected = formData.category_year === year;
+                                return (
+                                    <TouchableOpacity
+                                        key={year}
+                                        style={[
+                                            styles.yearChip,
+                                            selected && styles.yearChipSelected,
+                                            disabled && !selected && styles.yearChipDisabled
+                                        ]}
+                                        disabled={disabled}
+                                        onPress={() => setFormData({ ...formData, category_year: year })}
+                                    >
+                                        <Text style={[
+                                            styles.yearChipText,
+                                            selected && styles.yearChipTextSelected,
+                                            disabled && !selected && styles.yearChipTextDisabled
+                                        ]}>
+                                            {year}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                    </ScrollView>
+
+                    <Text style={styles.formLabel}>Descripción</Text>
+                    <TextInput
+                        style={styles.formInput}
+                        placeholder="Ej: Categoría Benjamín"
+                        placeholderTextColor="#999"
+                        value={formData.description}
+                        onChangeText={(text) => setFormData({ ...formData, description: text })}
+                    />
+
                     <TouchableOpacity style={styles.formSubmit} onPress={handleSubmit}>
                         <Text style={styles.formSubmitText}>
                             {isEditing ? 'Actualizar' : 'Crear'}
@@ -246,9 +291,46 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
     },
-    formRow: {
+    formLabel: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    yearScroll: {
+        marginBottom: 14,
+    },
+    yearContainer: {
         flexDirection: 'row',
-        marginBottom: 10,
+        gap: 8,
+    },
+    yearChip: {
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        backgroundColor: '#f8f9fa',
+        marginRight: 8,
+    },
+    yearChipSelected: {
+        backgroundColor: MyColors.primary,
+        borderColor: MyColors.primary,
+    },
+    yearChipDisabled: {
+        opacity: 0.4,
+    },
+    yearChipText: {
+        fontSize: 13,
+        color: '#666',
+        fontWeight: '500',
+    },
+    yearChipTextSelected: {
+        color: '#fff',
+        fontWeight: '700',
+    },
+    yearChipTextDisabled: {
+        color: '#999',
     },
     formInput: {
         borderWidth: 1,
@@ -258,6 +340,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         fontSize: 15,
         backgroundColor: '#f8f9fa',
+        marginBottom: 14,
     },
     formSubmit: {
         backgroundColor: MyColors.primary,
