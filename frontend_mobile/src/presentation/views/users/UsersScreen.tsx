@@ -40,7 +40,9 @@ export const UsersScreen = () => {
     const loadUsers = async () => {
         try {
             const response = await ApiDelivery.get('/users');
-            const usersData = response.data || [];
+            // El backend envuelve la respuesta como { success, message, data }.
+            // Antes se asumia que response.data YA era el array.
+            const usersData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
             setUsers(usersData);
             setFilteredUsers(usersData);
         } catch (error) {

@@ -43,9 +43,23 @@ export const DashboardScreen = () => {
     // ============================================
     // LOGICA DE DATOS SIN CAMBIOS — mismos endpoints
     // ============================================
+    // Extrae el array real de la respuesta, sin importar si el
+    // backend lo manda envuelto como { success, message, data } o directo.
+    const extractArray = (result: PromiseSettledResult<any>, label: string): any[] => {
+        if (result.status === 'rejected') {
+            console.error(`Error cargando ${label}:`, result.reason?.message || result.reason);
+            return [];
+        }
+        const data = result.value?.data;
+        return Array.isArray(data) ? data : (data?.data || []);
+    };
+
     const loadStats = async () => {
         try {
-            const [students, tournaments, products, categories, schedules] = await Promise.all([
+            // Promise.allSettled en vez de Promise.all: si UN endpoint falla
+            // (ej. Horarios o Torneos con error 501 del backend), los demas
+            // igual cargan en vez de tumbar todo el dashboard.
+            const [studentsRes, tournamentsRes, productsRes, categoriesRes, schedulesRes] = await Promise.allSettled([
                 ApiDelivery.get('/students'),
                 ApiDelivery.get('/tournaments'),
                 ApiDelivery.get('/products'),
@@ -53,14 +67,14 @@ export const DashboardScreen = () => {
                 ApiDelivery.get('/schedules')
             ]);
 
-            const tournamentsData = tournaments.data || [];
+            const tournamentsData = extractArray(tournamentsRes, 'torneos');
             setStats({
-                students: students.data?.length || 0,
+                students: extractArray(studentsRes, 'estudiantes').length,
                 tournaments: tournamentsData.length,
                 activeTournaments: tournamentsData.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
-                products: products.data?.length || 0,
-                categories: categories.data?.length || 0,
-                schedules: schedules.data?.length || 0,
+                products: extractArray(productsRes, 'productos').length,
+                categories: extractArray(categoriesRes, 'categorías').length,
+                schedules: extractArray(schedulesRes, 'horarios').length,
                 teams: 0 // no existe todavia un endpoint de Equipos en el backend
             });
         } catch (error) {

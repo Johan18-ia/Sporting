@@ -61,7 +61,9 @@ export const UserFormScreen = () => {
         const loadCategories = async () => {
             try {
                 const response = await ApiDelivery.get('/categories');
-                setCategories(response.data || []);
+                // El backend envuelve la respuesta como { success, message, data }.
+                const categoriesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+                setCategories(categoriesData);
             } catch (error) {
                 console.error('Error loading categories:', error);
             } finally {
@@ -275,7 +277,7 @@ export const UserFormScreen = () => {
                                         styles.roleOption,
                                         formData.role === role && styles.roleOptionSelected
                                     ]}
-                                    onPress={() => setFormData({ ...formData, role })}
+                                    onPress={() => setFormData({ ...formData, role, category_id: role === 'user' ? formData.category_id : '' })}
                                     disabled={mode === 'edit' && currentUser?.id === user?.id && role === 'admin'}
                                 >
                                     <Text style={[
@@ -292,8 +294,11 @@ export const UserFormScreen = () => {
 
                     {/* ============================================
                         CATEGORÍA (AÑO) — mismo patron visual de chips
-                        que ya usa StudentFormScreen para consistencia
+                        que ya usa StudentFormScreen para consistencia.
+                        Solo aplica a estudiantes (role === 'user'):
+                        un admin o vendedor no pertenece a una categoria.
                         ============================================ */}
+                    {formData.role === 'user' && (
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Categoría (Año)</Text>
                         <View style={styles.categoryContainer}>
@@ -336,6 +341,7 @@ export const UserFormScreen = () => {
                             )}
                         </View>
                     </View>
+                    )}
 
                     <TouchableOpacity
                         style={[styles.submitButton, loading && styles.submitButtonDisabled]}
