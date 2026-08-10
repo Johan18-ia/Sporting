@@ -285,7 +285,7 @@ export const UserFormScreen = () => {
                                         formData.role === role && styles.roleOptionTextSelected
                                     ]}>
                                         {role === 'admin' ? 'Administrador' :
-                                         role === 'seller' ? 'Vendedor' : 'Usuario'}
+                                         role === 'seller' ? 'Seller' : 'Usuario'}
                                     </Text>
                                 </TouchableOpacity>
                             ))}

@@ -12,7 +12,7 @@ import {
     Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useAuth } from '../../../hooks/useAuth';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
@@ -30,6 +30,7 @@ interface User {
 
 export const UsersScreen = () => {
     const navigation = useNavigation<any>();
+    const isFocused = useIsFocused();
     const { user: currentUser } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -55,8 +56,10 @@ export const UsersScreen = () => {
     };
 
     useEffect(() => {
-        loadUsers();
-    }, []);
+        if (isFocused) {
+            loadUsers();
+        }
+    }, [isFocused]);
 
     useEffect(() => {
         if (searchTerm.trim()) {

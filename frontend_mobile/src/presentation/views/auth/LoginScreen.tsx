@@ -38,10 +38,11 @@ export const LoginScreen = () => {
         }
 
         const result = await login({ email, password });
-        if (result.success) {
+        if (result.success && result.data) {
+            const destinationRoute = result.data.role === 'user' ? 'Students' : undefined;
             navigation.reset({
                 index: 0,
-                routes: [{ name: 'MainTabs' }]
+                routes: [{ name: 'MainTabs', params: destinationRoute ? { screen: destinationRoute } : undefined }]
             });
         } else {
             setLocalError(result.error || 'Error al iniciar sesión');
