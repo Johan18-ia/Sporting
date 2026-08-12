@@ -22,6 +22,7 @@ import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 import { useAuth } from '../../../hooks/useAuth';
+import { SaveUserLocalUseCase } from '../../../domain/useCases/userLocal/SaveUserLocal';
 
 type UserFormRouteProp = RouteProp<RootStackParamList, 'UserForm'>;
 
@@ -40,7 +41,7 @@ export const UserFormScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<UserFormRouteProp>();
     const { user, mode } = route.params || { mode: 'create' };
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, checkAuth } = useAuth();
     
     const [formData, setFormData] = useState<FormData>({
         name: '',
@@ -144,6 +145,28 @@ export const UserFormScreen = () => {
             }
 
             if (response.data?.success !== false) {
+                // Si el usuario editado es el actual, actualizar almacenamiento local y contexto
+                const updated = response.data?.data;
+                if (mode === 'edit' && updated && currentUser && updated.id === currentUser.id) {
+                    try {
+                        await SaveUserLocalUseCase({
+                            id: updated.id,
+                            name: updated.name || formData.name,
+                            lastname: updated.lastname || formData.lastname,
+                            email: updated.email || formData.email,
+                            password: currentUser.password || '',
+                            phone: updated.phone || formData.phone || '',
+                            role: updated.role || formData.role || currentUser.role,
+                            image: updated.image || currentUser.image || '',
+                            session_token: currentUser.session_token || ''
+                        } as any);
+                        // Refrescar contexto de autenticación
+                        await checkAuth();
+                    } catch (err) {
+                        console.warn('No se pudo actualizar usuario local:', err);
+                    }
+                }
+
                 Alert.alert(
                     'Éxito',
                     mode === 'create' ? 'Usuario creado correctamente' : 'Usuario actualizado correctamente',
