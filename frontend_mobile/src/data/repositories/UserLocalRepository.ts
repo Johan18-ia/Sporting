@@ -32,6 +32,7 @@ export class UserLocalRepositoryImpl implements UserLocalRepository {
         const { remove } = LocalStorage();
         await remove('user_data');
         await remove('auth_token');
+        await remove('auth_token_expiry');
     }
 
     async clear(): Promise<void> {

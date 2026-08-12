@@ -14,7 +14,8 @@ import {
     ScrollView,
     KeyboardAvoidingView,
     Platform,
-    ActivityIndicator
+    ActivityIndicator,
+    Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -47,27 +48,59 @@ export const RegisterScreen = () => {
     };
 
     const handleRegister = async () => {
-        // Validaciones
-        if (!formData.name || !formData.email || !formData.password) {
+        // Normalizar y validar
+        const name = (formData.name || '').trim();
+        const lastname = (formData.lastname || '').trim();
+        const email = (formData.email || '').trim().toLowerCase();
+        const password = formData.password || '';
+        const confirmPassword = formData.confirmPassword || '';
+        const phone = (formData.phone || '').trim();
+
+        if (!name || !email || !password) {
             setError('Por favor complete todos los campos obligatorios');
             return;
         }
 
-        if (formData.password !== formData.confirmPassword) {
+        // Formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError('Por favor ingrese un correo electrónico válido');
+            return;
+        }
+
+        if (password !== confirmPassword) {
             setError('Las contraseñas no coinciden');
             return;
         }
 
-        if (formData.password.length < 6) {
+        if (password.length < 6) {
             setError('La contraseña debe tener al menos 6 caracteres');
             return;
         }
 
-        const result = await register(formData);
+        const payload = {
+            name,
+            lastname,
+            email,
+            password,
+            phone,
+            role: 'user'
+        };
+
+        const result = await register(payload as any);
         if (result.success) {
-            navigation.goBack();
+            Alert.alert('Registro exitoso', 'Cuenta creada correctamente. Ahora puedes iniciar sesión.', [
+                { text: 'OK', onPress: () => navigation.goBack() }
+            ]);
         } else {
-            setError(result.error || 'Error al registrar usuario');
+            const err = (result.error || '').toLowerCase();
+            if (err.includes('email') && (err.includes('existe') || err.includes('duplicate') || err.includes('ya registrada'))) {
+                setError('El correo electrónico ya está registrado');
+            } else if (err.includes('document') || err.includes('dni') || err.includes('cedula')) {
+                setError('El número de documento ya está registrado');
+            } else {
+                setError(result.error || 'Error al registrar usuario');
+            }
         }
     };
 

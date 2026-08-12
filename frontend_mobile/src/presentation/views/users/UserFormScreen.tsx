@@ -42,6 +42,7 @@ export const UserFormScreen = () => {
     const route = useRoute<UserFormRouteProp>();
     const { user, mode } = route.params || { mode: 'create' };
     const { user: currentUser, checkAuth } = useAuth();
+    const editingUser = user || currentUser;
     
     const [formData, setFormData] = useState<FormData>({
         name: '',
@@ -145,10 +146,16 @@ export const UserFormScreen = () => {
                     throw new Error('Usuario no encontrado');
                 }
 
-                // Si el usuario está editando su propio perfil, no enviar el campo `role`
-                // porque el backend puede rechazar cambios de rol sobre el propio usuario.
+                // Construir payload de envío
                 const sendPayload: any = { ...payload, id: editingUser.id };
+
+                // Si edita su propio perfil, quitar role para evitar rechazos del backend
                 if (currentUser && editingUser.id === currentUser.id) {
+                    delete sendPayload.role;
+                }
+
+                // Si el usuario que realiza la edición NO es admin, impedir cambiar roles
+                if (currentUser && currentUser.role !== 'admin') {
                     delete sendPayload.role;
                 }
 
@@ -307,27 +314,36 @@ export const UserFormScreen = () => {
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Rol</Text>
-                        <View style={styles.roleContainer}>
-                            {['user', 'seller', 'admin'].map((role) => (
-                                <TouchableOpacity
-                                    key={role}
-                                    style={[
-                                        styles.roleOption,
-                                        formData.role === role && styles.roleOptionSelected
-                                    ]}
-                                    onPress={() => setFormData({ ...formData, role, category_id: role === 'user' ? formData.category_id : '' })}
-                                    disabled={mode === 'edit' && currentUser?.id === user?.id && role === 'admin'}
-                                >
-                                    <Text style={[
-                                        styles.roleOptionText,
-                                        formData.role === role && styles.roleOptionTextSelected
-                                    ]}>
-                                        {role === 'admin' ? 'Administrador' :
-                                         role === 'seller' ? 'Seller' : 'Usuario'}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+                        {mode === 'edit' && editingUser && currentUser && editingUser.id === currentUser.id ? (
+                            <View style={{ paddingVertical: 8 }}>
+                                <Text style={{ fontSize: 15, fontWeight: '600' }}>{
+                                    editingUser.role === 'admin' ? 'Administrador' : editingUser.role === 'seller' ? 'Seller' : 'Usuario'
+                                }</Text>
+                                <Text style={{ color: '#888', marginTop: 6 }}>El rol no puede ser modificado desde el perfil.</Text>
+                            </View>
+                        ) : (
+                            <View style={styles.roleContainer}>
+                                {['user', 'seller', 'admin'].map((role) => (
+                                    <TouchableOpacity
+                                        key={role}
+                                        style={[
+                                            styles.roleOption,
+                                            formData.role === role && styles.roleOptionSelected
+                                        ]}
+                                        onPress={() => setFormData({ ...formData, role, category_id: role === 'user' ? formData.category_id : '' })}
+                                        disabled={role === 'admin' && currentUser?.role !== 'admin'}
+                                    >
+                                        <Text style={[
+                                            styles.roleOptionText,
+                                            formData.role === role && styles.roleOptionTextSelected,
+                                            role === 'admin' && currentUser?.role !== 'admin' ? { color: '#aaa' } : {}
+                                        ]}>
+                                            {role === 'admin' ? 'Administrador' : role === 'seller' ? 'Seller' : 'Usuario'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
                     </View>
 
                     {/* ============================================
@@ -395,7 +411,7 @@ export const UserFormScreen = () => {
                         )}
                     </TouchableOpacity>
 
-                    {mode === 'edit' && currentUser?.id !== user?.id && (
+                    {mode === 'edit' && editingUser && currentUser && editingUser.id !== currentUser.id && (
                         <TouchableOpacity
                             style={styles.deleteButton}
                             onPress={handleDelete}
