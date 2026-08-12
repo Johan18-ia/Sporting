@@ -1,4 +1,8 @@
 ﻿// src/presentation/views/common/Footer.tsx
+// Encargado: Componente - Footer
+// Descripción: Pie de página reutilizable para pantallas públicas
+// Archivo: src/presentation/views/common/Footer.tsx
+// ============================================
 import React from 'react';
 import {
     View,

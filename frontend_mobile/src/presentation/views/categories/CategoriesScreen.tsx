@@ -1,3 +1,7 @@
+// Encargado: Categorías
+// Descripción: Gestión de categorías (año de nacimiento) y selección para estudiantes
+// Archivo: src/presentation/views/categories/CategoriesScreen.tsx
+// ============================================
 // src/presentation/views/categories/CategoriesScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {

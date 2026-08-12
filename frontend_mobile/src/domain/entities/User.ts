@@ -1,3 +1,8 @@
+// Encargado: Entidad - User
+// Descripción: Definición del tipo Usuario usado en la capa de dominio
+// Archivo: src/domain/entities/User.ts
+// ============================================
+
 // src/domain/entities/User.ts
 export interface User {
     id?: number;

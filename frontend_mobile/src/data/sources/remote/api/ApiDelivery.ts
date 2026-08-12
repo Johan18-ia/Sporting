@@ -1,3 +1,7 @@
+// Encargado: Cliente HTTP - ApiDelivery
+// Descripción: Configuración de axios con interceptores para auth y logging
+// Archivo: src/data/sources/remote/api/ApiDelivery.ts
+// ============================================
 // frontend_mobile/src/data/sources/remote/api/ApiDelivery.ts
 
 import axios from 'axios';

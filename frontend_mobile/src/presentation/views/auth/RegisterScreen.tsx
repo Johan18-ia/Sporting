@@ -1,4 +1,8 @@
 // src/presentation/views/auth/RegisterScreen.tsx
+// Encargado: Registro de Usuario
+// Descripción: Pantalla para crear cuentas nuevas y validación inicial
+// Archivo: src/presentation/views/auth/RegisterScreen.tsx
+// ============================================
 import React, { useState, useEffect } from 'react';
 import {
     View,

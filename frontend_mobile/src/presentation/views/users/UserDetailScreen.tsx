@@ -1,3 +1,7 @@
+// Encargado: Usuarios - Detalle
+// Descripción: Muestra información detallada de un usuario y permite acciones (editar, activar/inactivar)
+// Archivo: src/presentation/views/users/UserDetailScreen.tsx
+// ============================================
 // src/presentation/views/users/UserDetailScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {

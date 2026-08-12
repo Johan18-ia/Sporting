@@ -1,3 +1,8 @@
+// Encargado: Repositorio - UserLocal
+// Descripción: Persistencia local de usuarios (LocalStorage/AsyncStorage)
+// Archivo: src/domain/repositories/UserLocalRepository.ts
+// ============================================
+
 // src/domain/repositories/UserLocalRepository.ts
 import { User } from '../entities/User';
 

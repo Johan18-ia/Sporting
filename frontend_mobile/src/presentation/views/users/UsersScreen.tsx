@@ -1,3 +1,7 @@
+// Encargado: Usuarios - Listado
+// Descripción: Pantalla para listar y buscar usuarios; incluye refresco y navegación a detalle/edición
+// Archivo: src/presentation/views/users/UsersScreen.tsx
+// ============================================
 // src/presentation/views/users/UsersScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {

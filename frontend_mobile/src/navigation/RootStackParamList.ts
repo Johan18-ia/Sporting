@@ -1,4 +1,8 @@
 // src/navigation/RootStackParamList.ts
+// Encargado: Tipado de rutas (RootStack)
+// Descripción: Define los parámetros permitidos para la navegación principal
+// Archivo: src/navigation/RootStackParamList.ts
+// ============================================
 import { User } from '../domain/entities/User';
 
 export type RootStackParamList = {

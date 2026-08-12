@@ -1,4 +1,7 @@
 // src/presentation/views/auth/LoginScreen.tsx
+// Encargado: Pantalla de Autenticación (Login)
+// Descripción: Maneja la entrada del usuario y redirección según rol
+// ============================================
 import React, { useState, useEffect } from 'react';
 import {
     View,
@@ -32,6 +35,10 @@ export const LoginScreen = () => {
     const [localError, setLocalError] = useState('');
 
     const handleLogin = async () => {
+        // ============================================
+        // PROCESO DE LOGIN
+        // Validaciones básicas y redirección por rol
+        // ============================================
         if (!email || !password) {
             setLocalError('Por favor complete todos los campos');
             return;

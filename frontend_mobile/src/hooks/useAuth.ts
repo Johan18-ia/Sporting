@@ -1,3 +1,8 @@
+// Encargado: Hook - useAuth
+// Descripción: Manejo de autenticación, login/logout y estado del usuario
+// Archivo: src/hooks/useAuth.ts
+// ============================================
+
 // frontend_mobile/src/hooks/useAuth.ts
 
 import React, { createContext, useContext, useEffect, useState } from 'react';

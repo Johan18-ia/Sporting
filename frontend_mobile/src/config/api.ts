@@ -1,3 +1,8 @@
+// Encargado: Configuración API
+// Descripción: Endpoints y configuración base para llamadas al backend
+// Archivo: src/config/api.ts
+// ============================================
+
 // src/config/api.ts
 export const API_CONFIG = {
     BASE_URL: 'http://10.1.202.216:3000/api', // Cambia por tu IP local

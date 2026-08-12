@@ -1,4 +1,7 @@
-// src/presentation/theme/AppTheme.tsx
+// Encargado: Tema de la aplicación
+// Descripción: Colores y valores compartidos para UI (MyColors, estilos base)
+// Archivo: src/presentation/theme/AppTheme.tsx
+// ============================================
 export const MyColors = {
     background: '#EEEEEE',
     primary: '#8B0000',     // Rojo Sporting Club

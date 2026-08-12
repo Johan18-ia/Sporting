@@ -1,4 +1,8 @@
 // src/presentation/views/dashboard/components/ActivityItem.tsx
+// Encargado: Componente - ActivityItem
+// Descripción: Item de actividad reciente mostrado en Dashboard
+// Archivo: src/presentation/views/dashboard/components/ActivityItem.tsx
+// ============================================
 import React from 'react';
 import {
     View,

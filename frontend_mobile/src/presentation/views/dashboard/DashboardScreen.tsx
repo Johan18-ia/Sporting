@@ -1,3 +1,7 @@
+// Encargado: Dashboard
+// Descripción: Panel principal con estadísticas y accesos rápidos según rol
+// Archivo: src/presentation/views/dashboard/DashboardScreen.tsx
+// ============================================
 // src/presentation/views/dashboard/DashboardScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {

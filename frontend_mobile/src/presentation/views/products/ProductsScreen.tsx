@@ -1,3 +1,7 @@
+// Encargado: Productos
+// Descripción: Gestión de productos, inventario y variantes
+// Archivo: src/presentation/views/products/ProductsScreen.tsx
+// ============================================
 // src/presentation/views/products/ProductsScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {

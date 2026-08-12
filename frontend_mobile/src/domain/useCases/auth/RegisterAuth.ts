@@ -1,3 +1,8 @@
+// Encargado: Caso de uso - RegisterAuth
+// Descripción: Lógica de registro de usuario (validaciones y llamado a repositorio)
+// Archivo: src/domain/useCases/auth/RegisterAuth.ts
+// ============================================
+
 // src/domain/useCases/auth/RegisterAuth.ts
 import { AuthRepositoryImpl } from '../../../data/repositories/AuthRepository';
 import { User } from '../../entities/User';

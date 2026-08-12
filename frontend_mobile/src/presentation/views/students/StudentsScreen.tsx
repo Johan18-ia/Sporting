@@ -1,3 +1,7 @@
+// Encargado: Estudiantes - Listado
+// Descripción: Lista y búsqueda de estudiantes; filtrado por categoría
+// Archivo: src/presentation/views/students/StudentsScreen.tsx
+// ============================================
 // src/presentation/views/students/StudentsScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {

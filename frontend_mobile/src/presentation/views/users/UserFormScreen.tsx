@@ -1,3 +1,7 @@
+// Encargado: Usuarios - Formulario
+// Descripción: Formulario para crear/editar usuarios (validaciones y envío al API)
+// Archivo: src/presentation/views/users/UserFormScreen.tsx
+// ============================================
 // src/presentation/views/users/UserFormScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {

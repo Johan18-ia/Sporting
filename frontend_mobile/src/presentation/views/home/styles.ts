@@ -1,3 +1,7 @@
+// Encargado: Estilos - Home
+// Descripción: Estilos modulares para la pantalla pública Home
+// Archivo: src/presentation/views/home/styles.ts
+// ============================================
 // src/presentation/views/home/styles.ts
 import { StyleSheet } from 'react-native';
 import { MyColors } from '../../theme/AppTheme';

@@ -1,3 +1,6 @@
+// Encargado: Detalle de Perfil
+// Descripción: Vista para mostrar los datos del usuario autenticado
+// ============================================
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useAuth } from '../../../hooks/useAuth';
