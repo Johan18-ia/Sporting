@@ -79,16 +79,18 @@ export const UserFormScreen = () => {
     }, []);
 
     useEffect(() => {
-        if (user && mode === 'edit') {
+        const editingUser = user || currentUser;
+        console.log('UserForm init - route.user:', user ? 'si' : 'no', ' currentUser:', currentUser ? 'si' : 'no', ' mode:', mode);
+        if (editingUser && mode === 'edit') {
             setFormData({
-                name: user.name || '',
-                lastname: user.lastname || '',
-                email: user.email || '',
+                name: editingUser.name || '',
+                lastname: editingUser.lastname || '',
+                email: editingUser.email || '',
                 password: '',
                 confirmPassword: '',
-                phone: user.phone || '',
-                role: user.role || 'user',
-                category_id: user.category_id ? String(user.category_id) : ''
+                phone: editingUser.phone || '',
+                role: editingUser.role || 'user',
+                category_id: editingUser.category_id ? String(editingUser.category_id) : ''
             });
         }
     }, [user, mode]);
@@ -138,10 +140,19 @@ export const UserFormScreen = () => {
             if (mode === 'create') {
                 response = await ApiDelivery.post('/users/create', payload);
             } else {
-                if (!user) {
+                const editingUser = user || currentUser;
+                if (!editingUser) {
                     throw new Error('Usuario no encontrado');
                 }
-                response = await ApiDelivery.put('/users', { ...payload, id: user.id });
+
+                // Si el usuario está editando su propio perfil, no enviar el campo `role`
+                // porque el backend puede rechazar cambios de rol sobre el propio usuario.
+                const sendPayload: any = { ...payload, id: editingUser.id };
+                if (currentUser && editingUser.id === currentUser.id) {
+                    delete sendPayload.role;
+                }
+
+                response = await ApiDelivery.put('/users', sendPayload);
             }
 
             if (response.data?.success !== false) {
