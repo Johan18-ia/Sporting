@@ -1,14 +1,28 @@
+// Encargado: Detalle de Perfil
+// Descripción: Vista para mostrar los datos del usuario autenticado
+// ============================================
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { useAuth } from '../../../hooks/useAuth';
 import { MyColors } from '../../theme/AppTheme';
 
+type ProfileDetailNavigationProp = StackNavigationProp<RootStackParamList, 'ProfileDetail'>;
+
 export const ProfileDetailScreen = () => {
     const { user } = useAuth();
+    const navigation = useNavigation<ProfileDetailNavigationProp>();
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Mi Perfil</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={styles.title}>Mi Perfil</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('UserForm', { user: user, mode: 'edit' })}>
+                    <Text style={{ color: MyColors.primary, fontWeight: '600' }}>Editar</Text>
+                </TouchableOpacity>
+            </View>
             <View style={styles.card}>
                 <Text style={styles.label}>Nombre</Text>
                 <Text style={styles.value}>{user?.name} {user?.lastname}</Text>

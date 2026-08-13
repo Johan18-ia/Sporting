@@ -1,3 +1,8 @@
+// Encargado: Repositorio de datos - Auth
+// Descripción: Implementación para llamadas de autenticación al backend
+// Archivo: src/data/repositories/AuthRepository.ts
+// ============================================
+
 // src/data/repositories/AuthRepository.ts
 import { AxiosError } from 'axios';
 import { User, UserLogin } from '../../domain/entities/User';

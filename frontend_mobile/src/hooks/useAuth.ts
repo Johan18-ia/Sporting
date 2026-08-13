@@ -1,3 +1,8 @@
+// Encargado: Hook - useAuth
+// Descripción: Manejo de autenticación, login/logout y estado del usuario
+// Archivo: src/hooks/useAuth.ts
+// ============================================
+
 // frontend_mobile/src/hooks/useAuth.ts
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -79,6 +84,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 await save('auth_token', token);
                 console.log('Token guardado en AsyncStorage');
+                // Guardar expiración del token (24 horas)
+                try {
+                    const expiry = Date.now() + 24 * 60 * 60 * 1000;
+                    await save('auth_token_expiry', String(expiry));
+                    console.log('Token expiry guardado:', new Date(expiry).toISOString());
+                } catch (err) {
+                    console.warn('No se pudo guardar expiry del token:', err);
+                }
 
                 const userData: User = {
                     id: payload?.id,
@@ -140,6 +153,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await RemoveUserLocalUseCase();
+            // Asegurar que el token expiry tambien se elimina
+            try {
+                const { remove } = LocalStorage();
+                await remove('auth_token_expiry');
+            } catch (err) {
+                console.warn('No se pudo eliminar auth_token_expiry en logout:', err);
+            }
             setUser(null);
             setIsAuthenticated(false);
             console.log('Sesion cerrada');

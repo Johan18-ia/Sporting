@@ -1,3 +1,7 @@
+// Encargado: Equipos
+// Descripción: Gestiona equipos y asignación de estudiantes a equipos
+// Archivo: src/presentation/views/teams/TeamsScreen.tsx
+// ============================================
 // src/presentation/views/teams/TeamsScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {

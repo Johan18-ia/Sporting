@@ -1,3 +1,7 @@
+// Encargado: Usuarios - Listado
+// Descripción: Pantalla para listar y buscar usuarios; incluye refresco y navegación a detalle/edición
+// Archivo: src/presentation/views/users/UsersScreen.tsx
+// ============================================
 // src/presentation/views/users/UsersScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
@@ -80,6 +84,11 @@ export const UsersScreen = () => {
     };
 
     const handleDeleteUser = (id: number, name: string) => {
+        if (currentUser?.id === id) {
+            Alert.alert('Operación no permitida', 'No puedes eliminar tu propia cuenta desde aquí.');
+            return;
+        }
+
         Alert.alert(
             'Eliminar Usuario',
             `¿Estás seguro de eliminar a "${name}"?`,
@@ -100,6 +109,42 @@ export const UsersScreen = () => {
                 }
             ]
         );
+    };
+
+    const handleToggleUser = (item: User) => {
+        if (currentUser?.id === item.id) {
+            Alert.alert('Operación no permitida', 'No puedes activar/desactivar tu propia cuenta desde aquí.');
+            return;
+        }
+
+        const action = item.is_active === 1 ? 'Desactivar' : 'Activar';
+        Alert.alert(`${action} usuario`, `¿Deseas ${action.toLowerCase()} a ${item.name} ${item.lastname}?`, [
+            { text: 'Cancelar', style: 'cancel' },
+            {
+                text: action,
+                onPress: async () => {
+                    try {
+                        const newStatus = item.is_active === 1 ? 0 : 1;
+                        await ApiDelivery.patch(`/users/toggle-status/${item.id}`, { is_active: newStatus });
+                        loadUsers();
+                        Alert.alert('Éxito', `Usuario ${newStatus === 1 ? 'activado' : 'desactivado'} correctamente`);
+                    } catch (error) {
+                        Alert.alert('Error', 'No se pudo cambiar el estado del usuario');
+                    }
+                }
+            }
+        ]);
+    };
+
+    const openUserActions = (item: User) => {
+        const options: any[] = [];
+        options.push({ text: 'Editar', onPress: () => navigation.navigate('UserForm', { user: item, mode: 'edit' }) });
+        options.push({ text: item.is_active === 1 ? 'Desactivar' : 'Activar', onPress: () => handleToggleUser(item) });
+        options.push({ text: 'Eliminar', style: 'destructive', onPress: () => handleDeleteUser(item.id, item.name) });
+        options.push({ text: 'Cancelar', style: 'cancel' });
+
+        // Convertir a Alert.alert secuencial: mostrar primer dialog con opciones
+        Alert.alert(item.name, 'Selecciona una acción', options as any);
     };
 
     const getRoleBadge = (role: string) => {
@@ -156,7 +201,7 @@ export const UsersScreen = () => {
                 </View>
                 <TouchableOpacity
                     style={styles.userActions}
-                    onPress={() => navigation.navigate('UserForm', { user: item, mode: 'edit' })}
+                    onPress={() => openUserActions(item)}
                 >
                     <Ionicons name="ellipsis-vertical" size={20} color="#666" />
                 </TouchableOpacity>

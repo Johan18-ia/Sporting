@@ -1,3 +1,7 @@
+// Encargado: Reportes
+// Descripción: Generación y exportación de reportes (CSV, compartir)
+// Archivo: src/presentation/views/reports/ReportsScreen.tsx
+// ============================================
 // src/presentation/views/reports/ReportsScreen.tsx
 import React, { useState } from 'react';
 import {

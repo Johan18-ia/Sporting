@@ -1,3 +1,7 @@
+// Encargado: Cliente HTTP - ApiDelivery
+// Descripción: Configuración de axios con interceptores para auth y logging
+// Archivo: src/data/sources/remote/api/ApiDelivery.ts
+// ============================================
 // frontend_mobile/src/data/sources/remote/api/ApiDelivery.ts
 
 import axios from 'axios';
@@ -16,6 +20,17 @@ const ApiDelivery = axios.create({
 ApiDelivery.interceptors.request.use(
     async (config) => {
         const token = await AsyncStorage.getItem('auth_token') || '';
+        const expiryStr = await AsyncStorage.getItem('auth_token_expiry');
+        if (expiryStr) {
+            const expiry = Number(expiryStr);
+            if (!isNaN(expiry) && expiry <= Date.now()) {
+                console.log('Token expirado detectado en interceptor, limpiando sesión');
+                await AsyncStorage.removeItem('auth_token');
+                await AsyncStorage.removeItem('auth_token_expiry');
+                await AsyncStorage.removeItem('user_data');
+                return Promise.reject(new Error('Token expired'));
+            }
+        }
         const normalizedToken = token.replace(/^bearer\s+/i, '').replace(/^jwt\s+/i, '').trim();
         
         console.log('Peticion a:', config.url);

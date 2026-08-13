@@ -1,3 +1,7 @@
+// Encargado: Home Público
+// Descripción: Pantalla pública de inicio con catálogo y secciones informativas
+// Archivo: src/presentation/views/home/HomeScreen.tsx
+// ============================================
 // src/presentation/views/home/HomeScreen.tsx
 // ====================================================
 // PANTALLA PUBLICA DE INICIO (equivalente a CatalogoView.jsx

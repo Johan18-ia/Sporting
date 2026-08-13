@@ -1,4 +1,9 @@
 // src/navigation/AppNavigator.tsx
+// Encargado: Navegación de la aplicación móvil
+// Descripción: Registra los stacks y tabs principales (autenticación y área principal)
+// ============================================
+// NOTAS: Mantener la consistencia con RootStackParamList para tipado.
+// ============================================
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import { NavigationContainer, RouteProp } from '@react-navigation/native';

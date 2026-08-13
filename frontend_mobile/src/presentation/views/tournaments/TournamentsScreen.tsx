@@ -1,3 +1,7 @@
+// Encargado: Torneos
+// Descripción: Gestión de torneos, inscripción de estudiantes y control de estado
+// Archivo: src/presentation/views/tournaments/TournamentsScreen.tsx
+// ============================================
 // src/presentation/views/tournaments/TournamentsScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {

@@ -1,4 +1,8 @@
 // src/presentation/components/AlertMessage.tsx
+// Encargado: Componente - AlertMessage
+// Descripción: Mensaje de alerta estilizado para errores/éxito
+// Archivo: src/presentation/components/AlertMessage.tsx
+// ============================================
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

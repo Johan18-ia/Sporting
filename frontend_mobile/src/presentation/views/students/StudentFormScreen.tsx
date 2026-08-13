@@ -1,3 +1,7 @@
+// Encargado: Estudiantes - Formulario
+// Descripción: Formulario para crear/editar estudiantes y sus datos personales
+// Archivo: src/presentation/views/students/StudentFormScreen.tsx
+// ============================================
 // src/presentation/views/students/StudentFormScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {

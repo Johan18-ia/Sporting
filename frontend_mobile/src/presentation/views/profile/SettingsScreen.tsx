@@ -1,3 +1,6 @@
+// Encargado: Pantalla de Configuración
+// Descripción: Opciones de usuario (notificaciones, modo oscuro) - demo
+// ============================================
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
 import { MyColors } from '../../theme/AppTheme';

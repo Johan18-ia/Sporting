@@ -1,4 +1,8 @@
 // src/presentation/components/LoadingSpinner.tsx
+// Encargado: Componente - LoadingSpinner
+// Descripción: Indicador de carga reutilizable
+// Archivo: src/presentation/components/LoadingSpinner.tsx
+// ============================================
 import React from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { MyColors } from '../theme/AppTheme';

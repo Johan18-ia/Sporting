@@ -1,4 +1,7 @@
 // src/presentation/views/profile/ProfileScreen.tsx
+// Encargado: Pantalla de Perfil
+// Descripción: Muestra información del usuario y acceso a opciones (Mi Perfil, Configuración, Notificaciones)
+// ============================================
 import React, { useState } from 'react';
 import {
     View,
@@ -44,6 +47,9 @@ export const ProfileScreen = () => {
         );
     };
 
+    // ============================================
+    // ITEM DEL MENÚ
+    // ============================================
     const MenuItem = ({ icon, label, onPress, color = '#333', showArrow = true }: any) => (
         <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
             <View style={styles.menuItemLeft}>

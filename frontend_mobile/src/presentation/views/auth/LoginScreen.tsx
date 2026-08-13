@@ -1,4 +1,7 @@
 // src/presentation/views/auth/LoginScreen.tsx
+// Encargado: Pantalla de Autenticación (Login)
+// Descripción: Maneja la entrada del usuario y redirección según rol
+// ============================================
 import React, { useState, useEffect } from 'react';
 import {
     View,
@@ -32,10 +35,21 @@ export const LoginScreen = () => {
     const [localError, setLocalError] = useState('');
 
     const handleLogin = async () => {
-        if (!email || !password) {
-            setLocalError('Por favor complete todos los campos');
-            return;
-        }
+        // ============================================
+        // PROCESO DE LOGIN
+        // Validaciones básicas y redirección por rol
+        // ============================================
+            if (!email || !password) {
+                setLocalError('Por favor complete todos los campos');
+                return;
+            }
+
+            // Validación de formato de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                setLocalError('Por favor ingrese un correo electrónico válido');
+                return;
+            }
 
         const result = await login({ email, password });
         if (result.success && result.data) {
@@ -45,7 +59,14 @@ export const LoginScreen = () => {
                 routes: [{ name: 'MainTabs', params: destinationRoute ? { screen: destinationRoute } : undefined }]
             });
         } else {
-            setLocalError(result.error || 'Error al iniciar sesión');
+                const err = (result.error || '').toLowerCase();
+                if (err.includes('desactiv') || err.includes('inactivo')) {
+                    setLocalError('Usuario desactivado. Contacte al administrador');
+                } else if (err.includes('token expired') || err.includes('token')) {
+                    setLocalError('Sesión expirada. Por favor inicie sesión de nuevo');
+                } else {
+                    setLocalError('Contraseña o correo incorrecto');
+                }
         }
     };
 
@@ -129,6 +150,10 @@ export const LoginScreen = () => {
                         ) : (
                             <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
                         )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => Alert.alert('Recuperar contraseña', 'Para restablecer tu contraseña, comunícate con el administrador del sistema.') } style={{ alignItems: 'center', marginTop: 12 }}>
+                        <Text style={{ color: MyColors.primary }}>¿Olvidaste tu contraseña?</Text>
                     </TouchableOpacity>
 
                     <View style={styles.registerContainer}>

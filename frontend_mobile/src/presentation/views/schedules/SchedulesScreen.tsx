@@ -1,3 +1,7 @@
+// Encargado: Horarios
+// Descripción: Gestión y visualización de horarios por categoría y día
+// Archivo: src/presentation/views/schedules/SchedulesScreen.tsx
+// ============================================
 // src/presentation/views/schedules/SchedulesScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
