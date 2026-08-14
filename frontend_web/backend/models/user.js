@@ -11,7 +11,7 @@ const User = {};
 // ====================================================
 User.findAll = (result) => {
     const sql = `
-        SELECT id, email, name, lastname, phone, image, role, created_at, updated_at
+        SELECT id, email, name, lastname, phone, image, role, is_active, created_at, updated_at
         FROM users ORDER BY id DESC
     `;
     db.query(sql, (err, users) => {
@@ -28,7 +28,7 @@ User.findAll = (result) => {
 // ====================================================
 User.findById = (id, result) => {
     const sql = `
-        SELECT id, email, name, lastname, phone, image, role, password
+        SELECT id, email, name, lastname, phone, image, role, is_active, password
         FROM users WHERE id = ?
     `;
     db.query(sql, [id], (err, user) => {
@@ -45,7 +45,7 @@ User.findById = (id, result) => {
 // ====================================================
 User.findByEmail = (email, result) => {
     const sql = `
-        SELECT id, email, name, lastname, phone, image, role, password
+        SELECT id, email, name, lastname, phone, image, role, is_active, password
         FROM users WHERE email = ?
     `;
     db.query(sql, [email], (err, user) => {
@@ -62,12 +62,12 @@ User.findByEmail = (email, result) => {
 // ====================================================
 User.create = async (user, result) => {
     const hash = await bcrypt.hash(user.password, 10);
-    const validRoles = ['admin', 'seller', 'customer', 'user'];
+    const validRoles = ['admin', 'seller', 'user'];
     const role = validRoles.includes(user.role) ? user.role : 'user';
 
     const sql = `
-        INSERT INTO users(name, lastname, email, password, phone, image, role, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        INSERT INTO users(name, lastname, email, password, phone, image, role, is_active, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `;
     db.query(sql, [
         user.name,
@@ -76,7 +76,8 @@ User.create = async (user, result) => {
         hash,
         user.phone || '',
         user.image || '',
-        role
+        role,
+        user.is_active ?? 1
     ], (err, res) => {
         if (err) {
             result(err, null);
