@@ -1,8 +1,7 @@
 // Encargado: Estudiantes - Formulario
-// Descripción: Formulario para crear/editar estudiantes y sus datos personales
+// Descripción: Formulario para crear/editar estudiantes vinculando a usuario existente
 // Archivo: src/presentation/views/students/StudentFormScreen.tsx
 // ============================================
-// src/presentation/views/students/StudentFormScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
     View,
@@ -14,7 +13,9 @@ import {
     Alert,
     ActivityIndicator,
     KeyboardAvoidingView,
-    Platform
+    Platform,
+    FlatList,
+    Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -26,16 +27,24 @@ import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 type StudentFormNavigationProp = StackNavigationProp<RootStackParamList, 'StudentForm'>;
 type StudentFormRouteProp = RouteProp<RootStackParamList, 'StudentForm'>;
 
-interface FormData {
+interface User {
+    id: number;
     name: string;
     lastname: string;
+    email: string;
+    role: string;
+    is_active: number;
+}
+
+interface FormData {
+    user_id: string;
     document: string;
     category_id: string;
     birth_date: string;
-    phone: string;
     address: string;
-    emergency_contact: string;
-    emergency_phone: string;
+    emergency_contact_name: string;
+    emergency_contact_phone: string;
+    status: 'pending' | 'approved' | 'rejected';
 }
 
 export const StudentFormScreen = () => {
