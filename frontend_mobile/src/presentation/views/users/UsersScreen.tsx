@@ -1,8 +1,10 @@
-// Encargado: Usuarios - Listado
-// Descripción: Pantalla para listar y buscar usuarios; incluye refresco y navegación a detalle/edición
+// Encargado: Módulo de Usuarios - Listado
+// Descripción: Permite consultar la lista de usuarios del sistema, buscar por nombre/correo y acceder a las acciones del módulo según las historias de usuario HU05-HU10.
 // Archivo: src/presentation/views/users/UsersScreen.tsx
 // ============================================
-// src/presentation/views/users/UsersScreen.tsx
+// NOTAS: La pantalla muestra el estado activo/inactivo y ofrece acceso a ver detalle, editar, activar/desactivar y eliminar usuarios.
+// Se protege la propia cuenta del usuario autenticado para evitar auto-desactivación o auto-eliminación.
+// ============================================
 import React, { useState, useEffect } from 'react';
 import {
     View,

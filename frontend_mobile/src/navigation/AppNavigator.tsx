@@ -1,8 +1,9 @@
-// src/navigation/AppNavigator.tsx
 // Encargado: Navegación de la aplicación móvil
-// Descripción: Registra los stacks y tabs principales (autenticación y área principal)
+// Descripción: Registra los stacks y tabs principales, incluyendo la autenticación, perfil y gestión de usuarios.
+// Archivo: src/navigation/AppNavigator.tsx
 // ============================================
 // NOTAS: Mantener la consistencia con RootStackParamList para tipado.
+// Se integran pantallas nuevas como Login, Register, ProfileDetail, Settings, UserForm y Users.
 // ============================================
 import React from 'react';
 import { TouchableOpacity } from 'react-native';

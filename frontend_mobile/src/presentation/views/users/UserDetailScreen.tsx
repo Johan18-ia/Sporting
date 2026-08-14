@@ -1,8 +1,10 @@
-// Encargado: Usuarios - Detalle
-// Descripción: Muestra información detallada de un usuario y permite acciones (editar, activar/inactivar)
+// Encargado: Módulo de Usuarios - Detalle
+// Descripción: Muestra la información completa de un usuario y permite ejecutar las acciones relacionadas con HU07, HU08 y HU09 del módulo de usuarios.
 // Archivo: src/presentation/views/users/UserDetailScreen.tsx
 // ============================================
-// src/presentation/views/users/UserDetailScreen.tsx
+// NOTAS: El detalle permite ver datos de contacto, rol, estado y acceso directo a edición.
+// La activación/desactivación queda bloqueada para el usuario autenticado para proteger la propia cuenta.
+// ============================================
 import React, { useState, useEffect } from 'react';
 import {
     View,

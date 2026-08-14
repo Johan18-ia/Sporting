@@ -1,5 +1,9 @@
 // Encargado: Detalle de Perfil
-// Descripción: Vista para mostrar los datos del usuario autenticado
+// Descripción: Muestra los datos del usuario autenticado y permite acceder al formulario de edición del perfil.
+// Archivo: src/presentation/views/profile/ProfileDetailScreen.tsx
+// ============================================
+// NOTAS: Se incluye el nombre, correo y rol del usuario autenticado.
+// La navegación hacia UserForm permite editar el propio perfil sin cambiar el rol del usuario.
 // ============================================
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';

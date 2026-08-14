@@ -1,7 +1,9 @@
-// src/presentation/views/auth/RegisterScreen.tsx
 // Encargado: Registro de Usuario
-// Descripción: Pantalla para crear cuentas nuevas y validación inicial
+// Descripción: Pantalla para crear cuentas nuevas con validación de campos, confirmación de contraseña y mensajes de error del backend.
 // Archivo: src/presentation/views/auth/RegisterScreen.tsx
+// ============================================
+// NOTAS: El registro crea usuarios con rol por defecto 'user' y muestra alerta de éxito al finalizar.
+// Se valida email, longitud mínima de contraseña y duplicados en el servidor.
 // ============================================
 import React, { useState, useEffect } from 'react';
 import {
