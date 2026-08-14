@@ -104,7 +104,15 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
             <Tab.Screen
                 name="Users"
                 component={UsersScreen}
-                options={{ title: 'Usuarios', tabBarLabel: 'Usuarios' }}
+                options={({ navigation }) => ({
+                    title: 'Usuarios',
+                    tabBarLabel: 'Usuarios',
+                    headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ marginLeft: 10 }}>
+                            <Ionicons name="arrow-back" size={24} color="#fff" />
+                        </TouchableOpacity>
+                    ),
+                })}
             />
             <Tab.Screen
                 name="Students"

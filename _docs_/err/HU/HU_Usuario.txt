@@ -1,0 +1,208 @@
+HISTORIAS DE USUARIO ADAPTADAS AL FRONTEND ACTUAL
+====================================================================
+Proyecto: Sporting
+Tipo de documento: Ajuste de Historias de Usuario según implementación real
+Fecha: 14/08/2026
+
+--------------------------------------------------------------------
+INTRODUCCIÓN
+Este documento presenta la versión ajustada de las Historias de Usuario para el proyecto Sporting, tomando como referencia la implementación real del frontend móvil y la lógica de negocio del backend. La finalidad es alinear las HU con la experiencia funcional que realmente existe en la aplicación, evitando inconsistencias entre requisitos teóricos y producto entregado.
+
+Las historias se estructuran bajo el criterio de estado de implementación:
+- Implementada: la funcionalidad existe en la aplicación actual.
+- Parcialmente implementada: la funcionalidad está presente, pero requiere ajustes o complementos.
+- No implementada: existe solo una notificación o mensaje informativo, pero no hay flujo real.
+
+--------------------------------------------------------------------
+HU01: Iniciar Sesión
+Estado: Implementada
+Como usuario registrado, quiero ingresar mi correo y contraseña para acceder al sistema y continuar con mi sesión de forma segura.
+
+Criterios de aceptación:
+1. El usuario ingresa su correo y contraseña en la pantalla de Login.
+2. Si ambos campos están completos y el formato del correo es válido, el sistema valida las credenciales.
+3. Si la autenticación es correcta, el sistema guarda el token JWT en almacenamiento local y redirige al usuario al panel principal correspondiente.
+4. Si el usuario ingresa una contraseña o correo incorrecto, el sistema muestra el mensaje: "Contraseña o correo incorrecto".
+5. Si el usuario está registrado pero su cuenta está inactiva, el sistema muestra: "Usuario desactivado. Contacte al administrador".
+6. Si el usuario deja campos vacíos, el sistema muestra: "Por favor complete todos los campos".
+7. Si el email tiene un formato inválido, el sistema muestra: "Por favor ingrese un correo electrónico válido".
+
+Observaciones:
+- La funcionalidad de login ya está implementada en la app móvil y la sesión se mantiene con almacenamiento local.
+- La validación y flujo de redirección por roles están presentes en la lógica de autenticación.
+
+--------------------------------------------------------------------
+HU02: Cerrar Sesión
+Estado: Implementada
+Como usuario autenticado, quiero cerrar mi sesión para finalizar el acceso de forma segura.
+
+Criterios de aceptación:
+1. El usuario accede al perfil o menú de configuración y selecciona la opción "Cerrar Sesión".
+2. El sistema muestra un cuadro de confirmación preguntando si desea cerrar la sesión.
+3. Si confirma, el sistema limpia la sesión local y redirige a la pantalla de autenticación.
+4. Después de cerrar sesión, el usuario no debe poder continuar navegando en rutas protegidas sin volver a autenticarse.
+
+Observaciones:
+- La acción ya está implementada en la pantalla de perfil y se gestiona desde el hook de autenticación.
+
+--------------------------------------------------------------------
+HU03: Recuperar Contraseña
+Estado: No implementada (flujo informativo)
+Como usuario, quiero recuperar el acceso a mi cuenta en caso de olvidar mi contraseña.
+
+Criterios de aceptación:
+1. Desde la pantalla de Login, el usuario selecciona la opción "¿Olvidaste tu contraseña?".
+2. El sistema informa al usuario que la funcionalidad no está implementada y le indica contactar al administrador.
+3. El sistema no debe simular un flujo real de recuperación si aún no existe la implementación.
+
+Observaciones:
+- Actualmente el sistema muestra un mensaje informativo, pero no existe envío de enlace ni restablecimiento real.
+
+--------------------------------------------------------------------
+HU04: Autoregistro de Estudiante
+Estado: Implementada
+Como estudiante o usuario nuevo, quiero registrarme en el sistema utilizando mis datos personales para poder acceder a la plataforma.
+
+Criterios de aceptación:
+1. El usuario accede a la pantalla de registro.
+2. Completa los campos obligatorios (nombre, apellido, documento, email, teléfono, contraseña y confirmación).
+3. Si todos los datos son válidos, el sistema crea un nuevo usuario con rol "user".
+4. Si el usuario deja campos vacíos, el sistema valida el formulario y muestra el mensaje de error correspondiente.
+5. Si la contraseña tiene menos de 6 caracteres, el sistema valida y muestra un mensaje de error.
+6. Si la confirmación de contraseña no coincide, el sistema muestra una alerta de validación.
+7. Si el email o documento ya existen, el sistema informa al usuario del conflicto mediante mensaje de error.
+
+Observaciones:
+- El flujo de registro ya está presente y funciona en la interfaz móvil.
+- Se aplican validaciones básicas de seguridad y de reglas del negocio.
+
+--------------------------------------------------------------------
+HU05: Registrar Usuario (Admin/Seller)
+Estado: Implementada
+Como administrador o seller, quiero registrar nuevos usuarios para administrarlos dentro del sistema.
+
+Criterios de aceptación:
+1. El administrador o seller accede al formulario de usuario.
+2. Completa los campos de información general del usuario y selecciona el rol correspondiente.
+3. Si el rol es administrador o seller, la lógica evita asociaciones innecesarias con categoría.
+4. Si el rol es de tipo usuario, la categoría puede ser opcional o nula según la lógica del negocio.
+5. El sistema valida email y contraseña antes de guardar.
+6. Si los datos son válidos, el usuario se registra correctamente y se muestra un mensaje de éxito.
+
+Observaciones:
+- El formulario existe y se encarga de la creación de usuarios con validación y restricciones por rol.
+
+--------------------------------------------------------------------
+HU06: Listar Usuarios
+Estado: Implementada
+Como administrador o seller, quiero ver la lista de usuarios registrados para gestionarlos.
+
+Criterios de aceptación:
+1. La pantalla de usuarios muestra una lista de todos los usuarios registrados.
+2. Cada elemento incluye nombre, correo, rol y estado de actividad.
+3. La pantalla incluye búsqueda por nombre o correo.
+4. La lista aplica filtros por roles y orden prioritario: admin, seller y usuario.
+5. El sistema identifica visualmente si el usuario es estudiante o si es un usuario regular.
+
+Observaciones:
+- La vista ya cuenta con filtro por rol, búsqueda y ordenamiento por prioridad.
+- Se muestra el estado activo/inactivo del usuario y el usuario autenticado con etiqueta "Tú".
+
+--------------------------------------------------------------------
+HU07: Obtener Usuario por Identificador
+Estado: Implementada
+Como administrador o seller, quiero consultar el detalle completo de un usuario para revisarlo o gestionarlo.
+
+Criterios de aceptación:
+1. El usuario selecciona un registro de la lista.
+2. El sistema navega a la vista de detalle.
+3. La vista muestra la información principal del usuario: nombre, correo, teléfono, rol, estado y fecha de registro.
+4. El sistema ofrece acceso rápido a edición y cambio de estado.
+
+Observaciones:
+- La funcionalidad de detalle ya está implementada en la pantalla del usuario.
+
+--------------------------------------------------------------------
+HU08: Editar Usuario
+Estado: Implementada
+Como administrador o seller, quiero actualizar la información de un usuario para mantener sus datos al día.
+
+Criterios de aceptación:
+1. Desde la vista de detalle o lista, el usuario puede acceder al formulario de edición.
+2. Se validan los campos obligatorios y el email antes de guardar.
+3. Si la edición se realiza por un usuario no administrador, se restringen los cambios de rol.
+4. Si se actualiza el usuario autenticado, la sesión local se sincroniza con los nuevos datos.
+
+Observaciones:
+- El flujo de edición está funcional y presenta validaciones de seguridad según el tipo de usuario.
+
+--------------------------------------------------------------------
+HU09: Cambiar Estado de Usuario (Activar/Desactivar)
+Estado: Implementada
+Como administrador, quiero activar o desactivar usuarios para controlar su acceso al sistema.
+
+Criterios de aceptación:
+1. Desde la vista de detalle, el administrador puede cambiar el estado de un usuario.
+2. La acción muestra confirmación antes de cambiar el estado.
+3. El sistema bloquea la auto-desactivación del administrador autenticado.
+4. Si el usuario es activado, su acceso vuelve a estar habilitado.
+5. Si el usuario es desactivado, queda bloqueado para iniciar sesión.
+
+Observaciones:
+- La funcionalidad está implementada con validaciones que evitan desactivar la propia cuenta del administrador.
+
+--------------------------------------------------------------------
+HU10: Eliminar Usuario
+Estado: Implementada
+Como administrador, quiero eliminar un usuario cuando sea necesario y bajo confirmación.
+
+Criterios de aceptación:
+1. El administrador selecciona la acción de eliminar usuario.
+2. El sistema muestra un cuadro de confirmación antes de proceder.
+3. Si se intenta eliminar la propia cuenta del administrador, el sistema bloquea la acción.
+4. Si la eliminación es exitosa, se muestra un mensaje de éxito y se vuelve a la vista anterior.
+
+Observaciones:
+- La acción ya existe y cuenta con confirmación y protección para evitar auto-eliminación.
+
+--------------------------------------------------------------------
+HU11: Editar Perfil
+Estado: Parcialmente implementada
+Como usuario autenticado, quiero actualizar mi información personal para mantener mis datos actuales.
+
+Criterios de aceptación:
+1. El usuario puede acceder a su perfil y visualizar su información personal.
+2. El usuario puede editar sus datos básicos desde el formulario de perfil.
+3. El rol debe seguir siendo de solo lectura desde la vista del usuario autenticado.
+4. La edición de contraseña debe mantenerse separada del formulario general de perfil.
+
+Observaciones:
+- La funcionalidad de edición del perfil ya existe, pero la sección de cambio de contraseña no está desarrollada como un flujo independiente formalizado.
+- La separación entre administración y perfil personal sí está diferenciada visualmente en la app.
+
+--------------------------------------------------------------------
+RESUMEN GENERAL
+El proyecto Sporting cuenta con una base sólida de historias de usuario implementadas en la app móvil, especialmente en el módulo de autenticación y gestión de usuarios. Las historias más completas corresponden a:
+- Login
+- Registro
+- Cierre de sesión
+- Listado de usuarios
+- Detalle de usuarios
+- Edición
+- Activación/desactivación
+- Eliminación
+
+Las historias que presentan limitaciones o flujo aún no formalizado son:
+- HU03 (recuperación de contraseña)
+- HU11 (edición de perfil avanzada / cambio de contraseña)
+
+La principal conclusión es que las HU deben reflejar la realidad del producto entregado, no solo los requisitos teóricos del backend. Por ello, este documento se ha ajustado a la implementación actual del frontend para mantener consistencia entre la documentación y la aplicación real.
+
+--------------------------------------------------------------------
+RECOMENDACIÓN DE DOCUMENTACIÓN
+Para futuras entregas, se recomienda separar en dos capas:
+1. Historias de usuario del producto (funcionalidad visible para el usuario).
+2. Historias técnicas o de backend (validación, seguridad, token, persistencia).
+
+Esto ayudará a mantener claridad entre lo que el usuario puede hacer en la interfaz y lo que el sistema debe garantizar internamente.
+
