@@ -54,16 +54,33 @@ export const UserDetailScreen = () => {
         try {
             const response = await ApiDelivery.get(`/users/${userId}`);
             const userData = response.data?.data ?? response.data ?? null;
+
+            if (!userData || response.status === 404) {
+                Alert.alert('Usuario no encontrado', 'El usuario solicitado no existe.', [
+                    { text: 'Aceptar', onPress: () => navigation.goBack() }
+                ]);
+                return;
+            }
+
             setUser(userData);
         } catch (error) {
-            Alert.alert('Error', 'No se pudo cargar la información del usuario');
-            navigation.goBack();
+            const responseStatus = (error as any)?.response?.status;
+            const responseMessage = (error as any)?.response?.data?.message;
+            if (responseStatus === 404 || responseMessage === 'Usuario no encontrado') {
+                Alert.alert('Usuario no encontrado', 'El usuario solicitado no existe.', [
+                    { text: 'Aceptar', onPress: () => navigation.goBack() }
+                ]);
+            } else {
+                Alert.alert('Error', 'No se pudo cargar la información del usuario', [
+                    { text: 'Aceptar', onPress: () => navigation.goBack() }
+                ]);
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    const handleToggleStatus = async () => {
+    const toggleStatus = async () => {
         if (!user) return;
         
         const newStatus = user.is_active === 1 ? 0 : 1;
@@ -74,6 +91,20 @@ export const UserDetailScreen = () => {
         } catch (error) {
             Alert.alert('Error', 'No se pudo cambiar el estado del usuario');
         }
+    };
+
+    const handleToggleStatus = () => {
+        if (!user) return;
+
+        const action = user.is_active === 1 ? 'Desactivar' : 'Activar';
+        Alert.alert(
+            `${action} usuario`,
+            `¿Deseas ${action.toLowerCase()} a ${user.name} ${user.lastname}?`,
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                { text: action, onPress: toggleStatus }
+            ]
+        );
     };
 
     if (loading) {

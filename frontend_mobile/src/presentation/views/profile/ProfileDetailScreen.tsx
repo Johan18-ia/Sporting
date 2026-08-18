@@ -23,7 +23,10 @@ export const ProfileDetailScreen = () => {
         <View style={styles.container}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={styles.title}>Mi Perfil</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('UserForm', { user: user, mode: 'edit' })}>
+                <TouchableOpacity
+                    onPress={() => user && navigation.navigate('UserForm', { user, mode: 'edit' })}
+                    disabled={!user}
+                >
                     <Text style={{ color: MyColors.primary, fontWeight: '600' }}>Editar</Text>
                 </TouchableOpacity>
             </View>
