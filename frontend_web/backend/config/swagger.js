@@ -3,7 +3,7 @@ const swaggerJsdoc = require('swagger-jsdoc');
 // ============================================
 // VARIABLES DE ENTORNO PARA FLEXIBILIDAD
 // ============================================
-const HOST = process.env.HOST || '192.168.80.14';
+const HOST = process.env.HOST || '10.1.202.216';
 const PORT = process.env.PORT || 3000;
 
 const options = {
