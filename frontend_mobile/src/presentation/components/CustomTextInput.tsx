@@ -1,4 +1,8 @@
 // src/presentation/components/CustomTextInput.tsx
+// Encargado: Componente - CustomTextInput
+// Descripción: Input personalizado con estilos y validaciones ligeras
+// Archivo: src/presentation/components/CustomTextInput.tsx
+// ============================================
 import React from 'react';
 import {
     View,

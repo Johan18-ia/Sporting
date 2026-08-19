@@ -1,3 +1,7 @@
+// Encargado: Utilidades - Helpers
+// Descripción: Funciones auxiliares generales usadas en la app móvil
+// Archivo: src/utils/helpers.ts
+// ============================================
 // src/utils/helpers.ts
 
 /**

@@ -1,3 +1,7 @@
+// Encargado: Productos
+// Descripción: Gestión de productos, inventario y variantes
+// Archivo: src/presentation/views/products/ProductsScreen.tsx
+// ============================================
 // src/presentation/views/products/ProductsScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
@@ -44,17 +48,17 @@ export const ProductsScreen = () => {
         imagen: ''
     });
 
-    const loadProducts = async () => {
-        try {
-            const response = await ApiDelivery.get('/products');
-            setProducts(response.data || []);
-        } catch (error) {
-            Alert.alert('Error', 'No se pudieron cargar los productos');
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+const loadProducts = async () => {
+    try {
+        const response = await ApiDelivery.get('/products');
+        setProducts(response.data?.data || []);
+    } catch (error) {
+        Alert.alert('Error', 'No se pudieron cargar los productos');
+    } finally {
+        setLoading(false);
+        setRefreshing(false);
+    }
+};
 
     useEffect(() => {
         loadProducts();

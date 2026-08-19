@@ -1,3 +1,8 @@
+// Encargado: Hook - useUserLocal
+// Descripción: Abstracción para persistencia local del usuario
+// Archivo: src/hooks/useUserLocal.ts
+// ============================================
+
 // src/hooks/useUserLocal.ts
 import { useEffect, useState } from 'react';
 import { User } from '../domain/entities/User';

@@ -1,3 +1,7 @@
+// Encargado: Estudiantes - Listado
+// Descripción: Lista y búsqueda de estudiantes; filtrado por categoría
+// Archivo: src/presentation/views/students/StudentsScreen.tsx
+// ============================================
 // src/presentation/views/students/StudentsScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
@@ -48,17 +52,16 @@ export const StudentsScreen = () => {
                 ApiDelivery.get('/categories')
             ]);
 
-            const studentsData = studentsRes.data || [];
-            const categoriesData = categoriesRes.data || [];
-            
+            const studentsData = studentsRes.data?.data ?? studentsRes.data ?? [];
+            const categoriesData = categoriesRes.data?.data ?? categoriesRes.data ?? [];
+
             setCategories(categoriesData);
-            
-            // Enriquecer estudiantes con nombre de categoría
+
             const enrichedStudents = studentsData.map((s: any) => ({
                 ...s,
                 category_name: categoriesData.find((c: any) => c.id === s.category_id)?.category_year || 'Sin categoría'
             }));
-            
+
             setStudents(enrichedStudents);
             setFilteredStudents(enrichedStudents);
         } catch (error) {

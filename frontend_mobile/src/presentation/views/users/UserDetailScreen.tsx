@@ -1,3 +1,7 @@
+// Encargado: Usuarios - Detalle
+// Descripción: Muestra información detallada de un usuario y permite acciones (editar, activar/inactivar)
+// Archivo: src/presentation/views/users/UserDetailScreen.tsx
+// ============================================
 // src/presentation/views/users/UserDetailScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
@@ -47,7 +51,8 @@ export const UserDetailScreen = () => {
     const loadUser = async () => {
         try {
             const response = await ApiDelivery.get(`/users/${userId}`);
-            setUser(response.data);
+            const userData = response.data?.data ?? response.data ?? null;
+            setUser(userData);
         } catch (error) {
             Alert.alert('Error', 'No se pudo cargar la información del usuario');
             navigation.goBack();

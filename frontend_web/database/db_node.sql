@@ -109,7 +109,7 @@ INSERT INTO productos(nombre, descripcion, precio, stock, imagen, categoria) VAL
 -- ============================================
 -- CREAR TABLA DE HORARIOS
 -- ============================================
-CREATE TABLE schedules(
+CREATE TABLE IF NOT EXISTS schedules(
     id INT PRIMARY KEY AUTO_INCREMENT,
     id_category INT NOT NULL,
     day_of_week VARCHAR(30) NOT NULL,
@@ -166,7 +166,7 @@ INSERT INTO tournaments(name, description, id_category, tournament_date, locatio
 -- ============================================
 -- CREAR TABLA DE ESTUDIANTES
 -- ============================================
-CREATE TABLE students (
+CREATE TABLE IF NOT EXISTS students (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     lastname VARCHAR(100) NOT NULL,
@@ -180,7 +180,7 @@ CREATE TABLE students (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    CONSTRAINT fk_student_category
+    CONSTRAINT fk_students_category
         FOREIGN KEY (category_id) 
         REFERENCES categories(id) 
         ON DELETE SET NULL

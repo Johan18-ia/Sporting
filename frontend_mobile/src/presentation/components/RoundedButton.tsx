@@ -1,4 +1,8 @@
 // src/presentation/components/RoundedButton.tsx
+// Encargado: Componente - RoundedButton
+// Descripción: Botón con bordes redondeados reutilizable
+// Archivo: src/presentation/components/RoundedButton.tsx
+// ============================================
 import React from 'react';
 import {
     TouchableOpacity,

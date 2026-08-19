@@ -1,4 +1,7 @@
 // src/presentation/views/profile/ProfileScreen.tsx
+// Encargado: Pantalla de Perfil
+// Descripción: Muestra información del usuario y acceso a opciones (Mi Perfil, Configuración, Notificaciones)
+// ============================================
 import React, { useState } from 'react';
 import {
     View,
@@ -36,16 +39,17 @@ export const ProfileScreen = () => {
                         setLogoutLoading(true);
                         await logout();
                         setLogoutLoading(false);
-                        navigation.reset({
-                            index: 0,
-                            routes: [{ name: 'Login' }],
-                        });
+                        // Al cambiar isAuthenticated a false, AppNavigator
+                        // vuelve a renderizar el stack de auth.
                     }
                 }
             ]
         );
     };
 
+    // ============================================
+    // ITEM DEL MENÚ
+    // ============================================
     const MenuItem = ({ icon, label, onPress, color = '#333', showArrow = true }: any) => (
         <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
             <View style={styles.menuItemLeft}>
@@ -85,17 +89,17 @@ export const ProfileScreen = () => {
                 <MenuItem
                     icon="person-outline"
                     label="Mi Perfil"
-                    onPress={() => {}}
+                    onPress={() => navigation.navigate('ProfileDetail')}
                 />
                 <MenuItem
                     icon="settings-outline"
                     label="Configuración"
-                    onPress={() => {}}
+                    onPress={() => navigation.navigate('Settings')}
                 />
                 <MenuItem
                     icon="notifications-outline"
                     label="Notificaciones"
-                    onPress={() => {}}
+                    onPress={() => Alert.alert('Notificaciones', 'Esta funcionalidad estará disponible pronto.')}
                 />
 
                 <View style={styles.divider} />

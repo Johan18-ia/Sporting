@@ -4,6 +4,8 @@ import { User } from '../domain/entities/User';
 export type RootStackParamList = {
     // Public
     Home: undefined;
+    PublicTabs: undefined;
+    SobreNosotros: undefined;
 
     // Auth
     Login: undefined;
@@ -44,4 +46,6 @@ export type RootStackParamList = {
     
     // Profile
     Profile: undefined;
+    ProfileDetail: undefined;
+    Settings: undefined;
 };

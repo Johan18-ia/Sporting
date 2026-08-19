@@ -1,3 +1,7 @@
+// Encargado: Torneos
+// Descripción: Gestión de torneos, inscripción de estudiantes y control de estado
+// Archivo: src/presentation/views/tournaments/TournamentsScreen.tsx
+// ============================================
 // src/presentation/views/tournaments/TournamentsScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
@@ -59,16 +63,16 @@ export const TournamentsScreen = () => {
                 ApiDelivery.get('/categories')
             ]);
 
-            setTournaments(tournamentsRes.data || []);
-            setStudents(studentsRes.data || []);
-            setCategories(categoriesRes.data || []);
+            setTournaments(tournamentsRes.data?.data || []);
+            setStudents(studentsRes.data?.data || []);
+            setCategories(categoriesRes.data?.data || []);
         } catch (error) {
             Alert.alert('Error', 'No se pudieron cargar los datos');
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+};
 
     useEffect(() => {
         loadData();

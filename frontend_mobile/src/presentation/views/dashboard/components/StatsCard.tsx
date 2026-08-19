@@ -1,4 +1,8 @@
 // src/presentation/views/dashboard/components/StatsCard.tsx
+// Encargado: Componente - StatsCard
+// Descripción: Tarjeta de estadística usada en el Dashboard
+// Archivo: src/presentation/views/dashboard/components/StatsCard.tsx
+// ============================================
 import React from 'react';
 import {
     View,

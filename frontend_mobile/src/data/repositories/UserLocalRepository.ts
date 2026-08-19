@@ -1,3 +1,8 @@
+// Encargado: Repositorio de datos - UserLocal
+// Descripción: Implementación concreta para persistencia local (Data layer)
+// Archivo: src/data/repositories/UserLocalRepository.ts
+// ============================================
+
 // src/data/repositories/UserLocalRepository.ts
 import { User } from '../../domain/entities/User';
 import { UserLocalRepository } from '../../domain/repositories/UserLocalRepository';
@@ -27,6 +32,7 @@ export class UserLocalRepositoryImpl implements UserLocalRepository {
         const { remove } = LocalStorage();
         await remove('user_data');
         await remove('auth_token');
+        await remove('auth_token_expiry');
     }
 
     async clear(): Promise<void> {

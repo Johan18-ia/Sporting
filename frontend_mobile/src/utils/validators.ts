@@ -1,3 +1,7 @@
+// Encargado: Utilidades - Validadores
+// Descripción: Validaciones reutilizables para formularios (email, contraseñas, etc.)
+// ============================================
+import { isEmail } from 'validator';
 // src/utils/validators.ts
 
 /**

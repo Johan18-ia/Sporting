@@ -1,3 +1,7 @@
+// Encargado: Equipos
+// Descripción: Gestiona equipos y asignación de estudiantes a equipos
+// Archivo: src/presentation/views/teams/TeamsScreen.tsx
+// ============================================
 // src/presentation/views/teams/TeamsScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
@@ -57,8 +61,8 @@ export const TeamsScreen = () => {
                 ApiDelivery.get('/students')
             ]);
 
-            setTeams(teamsRes.data || []);
-            setStudents(studentsRes.data || []);
+            setTeams(teamsRes.data?.data || []);
+            setStudents(studentsRes.data?.data || []);
         } catch (error) {
             Alert.alert('Error', 'No se pudieron cargar los datos');
         } finally {

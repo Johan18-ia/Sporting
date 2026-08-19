@@ -7,6 +7,7 @@ import {
     FlatList,
     TouchableOpacity,
     TextInput,
+    ScrollView,
     RefreshControl,
     ActivityIndicator,
     Alert
@@ -22,6 +23,27 @@ interface Category {
     created_at?: string;
 }
 
+// ============================================
+// Rango de años disponibles para elegir al crear una
+// categoría (años de nacimiento de los estudiantes).
+//
+// IMPORTANTE: en vez de un rango fijo (ej. "2005 a 2026"
+// escrito a mano, que con el tiempo queda obsoleto), se
+// calcula una VENTANA DE EDADES relativa a hoy: estudiantes
+// entre MIN_AGE y MAX_AGE años. Como usa new Date() en cada
+// carga, el rango se corre solo automáticamente cada año
+// sin tener que tocar el código nunca.
+// ============================================
+const CURRENT_YEAR = new Date().getFullYear();
+const MIN_AGE = 4;
+const MAX_AGE = 18;
+const OLDEST_YEAR = CURRENT_YEAR - MAX_AGE; // ej. 2026 - 18 = 2008
+const YOUNGEST_YEAR = CURRENT_YEAR - MIN_AGE; // ej. 2026 - 4 = 2022
+const YEAR_OPTIONS = Array.from(
+    { length: YOUNGEST_YEAR - OLDEST_YEAR + 1 },
+    (_, i) => String(OLDEST_YEAR + i)
+);
+
 export const CategoriesScreen = () => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
@@ -30,11 +52,15 @@ export const CategoriesScreen = () => {
     const [formData, setFormData] = useState({ category_year: '', description: '' });
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [customYearMode, setCustomYearMode] = useState(false);
 
     const loadCategories = async () => {
         try {
             const response = await ApiDelivery.get('/categories');
-            setCategories(response.data || []);
+            // El backend envuelve la respuesta como { success, message, data }.
+            // Antes se asumia que response.data YA era el array.
+            const categoriesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+            setCategories(categoriesData);
         } catch (error) {
             Alert.alert('Error', 'No se pudieron cargar las categorías');
         } finally {
@@ -52,18 +78,30 @@ export const CategoriesScreen = () => {
         loadCategories();
     };
 
+    // Años ya usados por otra categoría (para no dejar crear duplicados).
+    // Si se esta editando, el año actual de esa categoría sigue disponible.
+    // Se normaliza con String(...) porque el backend puede devolver
+    // category_year como numero, no como texto.
+    const usedYears = categories
+        .filter((c) => !(isEditing && c.id === editingId))
+        .map((c) => String(c.category_year));
+
     const handleSubmit = async () => {
-        if (!formData.category_year.trim()) {
-            Alert.alert('Error', 'El año de la categoría es requerido');
+        if (!formData.category_year) {
+            Alert.alert('Error', 'Selecciona o escribe el año de la categoría');
+            return;
+        }
+        if (!/^\d{4}$/.test(formData.category_year)) {
+            Alert.alert('Error', 'El año debe tener 4 dígitos, ej: 2010');
             return;
         }
 
         try {
             if (isEditing && editingId) {
-                await ApiDelivery.put('/categories', { 
-                    id: editingId, 
+                await ApiDelivery.put('/categories', {
+                    id: editingId,
                     category_year: formData.category_year,
-                    description: formData.description 
+                    description: formData.description
                 });
             } else {
                 await ApiDelivery.post('/categories/create', formData);
@@ -71,8 +109,9 @@ export const CategoriesScreen = () => {
             resetForm();
             loadCategories();
             Alert.alert('Éxito', isEditing ? 'Categoría actualizada' : 'Categoría creada');
-        } catch (error) {
-            Alert.alert('Error', 'No se pudo guardar la categoría');
+        } catch (error: any) {
+            const backendMessage = error?.response?.data?.message;
+            Alert.alert('Error', backendMessage || 'No se pudo guardar la categoría. Revisa que el año no esté repetido.');
         }
     };
 
@@ -90,8 +129,9 @@ export const CategoriesScreen = () => {
                             await ApiDelivery.delete(`/categories/delete/${id}`);
                             loadCategories();
                             Alert.alert('Éxito', 'Categoría eliminada');
-                        } catch (error) {
-                            Alert.alert('Error', 'No se pudo eliminar la categoría');
+                        } catch (error: any) {
+                            const backendMessage = error?.response?.data?.message;
+                            Alert.alert('Error', backendMessage || 'No se pudo eliminar la categoría');
                         }
                     }
                 }
@@ -104,6 +144,7 @@ export const CategoriesScreen = () => {
         setIsEditing(false);
         setEditingId(null);
         setShowForm(false);
+        setCustomYearMode(false);
     };
 
     const startEdit = (category: Category) => {
@@ -111,6 +152,10 @@ export const CategoriesScreen = () => {
         setIsEditing(true);
         setEditingId(category.id);
         setShowForm(true);
+        // Si el año de esta categoría quedó fuera de la ventana automática
+        // (ej. una categoría vieja de hace muchos años), se activa el modo
+        // "otro año" para que igual se pueda ver y editar sin problema.
+        setCustomYearMode(!YEAR_OPTIONS.includes(String(category.category_year)));
     };
 
     const renderCategoryItem = ({ item }: { item: Category }) => (
@@ -158,23 +203,69 @@ export const CategoriesScreen = () => {
 
             {showForm && (
                 <View style={styles.formContainer}>
-                    <View style={styles.formRow}>
+                    <View style={styles.formLabelRow}>
+                        <Text style={styles.formLabel}>Año de nacimiento</Text>
+                        <TouchableOpacity onPress={() => setCustomYearMode(!customYearMode)}>
+                            <Text style={styles.customYearToggle}>
+                                {customYearMode ? 'Ver lista de años' : 'Otro año'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {customYearMode ? (
+                        // Campo manual: para años fuera del rango automatico
+                        // (casos especiales) o categorías viejas ya existentes.
                         <TextInput
-                            style={[styles.formInput, { flex: 1, marginRight: 8 }]}
-                            placeholder="Año (ej: 2014)"
+                            style={styles.formInput}
+                            placeholder="Ej: 2003"
                             placeholderTextColor="#999"
+                            keyboardType="number-pad"
+                            maxLength={4}
                             value={formData.category_year}
                             onChangeText={(text) => setFormData({ ...formData, category_year: text })}
-                            keyboardType="numeric"
                         />
-                        <TextInput
-                            style={[styles.formInput, { flex: 1.5 }]}
-                            placeholder="Descripción"
-                            placeholderTextColor="#999"
-                            value={formData.description}
-                            onChangeText={(text) => setFormData({ ...formData, description: text })}
-                        />
-                    </View>
+                    ) : (
+                        // Rango automatico: se recalcula solo cada año,
+                        // no queda obsoleto con el tiempo.
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yearScroll}>
+                            <View style={styles.yearContainer}>
+                                {YEAR_OPTIONS.map((year) => {
+                                    const disabled = usedYears.includes(year);
+                                    const selected = formData.category_year === year;
+                                    return (
+                                        <TouchableOpacity
+                                            key={year}
+                                            style={[
+                                                styles.yearChip,
+                                                selected && styles.yearChipSelected,
+                                                disabled && !selected && styles.yearChipDisabled
+                                            ]}
+                                            disabled={disabled}
+                                            onPress={() => setFormData({ ...formData, category_year: year })}
+                                        >
+                                            <Text style={[
+                                                styles.yearChipText,
+                                                selected && styles.yearChipTextSelected,
+                                                disabled && !selected && styles.yearChipTextDisabled
+                                            ]}>
+                                                {year}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        </ScrollView>
+                    )}
+
+                    <Text style={styles.formLabel}>Descripción</Text>
+                    <TextInput
+                        style={styles.formInput}
+                        placeholder="Ej: Categoría Benjamín"
+                        placeholderTextColor="#999"
+                        value={formData.description}
+                        onChangeText={(text) => setFormData({ ...formData, description: text })}
+                    />
+
                     <TouchableOpacity style={styles.formSubmit} onPress={handleSubmit}>
                         <Text style={styles.formSubmitText}>
                             {isEditing ? 'Actualizar' : 'Crear'}
@@ -246,9 +337,57 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
     },
-    formRow: {
+    formLabel: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    formLabelRow: {
         flexDirection: 'row',
-        marginBottom: 10,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    customYearToggle: {
+        fontSize: 12.5,
+        fontWeight: '600',
+        color: MyColors.primary,
+    },
+    yearScroll: {
+        marginBottom: 14,
+    },
+    yearContainer: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    yearChip: {
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        backgroundColor: '#f8f9fa',
+        marginRight: 8,
+    },
+    yearChipSelected: {
+        backgroundColor: MyColors.primary,
+        borderColor: MyColors.primary,
+    },
+    yearChipDisabled: {
+        opacity: 0.4,
+    },
+    yearChipText: {
+        fontSize: 13,
+        color: '#666',
+        fontWeight: '500',
+    },
+    yearChipTextSelected: {
+        color: '#fff',
+        fontWeight: '700',
+    },
+    yearChipTextDisabled: {
+        color: '#999',
     },
     formInput: {
         borderWidth: 1,
@@ -258,6 +397,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         fontSize: 15,
         backgroundColor: '#f8f9fa',
+        marginBottom: 14,
     },
     formSubmit: {
         backgroundColor: MyColors.primary,

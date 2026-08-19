@@ -1,4 +1,8 @@
-﻿// src/presentation/views/common/Navbar.tsx
+﻿// Encargado: Componente - Navbar
+// Descripción: Barra de navegación superior reutilizable (títulos y accesos rápidos)
+// Archivo: src/presentation/views/common/Navbar.tsx
+// ============================================
+// src/presentation/views/common/Navbar.tsx
 import React from 'react';
 import {
     View,
