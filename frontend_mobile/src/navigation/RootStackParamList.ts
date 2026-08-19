@@ -1,17 +1,20 @@
 // src/navigation/RootStackParamList.ts
+// Encargado: Tipado de rutas (RootStack)
+// Descripción: Define los parámetros permitidos para la navegación principal
+// Archivo: src/navigation/RootStackParamList.ts
+// ============================================
 import { User } from '../domain/entities/User';
 
 export type RootStackParamList = {
     // Public
-    PublicTabs: undefined;
-    SobreNosotros: undefined;
+    Home: undefined;
 
     // Auth
     Login: undefined;
     Register: undefined;
     
     // Main
-    MainTabs: undefined;
+    MainTabs: { screen?: 'Dashboard' | 'Users' | 'Students' | 'Products' | 'Profile' } | undefined;
     
     // Dashboard
     Dashboard: undefined;
@@ -45,4 +48,6 @@ export type RootStackParamList = {
     
     // Profile
     Profile: undefined;
+    ProfileDetail: undefined;
+    Settings: undefined;
 };

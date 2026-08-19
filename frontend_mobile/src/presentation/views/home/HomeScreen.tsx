@@ -1,96 +1,166 @@
+// Encargado: Home Público
+// Descripción: Pantalla pública de inicio con catálogo y secciones informativas
+// Archivo: src/presentation/views/home/HomeScreen.tsx
+// ============================================
 // src/presentation/views/home/HomeScreen.tsx
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// ====================================================
+// PANTALLA PUBLICA DE INICIO (equivalente a CatalogoView.jsx
+// en el frontend web): hero + sobre nosotros + catalogo de
+// productos. Accesible SIN iniciar sesion.
+// ====================================================
+import React, { useState, useEffect, useRef } from 'react';
+import {
+    View,
+    Text,
+    ScrollView,
+    TouchableOpacity,
+    Image,
+    ActivityIndicator,
+    RefreshControl
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { MyColors } from '../../theme/AppTheme';
+import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 import { styles } from './styles';
 
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+
+interface Product {
+    id: number;
+    nombre: string;
+    descripcion: string;
+    precio: number;
+    imagen?: string;
+}
+
 export const HomeScreen = () => {
-    // navigation del stack raiz (para poder "salir" de los tabs hacia
-    // Login o SobreNosotros), y navigation del tab actual (para
-    // cambiar al tab de Catálogo).
-    const rootNavigation = useNavigation<any>();
+    const navigation = useNavigation<HomeScreenNavigationProp>();
+    const scrollRef = useRef<ScrollView>(null);
+    const catalogY = useRef(0);
+
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const loadProducts = async () => {
+        setError(null);
+        try {
+            const response = await ApiDelivery.get('/products');
+            // El backend envuelve la respuesta como { success, message, data }.
+            const productsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+            setProducts(productsData);
+        } catch (err) {
+            console.error('Error loading products:', err);
+            setError('No se pudieron cargar los productos');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        loadProducts();
+    }, []);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        loadProducts();
+    };
+
+    const scrollToCatalog = () => {
+        scrollRef.current?.scrollTo({ y: catalogY.current, animated: true });
+    };
 
     return (
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-            {/* ===== HEADER ===== */}
-            <View style={styles.topHeader}>
-                <View>
-                    <Text style={styles.topHeaderEyebrow}>Sporting Club</Text>
-                    <Text style={styles.topHeaderTitle}>Escuela de Microfútbol</Text>
-                </View>
-                <View style={styles.logoCircle}>
-                    <Ionicons name="football" size={26} color="#fff" />
-                </View>
-            </View>
-
-            {/* ===== HERO CARD ===== */}
-            <View style={styles.heroCard}>
+        <ScrollView
+            ref={scrollRef}
+            style={styles.container}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[MyColors.primary]} />
+            }
+        >
+            {/* ===================== HERO ===================== */}
+            <View style={styles.hero}>
+                <Text style={styles.heroEyebrow}>— Escuela de Microfútbol —</Text>
                 <Text style={styles.heroTitle}>Formando Campeones, Dentro y Fuera de la Cancha</Text>
                 <Text style={styles.heroSubtitle}>
-                    Disciplina, trabajo en equipo y crecimiento para cada estudiante.
+                    Únete a una escuela deportiva enfocada en la disciplina, el trabajo en equipo
+                    y el crecimiento de cada estudiante.
                 </Text>
-                <TouchableOpacity
-                    style={styles.heroButton}
-                    onPress={() => rootNavigation.navigate('Catálogo')}
-                >
-                    <Text style={styles.heroButtonText}>Ver Catálogo</Text>
-                    <Ionicons name="arrow-forward" size={16} color={MyColors.primary} />
-                </TouchableOpacity>
+                <View style={styles.heroActions}>
+                    <TouchableOpacity style={styles.heroBtnPrimary} onPress={scrollToCatalog}>
+                        <Text style={styles.heroBtnPrimaryText}>Ver Catálogo</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.heroBtnSecondary}
+                        onPress={() => navigation.navigate('Login')}
+                    >
+                        <Text style={styles.heroBtnSecondaryText}>Iniciar Sesión</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
 
-            {/* ===== OPTION CARDS ===== */}
-            <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Explora</Text>
+            {/* ===================== SOBRE NOSOTROS ===================== */}
+            <View style={styles.about}>
+                <Text style={styles.sectionEyebrow}>Quiénes somos</Text>
+                <Text style={styles.sectionTitle}>Sobre Nosotros</Text>
+                <Text style={styles.aboutText}>
+                    Sporting Club es una escuela de microfútbol enfocada en la formación técnica,
+                    física y en valores de niños y jóvenes. Contamos con categorías por año de
+                    nacimiento, horarios de entrenamiento organizados y torneos internos para que
+                    cada estudiante compita y crezca dentro del club.
+                </Text>
+                <Text style={styles.aboutText}>
+                    Trabajo en equipo, disciplina y respeto son la base de cada sesión de
+                    entrenamiento, dentro y fuera de la cancha.
+                </Text>
             </View>
 
-            <TouchableOpacity
-                style={styles.optionCard}
-                activeOpacity={0.7}
-                onPress={() => rootNavigation.navigate('SobreNosotros')}
+            {/* ===================== CATALOGO ===================== */}
+            <View
+                style={styles.catalog}
+                onLayout={(event) => {
+                    catalogY.current = event.nativeEvent.layout.y;
+                }}
             >
-                <View style={styles.optionIcon}>
-                    <Ionicons name="people-outline" size={24} color={MyColors.primary} />
-                </View>
-                <View style={styles.optionTextGroup}>
-                    <Text style={styles.optionTitle}>Sobre Nosotros</Text>
-                    <Text style={styles.optionDescription}>Conoce nuestra escuela y nuestros valores</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#ccc" />
-            </TouchableOpacity>
+                <Text style={[styles.sectionEyebrow, { textAlign: 'center' }]}>Tienda oficial</Text>
+                <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>Catálogo</Text>
+                <Text style={styles.catalogSubtitle}>
+                    Encuentra todo lo que necesitas para tu entrenamiento.
+                </Text>
 
-            <TouchableOpacity
-                style={styles.optionCard}
-                activeOpacity={0.7}
-                onPress={() => rootNavigation.navigate('Catálogo')}
-            >
-                <View style={styles.optionIcon}>
-                    <Ionicons name="bag-outline" size={24} color={MyColors.primary} />
-                </View>
-                <View style={styles.optionTextGroup}>
-                    <Text style={styles.optionTitle}>Catálogo</Text>
-                    <Text style={styles.optionDescription}>Uniformes, balones y accesorios oficiales</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#ccc" />
-            </TouchableOpacity>
+                {loading && <ActivityIndicator size="large" color={MyColors.primary} style={{ marginTop: 20 }} />}
+                {error && <Text style={styles.errorText}>{error}</Text>}
 
-            <TouchableOpacity
-                style={styles.optionCard}
-                activeOpacity={0.7}
-                onPress={() => rootNavigation.navigate('Login')}
-            >
-                <View style={styles.optionIcon}>
-                    <Ionicons name="log-in-outline" size={24} color={MyColors.primary} />
-                </View>
-                <View style={styles.optionTextGroup}>
-                    <Text style={styles.optionTitle}>Iniciar Sesión</Text>
-                    <Text style={styles.optionDescription}>Accede al panel de administración</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#ccc" />
-            </TouchableOpacity>
+                {!loading && !error && products.length === 0 && (
+                    <Text style={styles.emptyText}>No hay productos disponibles en este momento.</Text>
+                )}
 
-            <View style={{ height: 24 }} />
+                {!loading && !error && products.map((product) => (
+                    <View key={product.id} style={styles.productCard}>
+                        <View style={styles.productImage}>
+                            {product.imagen ? (
+                                <Image source={{ uri: product.imagen }} style={styles.productImageInner} />
+                            ) : (
+                                <Text style={styles.productImageNoImage}>{product.nombre}</Text>
+                            )}
+                        </View>
+                        <View style={styles.productBody}>
+                            <Text style={styles.productName}>{product.nombre}</Text>
+                            <Text style={styles.productDescription}>{product.descripcion || 'Sin descripción'}</Text>
+                            <View style={styles.productFooter}>
+                                <Text style={styles.productPrice}>${product.precio}</Text>
+                                <TouchableOpacity style={styles.productBtn}>
+                                    <Text style={styles.productBtnText}>Pedir por WhatsApp</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                ))}
+            </View>
         </ScrollView>
     );
 };

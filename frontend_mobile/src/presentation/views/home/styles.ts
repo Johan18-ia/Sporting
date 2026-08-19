@@ -1,3 +1,7 @@
+// Encargado: Estilos - Home
+// Descripción: Estilos modulares para la pantalla pública Home
+// Archivo: src/presentation/views/home/styles.ts
+// ============================================
 // src/presentation/views/home/styles.ts
 import { StyleSheet } from 'react-native';
 import { MyColors } from '../../theme/AppTheme';
@@ -5,124 +9,176 @@ import { MyColors } from '../../theme/AppTheme';
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#fff',
     },
 
-    // ===== HEADER =====
-    topHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingTop: 18,
-        paddingBottom: 14,
+    // ===== HERO =====
+    hero: {
+        backgroundColor: MyColors.primary,
+        paddingHorizontal: 24,
+        paddingTop: 70,
+        paddingBottom: 50,
     },
-    topHeaderEyebrow: {
+    heroEyebrow: {
+        color: '#ffcdd2',
         fontSize: 12,
         fontWeight: '700',
-        color: MyColors.primary,
         textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    topHeaderTitle: {
-        fontSize: 19,
-        fontWeight: '800',
-        color: '#222',
-        marginTop: 2,
-    },
-    logoCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: MyColors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-
-    // ===== HERO CARD =====
-    heroCard: {
-        marginHorizontal: 16,
-        backgroundColor: MyColors.primary,
-        borderRadius: 18,
-        padding: 22,
+        letterSpacing: 1,
         marginBottom: 10,
     },
     heroTitle: {
         color: '#fff',
-        fontSize: 19,
+        fontSize: 28,
         fontWeight: '800',
-        lineHeight: 25,
-        marginBottom: 8,
+        lineHeight: 34,
+        marginBottom: 14,
     },
     heroSubtitle: {
         color: 'rgba(255,255,255,0.85)',
-        fontSize: 13,
-        lineHeight: 18,
-        marginBottom: 18,
+        fontSize: 14,
+        lineHeight: 20,
+        marginBottom: 24,
     },
-    heroButton: {
+    heroActions: {
         flexDirection: 'row',
-        alignItems: 'center',
-        alignSelf: 'flex-start',
-        backgroundColor: '#fff',
-        paddingVertical: 10,
-        paddingHorizontal: 18,
-        borderRadius: 10,
-        gap: 6,
+        flexWrap: 'wrap',
+        gap: 10,
     },
-    heroButtonText: {
+    heroBtnPrimary: {
+        backgroundColor: '#fff',
+        paddingVertical: 12,
+        paddingHorizontal: 22,
+        borderRadius: 8,
+    },
+    heroBtnPrimaryText: {
         color: MyColors.primary,
         fontWeight: '700',
-        fontSize: 13.5,
+        fontSize: 14,
+    },
+    heroBtnSecondary: {
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.5)',
+        paddingVertical: 12,
+        paddingHorizontal: 22,
+        borderRadius: 8,
+    },
+    heroBtnSecondaryText: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 14,
     },
 
-    // ===== SECTION =====
-    sectionHeader: {
-        paddingHorizontal: 20,
-        marginTop: 18,
-        marginBottom: 10,
+    // ===== SOBRE NOSOTROS =====
+    about: {
+        padding: 24,
+        backgroundColor: '#fff',
+    },
+    sectionEyebrow: {
+        color: MyColors.primary,
+        fontSize: 12,
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginBottom: 6,
     },
     sectionTitle: {
-        fontSize: 15,
-        fontWeight: '700',
+        fontSize: 22,
+        fontWeight: '800',
         color: '#333',
+        marginBottom: 14,
+    },
+    aboutText: {
+        fontSize: 14,
+        lineHeight: 21,
+        color: '#555',
+        marginBottom: 12,
     },
 
-    // ===== OPTION CARDS =====
-    optionCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    // ===== CATALOGO =====
+    catalog: {
+        padding: 24,
+        backgroundColor: MyColors.background,
+    },
+    catalogSubtitle: {
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    errorText: {
+        color: MyColors.danger,
+        textAlign: 'center',
+        marginTop: 10,
+    },
+    emptyText: {
+        color: '#999',
+        textAlign: 'center',
+        marginTop: 10,
+        fontStyle: 'italic',
+    },
+    productCard: {
         backgroundColor: '#fff',
-        marginHorizontal: 16,
-        marginBottom: 12,
-        borderRadius: 14,
-        padding: 14,
+        borderRadius: 12,
+        overflow: 'hidden',
+        marginBottom: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
+        shadowOpacity: 0.06,
+        shadowRadius: 5,
         elevation: 2,
     },
-    optionIcon: {
-        width: 46,
-        height: 46,
-        borderRadius: 12,
-        backgroundColor: 'rgba(139,0,0,0.08)',
+    productImage: {
+        width: '100%',
+        height: 180,
+        backgroundColor: MyColors.primary,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 14,
     },
-    optionTextGroup: {
-        flex: 1,
+    productImageInner: {
+        width: '100%',
+        height: '100%',
     },
-    optionTitle: {
-        fontSize: 14.5,
+    productImageNoImage: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 18,
+        textAlign: 'center',
+        paddingHorizontal: 12,
+    },
+    productBody: {
+        padding: 16,
+    },
+    productName: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#333',
+        marginBottom: 4,
+    },
+    productDescription: {
+        fontSize: 13,
+        color: '#666',
+        marginBottom: 14,
+    },
+    productFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    productPrice: {
+        fontSize: 16,
         fontWeight: '700',
         color: '#333',
     },
-    optionDescription: {
+    productBtn: {
+        backgroundColor: '#25d366',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+    },
+    productBtnText: {
+        color: '#fff',
         fontSize: 12,
-        color: '#777',
-        marginTop: 2,
+        fontWeight: '600',
     },
 });
