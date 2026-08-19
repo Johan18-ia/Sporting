@@ -51,7 +51,7 @@ export const StudentFormScreen = () => {
     const navigation = useNavigation<StudentFormNavigationProp>();
     const route = useRoute<StudentFormRouteProp>();
     const { student, mode } = route.params || { mode: 'create' };
-
+    
     const [formData, setFormData] = useState<FormData>({
         user_id: '',
         document: '',
@@ -70,43 +70,28 @@ export const StudentFormScreen = () => {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showUserPicker, setShowUserPicker] = useState(false);
 
-    const selectedUser = users.find((user) => String(user.id) === formData.user_id) ?? null;
-
     useEffect(() => {
         loadData();
-    }, [student, mode]);
+    }, []);
 
     const loadData = async () => {
         try {
             setLoadingData(true);
-
-            const [usersResponse, studentsResponse, categoriesResponse] = await Promise.all([
-                ApiDelivery.get('/users'),
-                ApiDelivery.get('/students'),
-                ApiDelivery.get('/categories')
-            ]);
-
+            
+            // Cargar usuarios elegibles (role='user', is_active=1)
+            const usersResponse = await ApiDelivery.get('/users');
             const usersData = usersResponse.data?.data ?? usersResponse.data ?? [];
-            const studentsData = studentsResponse.data?.data ?? studentsResponse.data ?? [];
-            const existingStudentUserIds = new Set(
-                Array.isArray(studentsData)
-                    ? studentsData
-                        .map((s: any) => Number(s.user_id))
-                        .filter((id: number) => !Number.isNaN(id))
-                    : []
-            );
-
-            const eligibleUsers = Array.isArray(usersData)
-                ? usersData.filter((u: User) => {
-                    const isCurrentStudentUser = Boolean(student && mode === 'edit' && Number(student.user_id) === Number(u.id));
-                    return u.role === 'user' && u.is_active === 1 && (!existingStudentUserIds.has(Number(u.id)) || isCurrentStudentUser);
-                })
+            const eligibleUsers = Array.isArray(usersData) 
+                ? usersData.filter((u: User) => u.role === 'user' && u.is_active === 1)
                 : [];
             setUsers(eligibleUsers);
 
+            // Cargar categorías
+            const categoriesResponse = await ApiDelivery.get('/categories');
             const categoriesData = categoriesResponse.data?.data ?? categoriesResponse.data ?? [];
             setCategories(Array.isArray(categoriesData) ? categoriesData : []);
 
+            // Si está en modo edit, llenar datos
             if (student && mode === 'edit') {
                 setFormData({
                     user_id: String(student.user_id || ''),
@@ -120,8 +105,8 @@ export const StudentFormScreen = () => {
                 });
             }
         } catch (error) {
-            console.error('Error loading users/categories:', error);
-            Alert.alert('Error', 'No se pudieron cargar los usuarios y categorías');
+            console.error('Error loading data:', error);
+            Alert.alert('Error', 'No se pudieron cargar los datos');
         } finally {
             setLoadingData(false);
         }
@@ -131,7 +116,7 @@ export const StudentFormScreen = () => {
         const newErrors: Record<string, string> = {};
 
         if (!formData.user_id) {
-            newErrors.user_id = 'Debe seleccionar un correo registrado';
+            newErrors.user_id = 'El usuario es requerido';
         }
         if (!formData.document.trim()) {
             newErrors.document = 'El documento es requerido';
@@ -150,20 +135,21 @@ export const StudentFormScreen = () => {
         setLoading(true);
         try {
             const payload = {
-                user_id: Number(formData.user_id),
+                user_id: parseInt(formData.user_id),
                 document: formData.document,
-                category_id: Number(formData.category_id),
-                birth_date: formData.birth_date,
-                address: formData.address,
-                emergency_contact_name: formData.emergency_contact_name,
-                emergency_contact_phone: formData.emergency_contact_phone,
+                category_id: parseInt(formData.category_id),
+                birth_date: formData.birth_date || null,
+                address: formData.address || '',
+                emergency_contact_name: formData.emergency_contact_name || '',
+                emergency_contact_phone: formData.emergency_contact_phone || '',
                 status: formData.status
             };
 
+            let response;
             if (mode === 'create') {
-                await ApiDelivery.post('/students/create', payload);
+                response = await ApiDelivery.post('/students/create', payload);
             } else {
-                await ApiDelivery.put('/students', { ...payload, id: student.id });
+                response = await ApiDelivery.put('/students', { ...payload, id: student.id });
             }
 
             Alert.alert(
@@ -178,6 +164,19 @@ export const StudentFormScreen = () => {
         }
     };
 
+    const getSelectedUserName = () => {
+        const selected = users.find(u => String(u.id) === formData.user_id);
+        return selected ? `${selected.name} ${selected.lastname}` : 'Seleccionar usuario';
+    };
+
+    if (loadingData) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={MyColors.primary} />
+            </View>
+        );
+    }
+
     return (
         <KeyboardAvoidingView
             style={styles.container}
@@ -185,28 +184,22 @@ export const StudentFormScreen = () => {
         >
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.form}>
+                    {/* Usuario */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Correo registrado *</Text>
+                        <Text style={styles.label}>Usuario * (role: user, activo)</Text>
                         <TouchableOpacity
-                            style={[styles.selectorButton, errors.user_id && styles.inputError]}
+                            style={[styles.userButton, errors.user_id && styles.inputError]}
                             onPress={() => setShowUserPicker(true)}
-                            disabled={loadingData}
                         >
-                            <Text style={styles.selectorText}>
-                                {selectedUser ? selectedUser.email : 'Selecciona un correo'}
-                            </Text>
-                            <Ionicons name="chevron-down" size={18} color="#666" />
+                            <Text style={styles.userButtonText}>{getSelectedUserName()}</Text>
+                            <Ionicons name="chevron-down" size={20} color={MyColors.primary} />
                         </TouchableOpacity>
-                        {selectedUser && (
-                            <Text style={styles.userInfoText}>
-                                {selectedUser.name} {selectedUser.lastname}
-                            </Text>
-                        )}
                         {errors.user_id && <Text style={styles.errorText}>{errors.user_id}</Text>}
                     </View>
 
+                    {/* Documento */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Documento *</Text>
+                        <Text style={styles.label}>Documento * (único)</Text>
                         <TextInput
                             style={[styles.input, errors.document && styles.inputError]}
                             placeholder="Número de identificación"
@@ -217,34 +210,32 @@ export const StudentFormScreen = () => {
                         {errors.document && <Text style={styles.errorText}>{errors.document}</Text>}
                     </View>
 
+                    {/* Categoría */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Categoría *</Text>
                         <View style={styles.categoryContainer}>
-                            {loadingData ? (
-                                <ActivityIndicator color={MyColors.primary} />
-                            ) : (
-                                categories.map((cat) => (
-                                    <TouchableOpacity
-                                        key={cat.id}
-                                        style={[
-                                            styles.categoryOption,
-                                            formData.category_id === String(cat.id) && styles.categoryOptionSelected
-                                        ]}
-                                        onPress={() => setFormData({ ...formData, category_id: String(cat.id) })}
-                                    >
-                                        <Text style={[
-                                            styles.categoryOptionText,
-                                            formData.category_id === String(cat.id) && styles.categoryOptionTextSelected
-                                        ]}>
-                                            {cat.category_year}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))
-                            )}
+                            {categories.map((cat) => (
+                                <TouchableOpacity
+                                    key={cat.id}
+                                    style={[
+                                        styles.categoryOption,
+                                        formData.category_id === String(cat.id) && styles.categoryOptionSelected
+                                    ]}
+                                    onPress={() => setFormData({ ...formData, category_id: String(cat.id) })}
+                                >
+                                    <Text style={[
+                                        styles.categoryOptionText,
+                                        formData.category_id === String(cat.id) && styles.categoryOptionTextSelected
+                                    ]}>
+                                        {cat.category_year}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
                         </View>
                         {errors.category_id && <Text style={styles.errorText}>{errors.category_id}</Text>}
                     </View>
 
+                    {/* Fecha de Nacimiento */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Fecha de Nacimiento</Text>
                         <TextInput
@@ -255,6 +246,7 @@ export const StudentFormScreen = () => {
                         />
                     </View>
 
+                    {/* Dirección */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Dirección</Text>
                         <TextInput
@@ -265,21 +257,22 @@ export const StudentFormScreen = () => {
                         />
                     </View>
 
+                    {/* Contacto de Emergencia */}
                     <View style={styles.row}>
                         <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                             <Text style={styles.label}>Contacto de Emergencia</Text>
                             <TextInput
                                 style={styles.input}
-                                placeholder="Nombre del contacto"
+                                placeholder="Nombre"
                                 value={formData.emergency_contact_name}
                                 onChangeText={(text) => setFormData({ ...formData, emergency_contact_name: text })}
                             />
                         </View>
                         <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                            <Text style={styles.label}>Teléfono de Emergencia</Text>
+                            <Text style={styles.label}>Teléfono</Text>
                             <TextInput
                                 style={styles.input}
-                                placeholder="Teléfono de emergencia"
+                                placeholder="Teléfono"
                                 value={formData.emergency_contact_phone}
                                 onChangeText={(text) => setFormData({ ...formData, emergency_contact_phone: text })}
                                 keyboardType="phone-pad"
@@ -287,17 +280,18 @@ export const StudentFormScreen = () => {
                         </View>
                     </View>
 
+                    {/* Estado */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Estado</Text>
                         <View style={styles.statusContainer}>
-                            {['pending', 'approved', 'rejected'].map((status) => (
+                            {(['pending', 'approved', 'rejected'] as const).map((status) => (
                                 <TouchableOpacity
                                     key={status}
                                     style={[
                                         styles.statusOption,
                                         formData.status === status && styles.statusOptionSelected
                                     ]}
-                                    onPress={() => setFormData({ ...formData, status: status as 'pending' | 'approved' | 'rejected' })}
+                                    onPress={() => setFormData({ ...formData, status })}
                                 >
                                     <Text style={[
                                         styles.statusOptionText,
@@ -310,6 +304,7 @@ export const StudentFormScreen = () => {
                         </View>
                     </View>
 
+                    {/* Botón Submit */}
                     <TouchableOpacity
                         style={[styles.submitButton, loading && styles.submitButtonDisabled]}
                         onPress={handleSubmit}
@@ -326,40 +321,50 @@ export const StudentFormScreen = () => {
                 </View>
             </ScrollView>
 
-            <Modal visible={showUserPicker} transparent animationType="slide">
-                <View style={styles.modalBackdrop}>
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Selecciona un correo</Text>
-                            <TouchableOpacity onPress={() => setShowUserPicker(false)}>
-                                <Ionicons name="close" size={24} color="#333" />
-                            </TouchableOpacity>
-                        </View>
-
-                        <FlatList
-                            data={users}
-                            keyExtractor={(item) => String(item.id)}
-                            contentContainerStyle={styles.userList}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={[
-                                        styles.userItem,
-                                        String(item.id) === formData.user_id && styles.userItemSelected
-                                    ]}
-                                    onPress={() => {
-                                        setFormData({ ...formData, user_id: String(item.id) });
-                                        setShowUserPicker(false);
-                                    }}
-                                >
-                                    <Text style={styles.userEmail}>{item.email}</Text>
-                                    <Text style={styles.userName}>{item.name} {item.lastname}</Text>
-                                </TouchableOpacity>
-                            )}
-                            ListEmptyComponent={
-                                <Text style={styles.emptyText}>No hay correos registrados disponibles.</Text>
-                            }
-                        />
+            {/* Modal Seleccionar Usuario */}
+            <Modal
+                visible={showUserPicker}
+                animationType="slide"
+                onRequestClose={() => setShowUserPicker(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Seleccionar Usuario</Text>
+                        <TouchableOpacity onPress={() => setShowUserPicker(false)}>
+                            <Ionicons name="close" size={24} color="#333" />
+                        </TouchableOpacity>
                     </View>
+                    <FlatList
+                        data={users}
+                        keyExtractor={(item) => String(item.id)}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity
+                                style={[
+                                    styles.userItem,
+                                    formData.user_id === String(item.id) && styles.userItemSelected
+                                ]}
+                                onPress={() => {
+                                    setFormData({ ...formData, user_id: String(item.id) });
+                                    setShowUserPicker(false);
+                                }}
+                            >
+                                <View>
+                                    <Text style={styles.userName}>
+                                        {item.name} {item.lastname}
+                                    </Text>
+                                    <Text style={styles.userEmail}>{item.email}</Text>
+                                </View>
+                                {formData.user_id === String(item.id) && (
+                                    <Ionicons name="checkmark-circle" size={24} color={MyColors.primary} />
+                                )}
+                            </TouchableOpacity>
+                        )}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>No hay usuarios disponibles</Text>
+                            </View>
+                        }
+                    />
                 </View>
             </Modal>
         </KeyboardAvoidingView>
@@ -388,44 +393,37 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         color: '#333',
-        marginBottom: 6,
+        marginBottom: 8,
     },
     input: {
         borderWidth: 1,
         borderColor: '#ddd',
         borderRadius: 8,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        fontSize: 15,
-        backgroundColor: '#f8f9fa',
-    },
-    selectorButton: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        backgroundColor: '#f8f9fa',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    selectorText: {
+        padding: 12,
+        fontSize: 14,
         color: '#333',
-        fontSize: 15,
-    },
-    userInfoText: {
-        color: '#666',
-        fontSize: 12,
-        marginTop: 6,
     },
     inputError: {
         borderColor: '#dc3545',
     },
     errorText: {
-        color: '#dc3545',
         fontSize: 12,
+        color: '#dc3545',
         marginTop: 4,
+    },
+    userButton: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 12,
+        backgroundColor: '#fafafa',
+    },
+    userButtonText: {
+        fontSize: 14,
+        color: '#333',
     },
     categoryContainer: {
         flexDirection: 'row',
@@ -433,16 +431,16 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     categoryOption: {
-        paddingHorizontal: 16,
+        paddingHorizontal: 12,
         paddingVertical: 8,
-        borderRadius: 8,
         borderWidth: 1,
         borderColor: '#ddd',
-        marginBottom: 4,
+        borderRadius: 20,
+        backgroundColor: '#f5f5f5',
     },
     categoryOptionSelected: {
-        backgroundColor: MyColors.primary,
         borderColor: MyColors.primary,
+        backgroundColor: MyColors.primary,
     },
     categoryOptionText: {
         fontSize: 13,
@@ -450,27 +448,27 @@ const styles = StyleSheet.create({
     },
     categoryOptionTextSelected: {
         color: '#fff',
-        fontWeight: '600',
     },
     statusContainer: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
+        justifyContent: 'space-between',
         gap: 8,
     },
     statusOption: {
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 8,
+        flex: 1,
+        paddingVertical: 10,
         borderWidth: 1,
         borderColor: '#ddd',
-        backgroundColor: '#fff',
+        borderRadius: 8,
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
     },
     statusOptionSelected: {
-        backgroundColor: MyColors.primary,
         borderColor: MyColors.primary,
+        backgroundColor: MyColors.primary,
     },
     statusOptionText: {
-        fontSize: 13,
+        fontSize: 12,
         color: '#666',
     },
     statusOptionTextSelected: {
@@ -479,10 +477,10 @@ const styles = StyleSheet.create({
     },
     submitButton: {
         backgroundColor: MyColors.primary,
-        borderRadius: 8,
         paddingVertical: 14,
+        borderRadius: 8,
         alignItems: 'center',
-        marginTop: 10,
+        marginTop: 20,
     },
     submitButtonDisabled: {
         opacity: 0.6,
@@ -490,19 +488,12 @@ const styles = StyleSheet.create({
     submitButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: 'bold',
-    },
-    modalBackdrop: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'center',
-        padding: 20,
+        fontWeight: '600',
     },
     modalContainer: {
+        flex: 1,
         backgroundColor: '#fff',
-        borderRadius: 12,
-        maxHeight: '70%',
-        overflow: 'hidden',
+        marginTop: Platform.OS === 'ios' ? 20 : 0,
     },
     modalHeader: {
         flexDirection: 'row',
@@ -514,37 +505,38 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 18,
-        fontWeight: '700',
+        fontWeight: 'bold',
         color: '#333',
     },
-    userList: {
-        padding: 12,
-    },
     userItem: {
-        padding: 14,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#e5e5e5',
-        marginBottom: 8,
-        backgroundColor: '#fafafa',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
     },
     userItemSelected: {
-        backgroundColor: '#eaf4ff',
-        borderColor: '#7aa7ff',
-    },
-    userEmail: {
-        fontSize: 14,
-        color: '#1f2937',
-        fontWeight: '600',
+        backgroundColor: 'rgba(139, 0, 0, 0.05)',
     },
     userName: {
-        fontSize: 12,
-        color: '#6b7280',
-        marginTop: 4,
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+    },
+    userEmail: {
+        fontSize: 13,
+        color: '#666',
+        marginTop: 2,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     emptyText: {
-        color: '#666',
-        textAlign: 'center',
-        paddingVertical: 20,
+        fontSize: 16,
+        color: '#999',
     },
 });

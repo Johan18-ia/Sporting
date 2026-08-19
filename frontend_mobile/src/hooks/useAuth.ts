@@ -1,9 +1,10 @@
 // Encargado: Hook - useAuth
-// Descripción: Manejo de autenticación, login/logout y estado del usuario
+// Descripción: Manejo de autenticación, login/logout, verificación de sesión y persistencia del usuario y token JWT.
 // Archivo: src/hooks/useAuth.ts
 // ============================================
-
-// frontend_mobile/src/hooks/useAuth.ts
+// NOTAS: Guarda el token y su expiración de 24 horas en almacenamiento local.
+// También valida sesión activa, elimina credenciales al cerrar sesión y recarga el contexto al editar el perfil.
+// ============================================
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, UserLogin, UserRegister } from '../domain/entities/User';

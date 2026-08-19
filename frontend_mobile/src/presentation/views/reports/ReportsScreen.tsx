@@ -46,20 +46,28 @@ const CSV_HEADERS: Record<string, string[]> = {
     teams: ['ID', 'Nombre', 'Descripción', 'Integrantes'],
 };
 
+const CSV_FIELDS: Record<string, string[]> = {
+    users: ['id', 'name', 'lastname', 'email', 'role', 'phone', 'is_active'],
+    students: ['id', 'name', 'lastname', 'document', 'category', 'phone'],
+    categories: ['id', 'category_year', 'description'],
+    schedules: ['id', 'category', 'day', 'start_time', 'end_time'],
+    tournaments: ['id', 'name', 'category', 'status', 'students'],
+    products: ['id', 'name', 'description', 'price', 'stock', 'category'],
+    teams: ['id', 'name', 'description', 'students'],
+};
+
 export const ReportsScreen = () => {
     const [loading, setLoading] = useState<string | null>(null);
 
     const formatCSVValue = (value: any): string => {
         if (value === null || value === undefined) return '';
-        if (typeof value === 'object') return JSON.stringify(value);
-        return String(value);
+        const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+        return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
     };
 
-    const generateCSV = (data: any[], headers: string[]): string => {
+    const generateCSV = (data: any[], headers: string[], fields: string[]): string => {
         const headerRow = headers.join(',');
-        const dataRows = data.map(row => 
-            headers.map(h => formatCSVValue(row[h.toLowerCase()])).join(',')
-        );
+        const dataRows = data.map(row => fields.map(field => formatCSVValue(row[field])).join(','));
         return [headerRow, ...dataRows].join('\n');
     };
 
@@ -67,7 +75,9 @@ export const ReportsScreen = () => {
         setLoading(report.id);
         try {
             const response = await ApiDelivery.get(report.endpoint);
-            const data = response.data || [];
+            const data = Array.isArray(response.data)
+                ? response.data
+                : (response.data?.data || []);
 
             if (data.length === 0) {
                 Alert.alert('Sin Datos', `No hay datos disponibles para ${report.label}`);
@@ -75,7 +85,8 @@ export const ReportsScreen = () => {
             }
 
             const headers = CSV_HEADERS[report.id as keyof typeof CSV_HEADERS] || ['Datos'];
-            const csv = generateCSV(data, headers);
+            const fields = CSV_FIELDS[report.id] || ['data'];
+            const csv = generateCSV(data, headers, fields);
             
             // Compartir el archivo usando Share API
             const result = await Share.share({
