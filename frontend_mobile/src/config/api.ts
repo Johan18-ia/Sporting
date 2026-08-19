@@ -4,8 +4,21 @@
 // ============================================
 
 // src/config/api.ts
+import { Platform } from 'react-native';
+
+const getBaseUrl = () => {
+    const manualUrl = process.env.EXPO_PUBLIC_API_URL;
+    if (manualUrl) return manualUrl.replace(/\/$/, '');
+
+    if (Platform.OS === 'android') {
+        return 'http://10.0.2.2:3000/api';
+    }
+
+    return 'http://localhost:3000/api';
+};
+
 export const API_CONFIG = {
-    BASE_URL: 'http://192.168.80.14:3000/api', // Cambia por tu IP local
+    BASE_URL: getBaseUrl(),
     TIMEOUT: 10000,
     ENDPOINTS: {
         // AUTH

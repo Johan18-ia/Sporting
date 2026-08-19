@@ -15,11 +15,19 @@ export const ProfileDetailScreen = () => {
     const { user } = useAuth();
     const navigation = useNavigation<ProfileDetailNavigationProp>();
 
+    if (!user) {
+        return null;
+    }
+
+    const handleEdit = () => {
+        navigation.navigate('UserForm', { user, mode: 'edit' });
+    };
+
     return (
         <View style={styles.container}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={styles.title}>Mi Perfil</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('UserForm', { user: user, mode: 'edit' })}>
+                <TouchableOpacity onPress={handleEdit}>
                     <Text style={{ color: MyColors.primary, fontWeight: '600' }}>Editar</Text>
                 </TouchableOpacity>
             </View>

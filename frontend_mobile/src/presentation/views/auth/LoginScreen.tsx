@@ -53,11 +53,7 @@ export const LoginScreen = () => {
 
         const result = await login({ email, password });
         if (result.success && result.data) {
-            const destinationRoute = result.data.role === 'user' ? 'Students' : undefined;
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'MainTabs', params: destinationRoute ? { screen: destinationRoute } : undefined }]
-            });
+            return;
         } else {
                 const err = (result.error || '').toLowerCase();
                 if (err.includes('desactiv') || err.includes('inactivo')) {
