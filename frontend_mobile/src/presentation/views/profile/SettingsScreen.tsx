@@ -1,9 +1,5 @@
 // Encargado: Pantalla de Configuración
-// Descripción: Muestra opciones de usuario como notificaciones y modo oscuro dentro del perfil del cliente móvil.
-// Archivo: src/presentation/views/profile/SettingsScreen.tsx
-// ============================================
-// NOTAS: Es una pantalla demo con switches funcionales para preferencias del usuario.
-// Puede ampliarse con configuración persistente y sincronización con backend.
+// Descripción: Opciones de usuario (notificaciones, modo oscuro) - demo
 // ============================================
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';

@@ -57,19 +57,11 @@ module.exports = {
     // ============================================
     createStudent(req, res) {
         const student = req.body;
-
-        if (!student.user_id) {
-            return res.status(400).json({
-                success: false,
-                message: 'El user_id es obligatorio para crear el perfil de estudiante'
-            });
-        }
-
         Student.create(student, (err, data) => {
             if (err) {
-                return res.status(400).json({
+                return res.status(501).json({
                     success: false,
-                    message: err.message || 'Error creando estudiante',
+                    message: 'Error creando estudiante',
                     error: err
                 });
             }
