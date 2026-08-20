@@ -33,7 +33,6 @@ const REPORTS: Report[] = [
     { id: 'schedules', label: 'Horarios', icon: 'calendar', color: '#00BCD4', endpoint: '/schedules' },
     { id: 'tournaments', label: 'Torneos', icon: 'trophy', color: '#FF9800', endpoint: '/tournaments' },
     { id: 'products', label: 'Productos', icon: 'bag', color: '#4CAF50', endpoint: '/products' },
-    { id: 'teams', label: 'Equipos', icon: 'people-circle', color: '#795548', endpoint: '/teams' },
 ];
 
 const CSV_HEADERS: Record<string, string[]> = {
@@ -43,17 +42,15 @@ const CSV_HEADERS: Record<string, string[]> = {
     schedules: ['ID', 'Categoría', 'Día', 'Hora Inicio', 'Hora Fin'],
     tournaments: ['ID', 'Nombre', 'Categoría', 'Estado', 'Estudiantes'],
     products: ['ID', 'Nombre', 'Descripción', 'Precio', 'Stock', 'Categoría'],
-    teams: ['ID', 'Nombre', 'Descripción', 'Integrantes'],
 };
 
 const CSV_FIELDS: Record<string, string[]> = {
     users: ['id', 'name', 'lastname', 'email', 'role', 'phone', 'is_active'],
-    students: ['id', 'name', 'lastname', 'document', 'category', 'phone'],
+    students: ['id', 'name', 'lastname', 'document', 'category_year', 'phone'],
     categories: ['id', 'category_year', 'description'],
-    schedules: ['id', 'category', 'day_of_week', 'start_time', 'end_time'],
+    schedules: ['id', 'category_name', 'day_of_week', 'start_time', 'end_time'],
     tournaments: ['id', 'name', 'category', 'status', 'students'],
     products: ['id', 'nombre', 'descripcion', 'precio', 'stock', 'categoria'],
-    teams: ['id', 'name', 'description', 'students'],
 };
 
 export const ReportsScreen = () => {

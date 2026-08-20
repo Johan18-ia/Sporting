@@ -9,26 +9,28 @@ const Tournament = {};
 // CREAR UN NUEVO TORNEO
 // ====================================================
 Tournament.create = (tournament, result) => {
-    // Consulta SQL para insertar un torneo
     const sql = `
         INSERT INTO tournaments (
             name,
-            min_players,
-            max_players,
+            description,
+            id_category,
+            tournament_date,
+            location,
+            max_teams,
             status,
-            created_at
+            created_at,
+            updated_at
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `;
-    // Ejecuta la consulta
     db.query(sql, [
         tournament.name,
-        // Reglas fijas del sistema
-        5, // mínimo de jugadores
-        8, // máximo de jugadores
-        'programado', // estado inicial
-        // Fecha de creación
-        new Date()
+        tournament.description || null,
+        tournament.id_category,
+        tournament.tournament_date || null,
+        tournament.location || null,
+        tournament.max_teams || 0,
+        tournament.status || 'Pendiente'
     ], (err, res) => {
         // Manejo de error
         if (err) {
@@ -46,17 +48,43 @@ Tournament.create = (tournament, result) => {
 // OBTENER TODOS LOS TORNEOS
 // ====================================================
 Tournament.getAll = (result) => {
-    // Consulta SQL
-    const sql = 'SELECT * FROM tournaments';
-    // Ejecuta consulta
+    const sql = `
+        SELECT t.*, c.category_year,
+               COALESCE(GROUP_CONCAT(CASE WHEN s.id IS NOT NULL THEN JSON_OBJECT(
+                   'id', s.id,
+                   'name', s.name,
+                   'lastname', s.lastname,
+                   'document', s.document
+               ) END), '') AS students_json
+        FROM tournaments t
+        LEFT JOIN categories c ON t.id_category = c.id
+        LEFT JOIN tournament_students ts ON ts.tournament_id = t.id
+        LEFT JOIN students s ON s.id = ts.student_id
+        GROUP BY t.id
+        ORDER BY t.tournament_date, t.id DESC
+    `;
     db.query(sql, (err, res) => {
 
         // Manejo de error
         if (err) {
             result(err, null);
         } else {
-            result(null, res);
+            result(null, res.map((tournament) => ({
+                ...tournament,
+                category: tournament.category_year,
+                students: tournament.students_json
+                    ? JSON.parse(`[${tournament.students_json}]`)
+                    : []
+            })));
         }
+    });
+};
+
+Tournament.enroll = (tournamentId, studentId, result) => {
+    const sql = 'INSERT INTO tournament_students (tournament_id, student_id) VALUES (?, ?)';
+    db.query(sql, [tournamentId, studentId], (err, res) => {
+        if (err) result(err, null);
+        else result(null, { id: res.insertId, tournament_id: tournamentId, student_id: studentId });
     });
 };
 // Exporta el modelo

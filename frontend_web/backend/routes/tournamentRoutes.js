@@ -86,6 +86,13 @@ router.post(
     tournamentController.create
 );
 
+router.post(
+    '/:id/enroll',
+    verifyToken,
+    authorizeRoles(['admin', 'seller']),
+    tournamentController.enroll
+);
+
 // ====================================================
 // GENERAR EQUIPOS ALEATORIOS
 // ====================================================

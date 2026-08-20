@@ -90,9 +90,10 @@ export const TournamentsScreen = () => {
         }
 
         try {
+            const selectedCategory = categories.find((category) => String(category.id) === formData.category);
             await ApiDelivery.post('/tournaments/create', {
                 name: formData.name,
-                category: formData.category,
+                id_category: selectedCategory?.id,
                 max_teams: parseInt(formData.max_teams) || 4
             });
             resetForm();

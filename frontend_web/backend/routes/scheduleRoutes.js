@@ -100,6 +100,13 @@ router.post(
     scheduleController.create
 );
 
+router.put(
+    '/',
+    verifyToken,
+    authorizeRoles(['admin', 'seller']),
+    scheduleController.update
+);
+
 // ====================================================
 // HORARIOS POR CATEGORÍA
 // ====================================================

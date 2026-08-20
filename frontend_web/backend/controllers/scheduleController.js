@@ -44,6 +44,15 @@ module.exports = {
         });
     },
 
+    update(req, res) {
+        Schedule.update(req.body, (err, data) => {
+            if (err) {
+                return res.status(501).json({ success: false, message: 'Error al actualizar el horario', error: err });
+            }
+            return res.status(200).json({ success: true, message: 'Horario actualizado', data });
+        });
+    },
+
     // ============================================
     // OBTENER HORARIOS DE UNA CATEGORÍA ESPECÍFICA
     // ============================================

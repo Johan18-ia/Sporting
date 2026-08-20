@@ -28,7 +28,6 @@ import { ProductsScreen } from '../presentation/views/products/ProductsScreen';
 import { StudentsScreen } from '../presentation/views/students/StudentsScreen';
 import { StudentFormScreen } from '../presentation/views/students/StudentFormScreen';
 import { TournamentsScreen } from '../presentation/views/tournaments/TournamentsScreen';
-import { TeamsScreen } from '../presentation/views/teams/TeamsScreen';
 import { ReportsScreen } from '../presentation/views/reports/ReportsScreen';
 import { ProfileScreen } from '../presentation/views/profile/ProfileScreen';
 import { ProfileDetailScreen } from '../presentation/views/profile/ProfileDetailScreen';
@@ -246,11 +245,6 @@ export const AppNavigator = () => {
                             name="Tournaments"
                             component={TournamentsScreen}
                             options={{ title: 'Torneos' }}
-                        />
-                        <Stack.Screen
-                            name="Teams"
-                            component={TeamsScreen}
-                            options={{ title: 'Equipos' }}
                         />
                         <Stack.Screen
                             name="Reports"
