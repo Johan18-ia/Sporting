@@ -16,9 +16,9 @@ app.set('port', port);
 const server = http.createServer(app);
 
 server.listen(port, host, () => {
-    console.log(`========================================================`)
+    console.log(`========================================================================`)
     console.log(`Servidor corriendo en http://${host}:${port}`)
-    console.log(`========================================================`);
+    console.log(`========================================================================`);
 ;
 });
 
