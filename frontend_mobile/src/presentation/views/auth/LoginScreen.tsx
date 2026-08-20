@@ -1,9 +1,6 @@
+// src/presentation/views/auth/LoginScreen.tsx
 // Encargado: Pantalla de Autenticación (Login)
-// Descripción: Maneja el ingreso del usuario, validaciones de email/contraseña, mensajes informativos y redirección según rol.
-// Archivo: src/presentation/views/auth/LoginScreen.tsx
-// ============================================
-// NOTAS: Se valida formato de correo, bloqueo de sesión expirada y acceso a recuperar contraseña.
-// Se redirige al usuario a la navegación principal según el rol detectado.
+// Descripción: Maneja la entrada del usuario y redirección según rol
 // ============================================
 import React, { useState, useEffect } from 'react';
 import {
@@ -56,11 +53,7 @@ export const LoginScreen = () => {
 
         const result = await login({ email, password });
         if (result.success && result.data) {
-            const destinationRoute = result.data.role === 'user' ? 'Students' : undefined;
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'MainTabs', params: destinationRoute ? { screen: destinationRoute } : undefined }]
-            });
+            return;
         } else {
                 const err = (result.error || '').toLowerCase();
                 if (err.includes('desactiv') || err.includes('inactivo')) {

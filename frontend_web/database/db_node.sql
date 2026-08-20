@@ -33,24 +33,33 @@ INSERT INTO categories(category_year, description) VALUES
 (2017, 'Categoría jugadores nacidos en 2017');
 
 -- ============================================
--- CREAR TABLA DE USUARIOS
--- ============================================
--- La tabla users guarda la autenticación y los datos base del usuario.
--- Los usuarios normales y los estudiantes comparten esta tabla.
--- El perfil específico del estudiante está en student_profiles.
+-- CREAR TABLA DE USUARIOS (TODAS LAS COLUMNAS)
 -- ============================================
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     lastname VARCHAR(100) NOT NULL,
+    document VARCHAR(20) NULL UNIQUE,
+    birth_date DATE NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     phone VARCHAR(20) NULL,
+    emergency_contact VARCHAR(100) NULL,
+    emergency_phone VARCHAR(20) NULL,
+    address VARCHAR(200) NULL,
     image VARCHAR(255) NULL,
-    role ENUM('admin', 'seller', 'user') NOT NULL DEFAULT 'user',
+    role VARCHAR(20) DEFAULT 'user',
+    category_id INT NULL,
+    student_id INT NULL,
     is_active TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_user_category
+        FOREIGN KEY(category_id)
+        REFERENCES categories(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 -- ============================================
@@ -62,7 +71,6 @@ INSERT INTO users (
     email,
     password,
     phone,
-    image,
     role,
     is_active
 ) VALUES (
@@ -71,42 +79,7 @@ INSERT INTO users (
     'profealbeiro2020@gmail.com',
     '$2b$10$NR8eRuuAB12JoHe81ZYnG.i2/5k/D5TKrxc7Pk74W4rgzADdABM9G',
     '3103103101',
-    NULL,
     'admin',
-    1
-);
-
--- ============================================
--- INSERTAR USUARIOS NORMALES DE EJEMPLO
--- ============================================
-INSERT INTO users (
-    name,
-    lastname,
-    email,
-    password,
-    phone,
-    image,
-    role,
-    is_active
-) VALUES
-(
-    'Ana',
-    'García',
-    'ana.garcia@email.com',
-    '$2b$10$NR8eRuuAB12JoHe81ZYnG.i2/5k/D5TKrxc7Pk74W4rgzADdABM9G',
-    '3201112233',
-    NULL,
-    'user',
-    1
-),
-(
-    'Luis',
-    'Martínez',
-    'luis.martinez@email.com',
-    '$2b$10$NR8eRuuAB12JoHe81ZYnG.i2/5k/D5TKrxc7Pk74W4rgzADdABM9G',
-    '3204445566',
-    NULL,
-    'user',
     1
 );
 
@@ -136,7 +109,7 @@ INSERT INTO productos(nombre, descripcion, precio, stock, imagen, categoria) VAL
 -- ============================================
 -- CREAR TABLA DE HORARIOS
 -- ============================================
-CREATE TABLE schedules(
+CREATE TABLE IF NOT EXISTS schedules(
     id INT PRIMARY KEY AUTO_INCREMENT,
     id_category INT NOT NULL,
     day_of_week VARCHAR(30) NOT NULL,
@@ -191,74 +164,34 @@ INSERT INTO tournaments(name, description, id_category, tournament_date, locatio
 ('Liga Juvenil Bogotá', 'Competencia juvenil distrital', 2, '2026-07-10', 'Estadio Municipal', 'Pendiente', 12);
 
 -- ============================================
--- CREAR TABLA DE PERFIL DE ESTUDIANTES
+-- CREAR TABLA DE ESTUDIANTES
 -- ============================================
--- El estudiante reutiliza la cuenta de usuario principal.
--- Los datos generales (nombre, apellido, email, contraseña) quedan en users.
--- Aquí se almacenan solo los datos del perfil estudiantil.
--- ============================================
-CREATE TABLE student_profiles (
+CREATE TABLE IF NOT EXISTS students (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    lastname VARCHAR(100) NOT NULL,
     document VARCHAR(20) NOT NULL UNIQUE,
     category_id INT NULL,
     birth_date DATE NULL,
+    phone VARCHAR(20) NULL,
     address VARCHAR(200) NULL,
-    emergency_contact_name VARCHAR(100) NULL,
-    emergency_contact_phone VARCHAR(20) NULL,
-    status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    emergency_contact VARCHAR(100) NULL,
+    emergency_phone VARCHAR(20) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_student_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-
-    CONSTRAINT fk_student_category
-        FOREIGN KEY (category_id)
-        REFERENCES categories(id)
+    
+    CONSTRAINT fk_students_category
+        FOREIGN KEY (category_id) 
+        REFERENCES categories(id) 
         ON DELETE SET NULL
-        ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 -- ============================================
 -- INSERTAR ESTUDIANTES DE EJEMPLO
 -- ============================================
--- Los estudiantes se registran a partir de usuarios ya creados en users.
--- Por eso se reutiliza el correo y los datos base del usuario.
--- ============================================
-INSERT INTO student_profiles (
-    user_id,
-    document,
-    category_id,
-    birth_date,
-    address,
-    emergency_contact_name,
-    emergency_contact_phone,
-    status
-) VALUES
-(
-    2,
-    '1234567890',
-    1,
-    '2015-03-15',
-    'Calle 123 #45-67',
-    'María García',
-    '3109998888',
-    'approved'
-),
-(
-    3,
-    '0987654321',
-    2,
-    '2016-07-20',
-    'Carrera 89 #12-34',
-    'Ana Martínez',
-    '3107776666',
-    'pending'
-);
+INSERT INTO students(name, lastname, document, category_id, birth_date, phone, address, emergency_contact, emergency_phone) VALUES
+('Juan', 'Pérez', '1234567890', 1, '2015-03-15', '3101112222', 'Calle 123 #45-67', 'María Pérez', '3109998888'),
+('Carlos', 'López', '0987654321', 2, '2016-07-20', '3103334444', 'Carrera 89 #12-34', 'Ana López', '3107776666');
 
 -- ============================================
 -- VERIFICAR TODAS LAS TABLAS
@@ -277,13 +210,13 @@ SELECT '📊 TABLA' AS 'Tipo', 'CATEGORÍAS' AS 'Nombre', COUNT(*) AS 'Registros
 UNION ALL
 SELECT '📊 TABLA', 'USUARIOS', COUNT(*) FROM users
 UNION ALL
-SELECT '📊 TABLA', 'PERFILES_ESTUDIANTES', COUNT(*) FROM student_profiles
-UNION ALL
 SELECT '📊 TABLA', 'PRODUCTOS', COUNT(*) FROM productos
 UNION ALL
 SELECT '📊 TABLA', 'HORARIOS', COUNT(*) FROM schedules
 UNION ALL
-SELECT '📊 TABLA', 'TORNEOS', COUNT(*) FROM tournaments;
+SELECT '📊 TABLA', 'TORNEOS', COUNT(*) FROM tournaments
+UNION ALL
+SELECT '📊 TABLA', 'ESTUDIANTES', COUNT(*) FROM students;
 
 -- ============================================
 -- MOSTRAR USUARIO ADMIN

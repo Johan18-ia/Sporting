@@ -180,10 +180,10 @@ export const AppNavigator = () => {
                             component={LoginScreen}
                             options={{ headerShown: false }}
                         />
-                        <Stack.Screen 
-                            name="Register" 
+                        <Stack.Screen
+                            name="Register"
                             component={RegisterScreen}
-                            options={{ 
+                            options={{
                                 headerShown: true,
                                 title: 'Registro de Usuario'
                             }}
@@ -194,48 +194,48 @@ export const AppNavigator = () => {
                     // MAIN STACK
                     // ============================================
                     <>
-                        <Stack.Screen 
-                            name="MainTabs" 
+                        <Stack.Screen
+                            name="MainTabs"
                             component={MainTabs}
                             options={{ headerShown: false }}
                         />
-                        <Stack.Screen 
-                            name="UserDetail" 
+                        <Stack.Screen
+                            name="UserDetail"
                             component={UserDetailScreen}
                             options={{ title: 'Detalles del Usuario' }}
                         />
-                        <Stack.Screen 
-                            name="UserForm" 
+                        <Stack.Screen
+                            name="UserForm"
                             component={UserFormScreen}
                             options={{ title: 'Formulario de Usuario' }}
                         />
-                        <Stack.Screen 
-                            name="StudentForm" 
+                        <Stack.Screen
+                            name="StudentForm"
                             component={StudentFormScreen}
                             options={{ title: 'Formulario de Estudiante' }}
                         />
-                        <Stack.Screen 
-                            name="Categories" 
+                        <Stack.Screen
+                            name="Categories"
                             component={CategoriesScreen}
                             options={{ title: 'Categorías' }}
                         />
-                        <Stack.Screen 
-                            name="Schedules" 
+                        <Stack.Screen
+                            name="Schedules"
                             component={SchedulesScreen}
                             options={{ title: 'Horarios' }}
                         />
-                        <Stack.Screen 
-                            name="Tournaments" 
+                        <Stack.Screen
+                            name="Tournaments"
                             component={TournamentsScreen}
                             options={{ title: 'Torneos' }}
                         />
-                        <Stack.Screen 
-                            name="Teams" 
+                        <Stack.Screen
+                            name="Teams"
                             component={TeamsScreen}
                             options={{ title: 'Equipos' }}
                         />
-                        <Stack.Screen 
-                            name="Reports" 
+                        <Stack.Screen
+                            name="Reports"
                             component={ReportsScreen}
                             options={{ title: 'Reportes' }}
                         />

@@ -1,10 +1,8 @@
-// Encargado: Módulo de Usuarios - Formulario
-// Descripción: Gestiona la creación y edición de usuarios del sistema, cubriendo HU04, HU06 y HU08 con validaciones, permisos y actualización de sesión.
+// Encargado: Usuarios - Formulario
+// Descripción: Formulario para crear/editar usuarios (validaciones y envío al API)
 // Archivo: src/presentation/views/users/UserFormScreen.tsx
 // ============================================
-// NOTAS: Se valida el formulario, se bloquea la asignación de rol admin para usuarios no administradores y se impide cambiar el propio rol.
-// Cuando el usuario edita su propio perfil, el backend recibe un payload sin role y la sesión local se refresca.
-// ============================================
+// src/presentation/views/users/UserFormScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
     View,

@@ -13,7 +13,7 @@ const { verifyToken, authorizeRoles } = require('../middlewares/authMiddleware')
 router.get(
     '/',
     verifyToken,
-    authorizeRoles(['admin', 'seller']),
+    authorizeRoles(['admin', 'seller', 'user']),
     studentController.getAllStudents
 );
 

@@ -1,10 +1,9 @@
-// Encargado: Módulo de Usuarios - Entidad
-// Descripción: Define la estructura del usuario del sistema para las HU de gestión de usuarios: registro, edición, activación, desactivación y eliminación.
+// Encargado: Entidad - User
+// Descripción: Definición del tipo Usuario usado en la capa de dominio
 // Archivo: src/domain/entities/User.ts
 // ============================================
-// NOTAS: Esta entidad soporta los datos requeridos por HU04, HU05, HU06, HU08, HU09 y HU10.
-// Incluye rol, estado activo, categoría, contacto y sesión del usuario autenticado.
-// ============================================
+
+// src/domain/entities/User.ts
 export interface User {
     id?: number;
     name: string;
