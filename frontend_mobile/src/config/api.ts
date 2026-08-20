@@ -18,7 +18,7 @@ const getBaseUrl = () => {
 };
 
 export const API_CONFIG = {
-    BASE_URL: 'http://10.1.202.216:3000/api', // Cambia por tu IP local
+    BASE_URL: getBaseUrl(),
     TIMEOUT: 10000,
     ENDPOINTS: {
         // AUTH

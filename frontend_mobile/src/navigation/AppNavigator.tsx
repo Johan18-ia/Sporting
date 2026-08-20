@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Importación de screens
 import { HomeScreen } from '../presentation/views/home/HomeScreen';
+import { AboutScreen } from '../presentation/views/home/AboutScreen';
+import { PublicTabNavigator } from './PublicTabNavigator';
 import { LoginScreen } from '../presentation/views/auth/LoginScreen';
 import { RegisterScreen } from '../presentation/views/auth/RegisterScreen';
 import { DashboardScreen } from '../presentation/views/dashboard/DashboardScreen';
@@ -43,7 +45,9 @@ const Tab = createBottomTabNavigator();
 // TAB NAVIGATOR
 // ============================================
 const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> }) => {
-    const initialRouteName = route?.params?.screen || 'Dashboard';
+    const { user } = useAuth();
+    const canManageUsers = user?.role === 'admin' || user?.role === 'seller';
+    const initialRouteName = route?.params?.screen || (user?.role === 'user' ? 'Students' : 'Dashboard');
 
     return (
         <Tab.Navigator
@@ -96,24 +100,28 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                 },
             })}
         >
-            <Tab.Screen
-                name="Dashboard"
-                component={DashboardScreen}
-                options={{ title: 'Inicio', tabBarLabel: 'Inicio' }}
-            />
-            <Tab.Screen
-                name="Users"
-                component={UsersScreen}
-                options={({ navigation }) => ({
-                    title: 'Usuarios',
-                    tabBarLabel: 'Usuarios',
-                    headerLeft: () => (
-                        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ marginLeft: 10 }}>
-                            <Ionicons name="arrow-back" size={24} color="#fff" />
-                        </TouchableOpacity>
-                    ),
-                })}
-            />
+            {user?.role !== 'user' && (
+                <Tab.Screen
+                    name="Dashboard"
+                    component={DashboardScreen}
+                    options={{ title: 'Inicio', tabBarLabel: 'Inicio' }}
+                />
+            )}
+            {canManageUsers && (
+                <Tab.Screen
+                    name="Users"
+                    component={UsersScreen}
+                    options={({ navigation }) => ({
+                        title: 'Usuarios',
+                        tabBarLabel: 'Usuarios',
+                        headerLeft: () => (
+                            <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ marginLeft: 10 }}>
+                                <Ionicons name="arrow-back" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        ),
+                    })}
+                />
+            )}
             <Tab.Screen
                 name="Students"
                 component={StudentsScreen}
@@ -171,9 +179,19 @@ export const AppNavigator = () => {
                     // ============================================
                     <>
                         <Stack.Screen
+                            name="PublicTabs"
+                            component={PublicTabNavigator}
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
                             name="Home"
                             component={HomeScreen}
                             options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
+                            name="SobreNosotros"
+                            component={AboutScreen}
+                            options={{ title: 'Sobre Nosotros' }}
                         />
                         <Stack.Screen 
                             name="Login" 

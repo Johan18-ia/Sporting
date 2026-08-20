@@ -24,6 +24,7 @@ type ProfileNavigationProp = StackNavigationProp<RootStackParamList, 'Profile'>;
 export const ProfileScreen = () => {
     const navigation = useNavigation<ProfileNavigationProp>();
     const { user, logout, loading } = useAuth();
+    const canManageAdmin = user?.role === 'admin' || user?.role === 'seller';
     const [logoutLoading, setLogoutLoading] = useState(false);
 
     const handleLogout = () => {
@@ -102,30 +103,34 @@ export const ProfileScreen = () => {
                     onPress={() => Alert.alert('Notificaciones', 'Esta funcionalidad estará disponible pronto.')}
                 />
 
-                <View style={styles.divider} />
+                {canManageAdmin && (
+                    <>
+                        <View style={styles.divider} />
 
-                <Text style={styles.menuTitle}>Administración</Text>
-                
-                <MenuItem
-                    icon="people-outline"
-                    label="Usuarios"
-                    onPress={() => navigation.navigate('Users')}
-                />
-                <MenuItem
-                    icon="school-outline"
-                    label="Estudiantes"
-                    onPress={() => navigation.navigate('Students')}
-                />
-                <MenuItem
-                    icon="trophy-outline"
-                    label="Torneos"
-                    onPress={() => navigation.navigate('Tournaments')}
-                />
-                <MenuItem
-                    icon="calendar-outline"
-                    label="Horarios"
-                    onPress={() => navigation.navigate('Schedules')}
-                />
+                        <Text style={styles.menuTitle}>Administración</Text>
+
+                        <MenuItem
+                            icon="people-outline"
+                            label="Usuarios"
+                            onPress={() => navigation.navigate('Users')}
+                        />
+                        <MenuItem
+                            icon="school-outline"
+                            label="Estudiantes"
+                            onPress={() => navigation.navigate('Students')}
+                        />
+                        <MenuItem
+                            icon="trophy-outline"
+                            label="Torneos"
+                            onPress={() => navigation.navigate('Tournaments')}
+                        />
+                        <MenuItem
+                            icon="calendar-outline"
+                            label="Horarios"
+                            onPress={() => navigation.navigate('Schedules')}
+                        />
+                    </>
+                )}
 
                 <View style={styles.divider} />
 
