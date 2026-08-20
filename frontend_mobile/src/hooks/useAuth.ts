@@ -102,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     phone: payload?.phone || '',
                     role: payload?.role || 'user',
                     image: payload?.image || '',
+                    category_id: payload?.category_id,
                     session_token: token
                 };
                 await SaveUserLocalUseCase(userData);

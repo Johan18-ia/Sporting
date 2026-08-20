@@ -77,6 +77,7 @@ module.exports = {
                     phone: myUser.phone,
                     image: myUser.image,
                     role: myUser.role,
+                    category_id: myUser.category_id,
                     is_active: isActive,
                     session_token: `JWT ${token}`,
                 };

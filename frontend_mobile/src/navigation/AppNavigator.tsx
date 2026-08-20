@@ -1,18 +1,21 @@
-// src/navigation/AppNavigator.tsx
 // Encargado: Navegación de la aplicación móvil
-// Descripción: Registra los stacks y tabs principales (autenticación y área principal)
+// Descripción: Registra los stacks y tabs principales, incluyendo la autenticación, perfil y gestión de usuarios.
+// Archivo: src/navigation/AppNavigator.tsx
 // ============================================
 // NOTAS: Mantener la consistencia con RootStackParamList para tipado.
+// Se integran pantallas nuevas como Login, Register, ProfileDetail, Settings, UserForm y Users.
 // ============================================
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, RouteProp } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 // Importación de screens
 import { HomeScreen } from '../presentation/views/home/HomeScreen';
+import { AboutScreen } from '../presentation/views/home/AboutScreen';
+import { PublicTabNavigator } from './PublicTabNavigator';
 import { LoginScreen } from '../presentation/views/auth/LoginScreen';
 import { RegisterScreen } from '../presentation/views/auth/RegisterScreen';
 import { DashboardScreen } from '../presentation/views/dashboard/DashboardScreen';
@@ -25,7 +28,6 @@ import { ProductsScreen } from '../presentation/views/products/ProductsScreen';
 import { StudentsScreen } from '../presentation/views/students/StudentsScreen';
 import { StudentFormScreen } from '../presentation/views/students/StudentFormScreen';
 import { TournamentsScreen } from '../presentation/views/tournaments/TournamentsScreen';
-import { TeamsScreen } from '../presentation/views/teams/TeamsScreen';
 import { ReportsScreen } from '../presentation/views/reports/ReportsScreen';
 import { ProfileScreen } from '../presentation/views/profile/ProfileScreen';
 import { ProfileDetailScreen } from '../presentation/views/profile/ProfileDetailScreen';
@@ -41,9 +43,10 @@ const Tab = createBottomTabNavigator();
 // ============================================
 // TAB NAVIGATOR
 // ============================================
-const MainTabs = () => {
+const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> }) => {
     const { user } = useAuth();
-    const initialRouteName = user?.role === 'user' ? 'Students' : 'Dashboard';
+    const canManageUsers = user?.role === 'admin' || user?.role === 'seller';
+    const initialRouteName = route?.params?.screen || (user?.role === 'user' ? 'Students' : 'Dashboard');
 
     return (
         <Tab.Navigator
@@ -96,16 +99,28 @@ const MainTabs = () => {
                 },
             })}
         >
-            <Tab.Screen
-                name="Dashboard"
-                component={DashboardScreen}
-                options={{ title: 'Inicio', tabBarLabel: 'Inicio' }}
-            />
-            <Tab.Screen
-                name="Users"
-                component={UsersScreen}
-                options={{ title: 'Usuarios', tabBarLabel: 'Usuarios' }}
-            />
+            {user?.role !== 'user' && (
+                <Tab.Screen
+                    name="Dashboard"
+                    component={DashboardScreen}
+                    options={{ title: 'Inicio', tabBarLabel: 'Inicio' }}
+                />
+            )}
+            {canManageUsers && (
+                <Tab.Screen
+                    name="Users"
+                    component={UsersScreen}
+                    options={({ navigation }) => ({
+                        title: 'Usuarios',
+                        tabBarLabel: 'Usuarios',
+                        headerLeft: () => (
+                            <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ marginLeft: 10 }}>
+                                <Ionicons name="arrow-back" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        ),
+                    })}
+                />
+            )}
             <Tab.Screen
                 name="Students"
                 component={StudentsScreen}
@@ -163,12 +178,22 @@ export const AppNavigator = () => {
                     // ============================================
                     <>
                         <Stack.Screen
+                            name="PublicTabs"
+                            component={PublicTabNavigator}
+                            options={{ headerShown: false }}
+                        />
+                        <Stack.Screen
                             name="Home"
                             component={HomeScreen}
                             options={{ headerShown: false }}
                         />
                         <Stack.Screen
-                            name="Login"
+                            name="SobreNosotros"
+                            component={AboutScreen}
+                            options={{ title: 'Sobre Nosotros' }}
+                        />
+                        <Stack.Screen 
+                            name="Login" 
                             component={LoginScreen}
                             options={{ headerShown: false }}
                         />
@@ -222,22 +247,17 @@ export const AppNavigator = () => {
                             options={{ title: 'Torneos' }}
                         />
                         <Stack.Screen
-                            name="Teams"
-                            component={TeamsScreen}
-                            options={{ title: 'Equipos' }}
-                        />
-                        <Stack.Screen
                             name="Reports"
                             component={ReportsScreen}
                             options={{ title: 'Reportes' }}
                         />
-                        <Stack.Screen
-                            name="ProfileDetail"
+                        <Stack.Screen 
+                            name="ProfileDetail" 
                             component={ProfileDetailScreen}
                             options={{ title: 'Mi Perfil' }}
                         />
-                        <Stack.Screen
-                            name="Settings"
+                        <Stack.Screen 
+                            name="Settings" 
                             component={SettingsScreen}
                             options={{ title: 'Configuración' }}
                         />

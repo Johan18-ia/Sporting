@@ -42,6 +42,16 @@ module.exports = {
             });
         });
     },
+
+    enroll(req, res) {
+        Tournament.enroll(req.params.id, req.body.studentId, (err, data) => {
+            if (err) {
+                const status = err.code === 'ER_DUP_ENTRY' ? 409 : 501;
+                return res.status(status).json({ success: false, message: 'No se pudo inscribir al estudiante', error: err });
+            }
+            return res.status(201).json({ success: true, message: 'Estudiante inscrito', data });
+        });
+    },
     // ============================================
     // GENERAR EQUIPOS AL AZAR
     // ============================================
