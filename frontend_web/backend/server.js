@@ -31,12 +31,12 @@ app.use(express.urlencoded({ extended: true }));
 // ============================================
 app.use(cors({
     origin: [
-        'http://10.1.202.216',
-        'http://10.1.202.216:3000',        // ← Backend
-        'http://10.1.202.216:5173',        // ← Web
-        'http://10.1.202.216:8081',        // ← Expo Metro
-        'http://10.1.202.216:19000',       // ← Expo Go
-        'http://10.1.202.216:19001',       // ← Expo Go
+        'http://10.1.202.208',
+        'http://10.1.202.208:3000',        // ← Backend
+        'http://10.1.202.208:5173',        // ← Web
+        'http://10.1.202.208:8081',        // ← Expo Metro
+        'http://10.1.202.208:19000',       // ← Expo Go
+        'http://10.1.202.208:19001',       // ← Expo Go
         'http://localhost',
         'http://localhost:5173',
         'http://localhost:8081',
@@ -137,7 +137,7 @@ app.use((req, res) => {
         message: `Ruta ${req.originalUrl} no encontrada`
     });
 });
-console.log(`========================================================`);
-console.log('Swagger disponible en: http://10.1.202.216:3000/api-docs');
+console.log(`========================================================================`);
+console.log('Swagger disponible en: http://10.1.202.208:3000/api-docs');
 
 module.exports = app;

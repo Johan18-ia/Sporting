@@ -194,6 +194,28 @@ INSERT INTO students(name, lastname, document, category_id, birth_date, phone, a
 ('Carlos', 'López', '0987654321', 2, '2016-07-20', '3103334444', 'Carrera 89 #12-34', 'Ana López', '3107776666');
 
 -- ============================================
+-- RELACIÓN OPCIONAL 1 A 1 ENTRE USUARIOS Y ESTUDIANTES
+-- ============================================
+ALTER TABLE users
+    ADD CONSTRAINT uq_user_student UNIQUE (student_id),
+    ADD CONSTRAINT fk_user_student
+        FOREIGN KEY (student_id)
+        REFERENCES students(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE;
+
+CREATE TABLE tournament_students (
+    tournament_id INT NOT NULL,
+    student_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (tournament_id, student_id),
+    CONSTRAINT fk_tournament_students_tournament
+        FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+    CONSTRAINT fk_tournament_students_student
+        FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ============================================
 -- VERIFICAR TODAS LAS TABLAS
 -- ============================================
 SHOW TABLES;

@@ -26,7 +26,6 @@ interface DashboardStats {
     products: number;
     categories: number;
     schedules: number;
-    teams: number;
 }
 
 export const DashboardScreen = () => {
@@ -38,8 +37,7 @@ export const DashboardScreen = () => {
         activeTournaments: 0,
         products: 0,
         categories: 0,
-        schedules: 0,
-        teams: 0
+        schedules: 0
     });
     const [loading, setLoading] = useState(true);
     const [studentLoading, setStudentLoading] = useState(false);
@@ -84,8 +82,7 @@ export const DashboardScreen = () => {
                 activeTournaments: tournamentsData.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
                 products: extractArray(productsRes, 'productos').length,
                 categories: extractArray(categoriesRes, 'categorías').length,
-                schedules: extractArray(schedulesRes, 'horarios').length,
-                teams: 0 // no existe todavia un endpoint de Equipos en el backend
+                schedules: extractArray(schedulesRes, 'horarios').length
             });
         } catch (error) {
             console.error('Error loading stats:', error);
@@ -324,13 +321,6 @@ export const DashboardScreen = () => {
                     value={stats.products}
                     onPress={() => navigation.navigate('Products')}
                 />
-                <StatCard
-                    icon="shield-outline"
-                    label="Equipos"
-                    value="—"
-                    note="próx."
-                    onPress={() => navigation.navigate('Teams')}
-                />
             </View>
 
             {/* Quick Actions */}
@@ -356,11 +346,6 @@ export const DashboardScreen = () => {
                         icon="calendar-outline"
                         label="Horarios"
                         onPress={() => navigation.navigate('Schedules')}
-                    />
-                    <QuickAction
-                        icon="people-outline"
-                        label="Equipos"
-                        onPress={() => navigation.navigate('Teams')}
                     />
                     <QuickAction
                         icon="bar-chart-outline"

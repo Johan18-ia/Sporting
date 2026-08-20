@@ -23,7 +23,7 @@ import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 
 interface Schedule {
     id: number;
-    category_id: number;
+    id_category: number;
     day_of_week: string;
     start_time: string;
     end_time: string;
@@ -48,7 +48,7 @@ export const SchedulesScreen = () => {
     const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
     
     const [formData, setFormData] = useState({
-        category_id: '',
+        id_category: '',
         day_of_week: 'Lunes',
         start_time: '08:00',
         end_time: '10:00'
@@ -67,7 +67,7 @@ export const SchedulesScreen = () => {
         const schedulesData = schedulesRes.data?.data || [];
         const enriched = schedulesData.map((s: any) => ({
             ...s,
-            category_name: categoriesData.find((c: any) => c.id === s.category_id)?.category_year || 'Sin categoría'
+            category_name: categoriesData.find((c: any) => c.id === s.id_category)?.category_year || 'Sin categoría'
         }));
         setSchedules(enriched);
     } catch (error) {
@@ -88,7 +88,7 @@ export const SchedulesScreen = () => {
     };
 
     const handleSubmit = async () => {
-        if (!formData.category_id || !formData.day_of_week) {
+        if (!formData.id_category || !formData.day_of_week) {
             Alert.alert('Error', 'Todos los campos son requeridos');
             return;
         }
@@ -98,12 +98,12 @@ export const SchedulesScreen = () => {
                 await ApiDelivery.put('/schedules', { 
                     id: editingSchedule.id,
                     ...formData,
-                    category_id: parseInt(formData.category_id)
+                    id_category: parseInt(formData.id_category)
                 });
             } else {
                 await ApiDelivery.post('/schedules/create', {
                     ...formData,
-                    category_id: parseInt(formData.category_id)
+                    id_category: parseInt(formData.id_category)
                 });
             }
             resetForm();
@@ -138,14 +138,14 @@ export const SchedulesScreen = () => {
     };
 
     const resetForm = () => {
-        setFormData({ category_id: '', day_of_week: 'Lunes', start_time: '08:00', end_time: '10:00' });
+        setFormData({ id_category: '', day_of_week: 'Lunes', start_time: '08:00', end_time: '10:00' });
         setEditingSchedule(null);
         setModalVisible(false);
     };
 
     const startEdit = (schedule: Schedule) => {
         setFormData({
-            category_id: String(schedule.category_id),
+            id_category: String(schedule.id_category),
             day_of_week: schedule.day_of_week,
             start_time: schedule.start_time,
             end_time: schedule.end_time
@@ -155,7 +155,7 @@ export const SchedulesScreen = () => {
     };
 
     const filteredSchedules = filterCategory
-        ? schedules.filter(s => s.category_id === parseInt(filterCategory))
+        ? schedules.filter(s => s.id_category === parseInt(filterCategory))
         : schedules;
 
     const getDayColor = (day: string) => {
@@ -291,13 +291,13 @@ export const SchedulesScreen = () => {
                                                 key={cat.id}
                                                 style={[
                                                     styles.categoryOption,
-                                                    formData.category_id === String(cat.id) && styles.categoryOptionSelected
+                                                    formData.id_category === String(cat.id) && styles.categoryOptionSelected
                                                 ]}
-                                                onPress={() => setFormData({ ...formData, category_id: String(cat.id) })}
+                                                onPress={() => setFormData({ ...formData, id_category: String(cat.id) })}
                                             >
                                                 <Text style={[
                                                     styles.categoryOptionText,
-                                                    formData.category_id === String(cat.id) && styles.categoryOptionTextSelected
+                                                    formData.id_category === String(cat.id) && styles.categoryOptionTextSelected
                                                 ]}>
                                                     {cat.category_year}
                                                 </Text>

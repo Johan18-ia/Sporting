@@ -51,7 +51,14 @@ export const ProductsScreen = () => {
 const loadProducts = async () => {
     try {
         const response = await ApiDelivery.get('/products');
-        setProducts(response.data?.data || []);
+        const productsData = Array.isArray(response.data)
+            ? response.data
+            : (response.data?.data || []);
+        setProducts(productsData.map((product: any) => ({
+            ...product,
+            precio: Number(product.precio) || 0,
+            stock: Number(product.stock) || 0
+        })));
     } catch (error) {
         Alert.alert('Error', 'No se pudieron cargar los productos');
     } finally {
