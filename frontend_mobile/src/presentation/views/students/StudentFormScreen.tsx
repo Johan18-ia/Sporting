@@ -14,7 +14,9 @@ import {
     Alert,
     ActivityIndicator,
     KeyboardAvoidingView,
-    Platform
+    Platform,
+    FlatList,
+    Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -26,16 +28,24 @@ import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 type StudentFormNavigationProp = StackNavigationProp<RootStackParamList, 'StudentForm'>;
 type StudentFormRouteProp = RouteProp<RootStackParamList, 'StudentForm'>;
 
-interface FormData {
+interface User {
+    id: number;
     name: string;
     lastname: string;
+    email: string;
+    role: 'admin' | 'seller' | 'user';
+    is_active: number;
+}
+
+interface FormData {
+    user_id: string;
     document: string;
     category_id: string;
     birth_date: string;
-    phone: string;
     address: string;
-    emergency_contact: string;
-    emergency_phone: string;
+    emergency_contact_name: string;
+    emergency_contact_phone: string;
+    status: 'pending' | 'approved' | 'rejected';
 }
 
 export const StudentFormScreen = () => {
@@ -44,58 +54,67 @@ export const StudentFormScreen = () => {
     const { student, mode } = route.params || { mode: 'create' };
     
     const [formData, setFormData] = useState<FormData>({
-        name: '',
-        lastname: '',
+        user_id: '',
         document: '',
         category_id: '',
         birth_date: '',
-        phone: '',
         address: '',
-        emergency_contact: '',
-        emergency_phone: ''
+        emergency_contact_name: '',
+        emergency_contact_phone: '',
+        status: 'pending'
     });
+    const [users, setUsers] = useState<User[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [loadingCategories, setLoadingCategories] = useState(true);
+    const [loadingData, setLoadingData] = useState(true);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [showUserPicker, setShowUserPicker] = useState(false);
 
     useEffect(() => {
-        loadCategories();
+        loadData();
         if (student && mode === 'edit') {
             setFormData({
-                name: student.name || '',
-                lastname: student.lastname || '',
+                user_id: String(student.user_id || ''),
                 document: student.document || '',
                 category_id: String(student.category_id || ''),
                 birth_date: student.birth_date || '',
-                phone: student.phone || '',
                 address: student.address || '',
-                emergency_contact: student.emergency_contact || '',
-                emergency_phone: student.emergency_phone || ''
+                emergency_contact_name: student.emergency_contact_name || '',
+                emergency_contact_phone: student.emergency_contact_phone || '',
+                status: student.status || 'pending'
             });
         }
     }, [student, mode]);
 
-    const loadCategories = async () => {
+    const loadData = async () => {
         try {
-            const response = await ApiDelivery.get('/categories');
-            const categoriesData = response.data?.data ?? response.data ?? [];
+            const [usersResponse, studentsResponse, categoriesResponse] = await Promise.all([
+                ApiDelivery.get('/users'),
+                ApiDelivery.get('/students'),
+                ApiDelivery.get('/categories')
+            ]);
+            const usersData = usersResponse.data?.data ?? usersResponse.data ?? [];
+            const studentsData = studentsResponse.data?.data ?? studentsResponse.data ?? [];
+            const existingIds = new Set((Array.isArray(studentsData) ? studentsData : []).map((item: any) => Number(item.user_id)));
+            const usersAvailable = (Array.isArray(usersData) ? usersData : []).filter((item: User) => {
+                const current = mode === 'edit' && Number(item.id) === Number(student?.user_id);
+                return item.role === 'user' && Number(item.is_active) === 1 && (!existingIds.has(Number(item.id)) || current);
+            });
+            setUsers(usersAvailable);
+            const categoriesData = categoriesResponse.data?.data ?? categoriesResponse.data ?? [];
             setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         } catch (error) {
-            console.error('Error loading categories:', error);
+            console.error('Error loading users and categories:', error);
         } finally {
-            setLoadingCategories(false);
+            setLoadingData(false);
         }
     };
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
-        if (!formData.name.trim()) {
-            newErrors.name = 'El nombre es requerido';
-        }
-        if (!formData.lastname.trim()) {
-            newErrors.lastname = 'El apellido es requerido';
+        if (!formData.user_id) {
+            newErrors.user_id = 'Debe seleccionar un correo registrado';
         }
         if (!formData.document.trim()) {
             newErrors.document = 'El documento es requerido';
@@ -114,8 +133,14 @@ export const StudentFormScreen = () => {
         setLoading(true);
         try {
             const payload = {
-                ...formData,
-                category_id: parseInt(formData.category_id)
+                user_id: Number(formData.user_id),
+                document: formData.document,
+                category_id: Number(formData.category_id),
+                birth_date: formData.birth_date || null,
+                address: formData.address || null,
+                emergency_contact_name: formData.emergency_contact_name || null,
+                emergency_contact_phone: formData.emergency_contact_phone || null,
+                status: formData.status
             };
 
             let response;
@@ -144,27 +169,19 @@ export const StudentFormScreen = () => {
         >
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.form}>
-                    <View style={styles.row}>
-                        <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                            <Text style={styles.label}>Nombres *</Text>
-                            <TextInput
-                                style={[styles.input, errors.name && styles.inputError]}
-                                placeholder="Nombre del estudiante"
-                                value={formData.name}
-                                onChangeText={(text) => setFormData({ ...formData, name: text })}
-                            />
-                            {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
-                        </View>
-                        <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                            <Text style={styles.label}>Apellidos *</Text>
-                            <TextInput
-                                style={[styles.input, errors.lastname && styles.inputError]}
-                                placeholder="Apellido del estudiante"
-                                value={formData.lastname}
-                                onChangeText={(text) => setFormData({ ...formData, lastname: text })}
-                            />
-                            {errors.lastname && <Text style={styles.errorText}>{errors.lastname}</Text>}
-                        </View>
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Correo registrado *</Text>
+                        <TouchableOpacity
+                            style={[styles.selectorButton, errors.user_id && styles.inputError]}
+                            onPress={() => setShowUserPicker(true)}
+                            disabled={loadingData}
+                        >
+                            <Text style={styles.selectorText}>
+                                {users.find((item) => String(item.id) === formData.user_id)?.email || 'Selecciona un correo'}
+                            </Text>
+                            <Ionicons name="chevron-down" size={18} color="#666" />
+                        </TouchableOpacity>
+                        {errors.user_id && <Text style={styles.errorText}>{errors.user_id}</Text>}
                     </View>
 
                     <View style={styles.inputGroup}>
@@ -182,7 +199,7 @@ export const StudentFormScreen = () => {
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Categoría *</Text>
                         <View style={styles.categoryContainer}>
-                            {loadingCategories ? (
+                            {loadingData ? (
                                 <ActivityIndicator color={MyColors.primary} />
                             ) : (
                                 categories.map((cat) => (
@@ -218,17 +235,6 @@ export const StudentFormScreen = () => {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Teléfono</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Número de contacto"
-                            value={formData.phone}
-                            onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                            keyboardType="phone-pad"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
                         <Text style={styles.label}>Dirección</Text>
                         <TextInput
                             style={styles.input}
@@ -244,8 +250,8 @@ export const StudentFormScreen = () => {
                             <TextInput
                                 style={styles.input}
                                 placeholder="Nombre del contacto"
-                                value={formData.emergency_contact}
-                                onChangeText={(text) => setFormData({ ...formData, emergency_contact: text })}
+                                value={formData.emergency_contact_name}
+                                onChangeText={(text) => setFormData({ ...formData, emergency_contact_name: text })}
                             />
                         </View>
                         <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
@@ -253,8 +259,8 @@ export const StudentFormScreen = () => {
                             <TextInput
                                 style={styles.input}
                                 placeholder="Teléfono de emergencia"
-                                value={formData.emergency_phone}
-                                onChangeText={(text) => setFormData({ ...formData, emergency_phone: text })}
+                                value={formData.emergency_contact_phone}
+                                onChangeText={(text) => setFormData({ ...formData, emergency_contact_phone: text })}
                                 keyboardType="phone-pad"
                             />
                         </View>
@@ -275,6 +281,36 @@ export const StudentFormScreen = () => {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+
+            <Modal visible={showUserPicker} transparent animationType="slide" onRequestClose={() => setShowUserPicker(false)}>
+                <View style={styles.modalBackdrop}>
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Selecciona un correo</Text>
+                            <TouchableOpacity onPress={() => setShowUserPicker(false)}>
+                                <Ionicons name="close" size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+                        <FlatList
+                            data={users}
+                            keyExtractor={(item) => String(item.id)}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={styles.userOption}
+                                    onPress={() => {
+                                        setFormData({ ...formData, user_id: String(item.id) });
+                                        setShowUserPicker(false);
+                                    }}
+                                >
+                                    <Text style={styles.userOptionEmail}>{item.email}</Text>
+                                    <Text style={styles.userOptionName}>{item.name} {item.lastname}</Text>
+                                </TouchableOpacity>
+                            )}
+                            ListEmptyComponent={<Text style={styles.emptyText}>No hay correos disponibles</Text>}
+                        />
+                    </View>
+                </View>
+            </Modal>
         </KeyboardAvoidingView>
     );
 };
@@ -311,6 +347,21 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         fontSize: 15,
         backgroundColor: '#f8f9fa',
+    },
+    selectorButton: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        backgroundColor: '#f8f9fa',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    selectorText: {
+        color: '#333',
+        fontSize: 15,
     },
     inputError: {
         borderColor: '#dc3545',
@@ -359,5 +410,53 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    modalBackdrop: {
+        flex: 1,
+        justifyContent: 'center',
+        padding: 20,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    modalContainer: {
+        maxHeight: '70%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#333',
+    },
+    userOption: {
+        padding: 14,
+        marginHorizontal: 12,
+        marginVertical: 5,
+        borderWidth: 1,
+        borderColor: '#e5e5e5',
+        borderRadius: 8,
+    },
+    userOptionEmail: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333',
+    },
+    userOptionName: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
+    },
+    emptyText: {
+        textAlign: 'center',
+        color: '#666',
+        padding: 20,
     },
 });

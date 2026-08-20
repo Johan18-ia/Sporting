@@ -11,7 +11,7 @@ module.exports = {
         Product.findAll((err, data) => {
             // Validar errores
             if (err) {
-                return res.status(501).json({
+                return res.status(500).json({
                     success: false,
                     message: 'Error listando productos',
                     error: err
@@ -35,7 +35,7 @@ module.exports = {
         Product.findById(id, (err, data) => {
             // Validar errores
             if (err) {
-                return res.status(501).json({
+                return res.status(500).json({
                     success: false,
                     message: 'Error consultando producto',
                     error: err
@@ -66,7 +66,7 @@ module.exports = {
         Product.create(product, (err, data) => {
             // Validar errores
             if (err) {
-                return res.status(501).json({
+                return res.status(400).json({
                     success: false,
                     message: 'Error creando producto',
                     error: err
@@ -90,7 +90,7 @@ module.exports = {
         Product.update(product, (err, data) => {
             // Validar errores
             if (err) {
-                return res.status(501).json({
+                return res.status(500).json({
                     success: false,
                     message: 'Error actualizando producto',
                     error: err

@@ -50,16 +50,18 @@ Tournament.create = (tournament, result) => {
 Tournament.getAll = (result) => {
     const sql = `
         SELECT t.*, c.category_year,
-               COALESCE(GROUP_CONCAT(CASE WHEN s.id IS NOT NULL THEN JSON_OBJECT(
-                   'id', s.id,
-                   'name', s.name,
-                   'lastname', s.lastname,
-                   'document', s.document
+               COALESCE(GROUP_CONCAT(CASE WHEN sp.id IS NOT NULL THEN JSON_OBJECT(
+                   'id', sp.id,
+                   'user_id', sp.user_id,
+                   'name', u.name,
+                   'lastname', u.lastname,
+                   'document', sp.document
                ) END), '') AS students_json
         FROM tournaments t
         LEFT JOIN categories c ON t.id_category = c.id
         LEFT JOIN tournament_students ts ON ts.tournament_id = t.id
-        LEFT JOIN students s ON s.id = ts.student_id
+        LEFT JOIN student_profiles sp ON sp.id = ts.student_id
+        LEFT JOIN users u ON u.id = sp.user_id
         GROUP BY t.id
         ORDER BY t.tournament_date, t.id DESC
     `;

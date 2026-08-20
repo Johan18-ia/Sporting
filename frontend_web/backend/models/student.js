@@ -1,147 +1,153 @@
 // backend/models/student.js
 // ====================================================
-// MODELO: ESTUDIANTE
+// MODELO: PERFIL DE ESTUDIANTE
 // ====================================================
 const db = require('../config/config');
 
 const Student = {};
 
-// ============================================
-// OBTENER TODOS LOS ESTUDIANTES
-// ============================================
+const selectFields = `
+    sp.id,
+    sp.user_id,
+    u.name,
+    u.lastname,
+    u.email,
+    u.phone,
+    u.role,
+    u.is_active,
+    sp.document,
+    sp.category_id,
+    sp.birth_date,
+    sp.address,
+    sp.emergency_contact_name,
+    sp.emergency_contact_phone,
+    sp.status,
+    sp.created_at,
+    sp.updated_at,
+    c.category_year,
+    c.description AS category_description
+`;
+
 Student.getAll = (result) => {
     const sql = `
-        SELECT 
-            s.*, 
-            c.category_year,
-            c.description as category_description
-        FROM students s
-        LEFT JOIN categories c ON s.category_id = c.id
-        ORDER BY s.id DESC
+        SELECT ${selectFields}
+        FROM student_profiles sp
+        INNER JOIN users u ON u.id = sp.user_id
+        LEFT JOIN categories c ON c.id = sp.category_id
+        ORDER BY sp.id DESC
     `;
-    db.query(sql, (err, res) => {
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, res);
-        }
-    });
+    db.query(sql, (err, rows) => result(err, err ? null : rows));
 };
 
-// ============================================
-// OBTENER ESTUDIANTE POR ID
-// ============================================
 Student.findById = (id, result) => {
     const sql = `
-        SELECT 
-            s.*, 
-            c.category_year,
-            c.description as category_description
-        FROM students s
-        LEFT JOIN categories c ON s.category_id = c.id
-        WHERE s.id = ?
+        SELECT ${selectFields}
+        FROM student_profiles sp
+        INNER JOIN users u ON u.id = sp.user_id
+        LEFT JOIN categories c ON c.id = sp.category_id
+        WHERE sp.id = ?
     `;
-    db.query(sql, [id], (err, res) => {
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, res[0]);
-        }
-    });
+    db.query(sql, [id], (err, rows) => result(err, err ? null : rows[0]));
 };
 
-// ============================================
-// CREAR ESTUDIANTE
-// ============================================
 Student.create = (student, result) => {
-    const sql = `
-        INSERT INTO students (
-            name, 
-            lastname, 
-            document, 
-            category_id, 
-            birth_date,
-            phone,
-            address,
-            emergency_contact,
-            emergency_phone,
-            created_at, 
-            updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-    `;
-    db.query(sql, [
-        student.name,
-        student.lastname,
-        student.document,
-        student.category_id,
-        student.birth_date || null,
-        student.phone || '',
-        student.address || '',
-        student.emergency_contact || '',
-        student.emergency_phone || ''
-    ], (err, res) => {
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, {
-                id: res.insertId,
-                ...student
-            });
+    const {
+        user_id,
+        document,
+        category_id,
+        birth_date,
+        address,
+        emergency_contact_name,
+        emergency_contact_phone,
+        status
+    } = student;
+
+    if (!user_id) return result(new Error('El user_id es obligatorio para crear un estudiante'), null);
+    if (!document) return result(new Error('El documento es obligatorio'), null);
+
+    db.query('SELECT id, role, is_active FROM users WHERE id = ?', [user_id], (userError, users) => {
+        if (userError) return result(userError, null);
+
+        const user = users[0];
+        if (!user) return result(new Error('El usuario no existe'), null);
+        if (user.role !== 'user') {
+            return result(new Error('Solo los usuarios con rol user pueden ser estudiantes'), null);
         }
+        if (Number(user.is_active) !== 1) {
+            return result(new Error('No se puede crear un estudiante con un usuario inactivo'), null);
+        }
+
+        db.query(
+            'SELECT id FROM student_profiles WHERE user_id = ? OR document = ?',
+            [user_id, document],
+            (duplicateError, existing) => {
+                if (duplicateError) return result(duplicateError, null);
+                if (existing.length > 0) {
+                    return result(new Error('El usuario o documento ya tiene un perfil de estudiante'), null);
+                }
+
+                const sql = `
+                    INSERT INTO student_profiles (
+                        user_id, document, category_id, birth_date, address,
+                        emergency_contact_name, emergency_contact_phone, status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `;
+                db.query(sql, [
+                    user_id,
+                    document,
+                    category_id || null,
+                    birth_date || null,
+                    address || null,
+                    emergency_contact_name || null,
+                    emergency_contact_phone || null,
+                    status || 'pending'
+                ], (insertError, response) => {
+                    if (insertError) return result(insertError, null);
+                    result(null, { id: response.insertId, ...student });
+                });
+            }
+        );
     });
 };
 
-// ============================================
-// ACTUALIZAR ESTUDIANTE
-// ============================================
 Student.update = (student, result) => {
+    const {
+        id,
+        user_id,
+        document,
+        category_id,
+        birth_date,
+        address,
+        emergency_contact_name,
+        emergency_contact_phone,
+        status
+    } = student;
+
     const sql = `
-        UPDATE students 
-        SET 
-            name = ?,
-            lastname = ?,
-            document = ?,
-            category_id = ?,
-            birth_date = ?,
-            phone = ?,
-            address = ?,
-            emergency_contact = ?,
-            emergency_phone = ?,
-            updated_at = NOW()
+        UPDATE student_profiles
+        SET user_id = ?, document = ?, category_id = ?, birth_date = ?,
+            address = ?, emergency_contact_name = ?, emergency_contact_phone = ?,
+            status = ?, updated_at = NOW()
         WHERE id = ?
     `;
     db.query(sql, [
-        student.name,
-        student.lastname,
-        student.document,
-        student.category_id,
-        student.birth_date || null,
-        student.phone || '',
-        student.address || '',
-        student.emergency_contact || '',
-        student.emergency_phone || '',
-        student.id
-    ], (err, res) => {
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, student);
-        }
+        user_id,
+        document,
+        category_id || null,
+        birth_date || null,
+        address || null,
+        emergency_contact_name || null,
+        emergency_contact_phone || null,
+        status || 'pending',
+        id
+    ], (err, response) => {
+        result(err, err ? null : { id, ...student, affectedRows: response.affectedRows });
     });
 };
 
-// ============================================
-// ELIMINAR ESTUDIANTE
-// ============================================
 Student.delete = (id, result) => {
-    const sql = 'DELETE FROM students WHERE id = ?';
-    db.query(sql, [id], (err, res) => {
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, res);
-        }
+    db.query('DELETE FROM student_profiles WHERE id = ?', [id], (err, response) => {
+        result(err, err ? null : response);
     });
 };
 

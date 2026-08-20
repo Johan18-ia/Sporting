@@ -1,0 +1,193 @@
+HISTORIAS DE USUARIO ADAPTADAS AL FRONTEND Y MODELO ACTUAL
+====================================================================
+Proyecto: Sporting
+Tipo de documento: Historias de Usuario ajustadas a la implementacion real
+Fecha: 20/08/2026
+
+INTRODUCCION
+------------
+Este documento alinea las historias de usuario con las pantallas actuales de la aplicacion movil, la API Node/Express y el modelo de datos vigente.
+
+Modelo de datos aplicado:
+- users contiene autenticacion y datos generales: nombre, apellido, email, contrasena, telefono, imagen, rol y estado.
+- student_profiles amplia una cuenta existente con documento, categoria, fecha de nacimiento, direccion, contacto de emergencia y estado.
+- La relacion entre ambas tablas se realiza mediante student_profiles.user_id y es uno a uno.
+- Un usuario con rol user puede ser usuario regular o tener un perfil de estudiante; no se duplican cuentas ni datos generales.
+
+Estados usados:
+- Implementada: disponible en la aplicacion.
+- Parcialmente implementada: existe, pero requiere un complemento.
+- No implementada: solo existe mensaje informativo o no existe flujo real.
+
+--------------------------------------------------------------------
+HU01: INICIAR SESION
+Estado: Implementada
+
+Como usuario registrado, quiero ingresar mi correo y contrasena para acceder al sistema de forma segura.
+
+Criterios de aceptacion:
+1. El usuario ingresa email y contrasena en Login.
+2. Se validan campos requeridos y formato del correo.
+3. Con credenciales correctas se genera/recibe un JWT valido por 24 horas, se guarda localmente y se redirige segun el rol.
+4. Con credenciales incorrectas se muestra "Contrasena o correo incorrecto".
+5. Si is_active = 0 se muestra "Usuario desactivado. Contacte al administrador".
+6. El sistema no permite acceder al area protegida sin una sesion valida.
+
+--------------------------------------------------------------------
+HU02: CERRAR SESION
+Estado: Implementada
+
+Como usuario autenticado, quiero cerrar mi sesion para finalizar mi acceso de forma segura.
+
+Criterios de aceptacion:
+1. El usuario selecciona Cerrar Sesion desde Perfil.
+2. Se solicita confirmacion antes de continuar.
+3. Al confirmar, se eliminan el usuario y el token local, incluida su expiracion.
+4. El usuario vuelve al flujo de autenticacion y no puede usar rutas protegidas sin iniciar sesion.
+
+--------------------------------------------------------------------
+HU03: RECUPERAR CONTRASENA
+Estado: No implementada; flujo informativo
+
+Como usuario, quiero recuperar mi cuenta si olvide mi contrasena.
+
+Criterios de aceptacion:
+1. Desde Login puede seleccionar "Olvidaste tu contrasena?".
+2. El sistema informa que el restablecimiento no esta disponible y recomienda contactar al administrador.
+3. No se simula un envio de correo ni un enlace inexistente.
+
+Observacion: No existe endpoint ni flujo real de recuperacion de contrasena.
+
+--------------------------------------------------------------------
+HU04: AUTOREGISTRO DE CUENTA PARA ESTUDIANTE
+Estado: Implementada
+
+Como estudiante o padre, quiero registrar una cuenta de usuario para acceder a la plataforma.
+
+Criterios de aceptacion:
+1. El usuario completa nombre, apellido, email, telefono, contrasena y confirmacion.
+2. Se validan campos requeridos, email, longitud minima de seis caracteres y coincidencia de contrasenas.
+3. Si los datos son correctos, se crea un registro en users con role = user.
+4. Si el email ya existe, se informa el conflicto.
+5. El registro de cuenta no crea datos duplicados en student_profiles.
+
+Observacion: La asociacion de la cuenta con un perfil de estudiante se realiza posteriormente desde la gestion de estudiantes usando user_id.
+
+--------------------------------------------------------------------
+HU05: REGISTRAR USUARIO COMO ADMINISTRADOR O VENDEDOR
+Estado: Implementada
+
+Como administrador o vendedor autorizado, quiero registrar usuarios y asignar su rol.
+
+Criterios de aceptacion:
+1. Puede crear usuarios desde el formulario de usuario.
+2. Se validan nombre, email y contrasena.
+3. Los roles permitidos son admin, seller y user.
+4. Las cuentas admin y seller no reciben datos de estudiante.
+5. Para role = user, la cuenta puede quedar sin perfil estudiantil hasta que se asocie desde el modulo de estudiantes.
+6. Se impiden cambios de privilegios no autorizados.
+
+--------------------------------------------------------------------
+HU06: LISTAR USUARIOS
+Estado: Implementada
+
+Como administrador o vendedor, quiero consultar los usuarios registrados para gestionarlos.
+
+Criterios de aceptacion:
+1. Se muestran nombre, email, rol y estado activo/inactivo.
+2. Se puede buscar por nombre, apellido o correo.
+3. Se puede filtrar por Todos, Admin, Seller y Usuario.
+4. El orden de prioridad es admin primero, seller segundo y user tercero.
+5. Los usuarios role = user muestran si son Estudiante o Usuario regular, consultando la existencia de student_profiles.
+6. La lista permite acceder al detalle y a las acciones autorizadas.
+
+--------------------------------------------------------------------
+HU07: OBTENER USUARIO POR IDENTIFICADOR
+Estado: Implementada
+
+Como administrador o vendedor, quiero consultar el detalle de un usuario.
+
+Criterios de aceptacion:
+1. Al seleccionar un usuario se solicita /api/users/:id.
+2. La vista muestra id, nombre, apellido, email, telefono, rol, estado y fecha de registro.
+3. Si no existe, se muestra "Usuario no encontrado" y se vuelve a la lista.
+4. El detalle ofrece acceso a editar y cambiar estado cuando corresponda.
+
+--------------------------------------------------------------------
+HU08: EDITAR USUARIO
+Estado: Implementada
+
+Como administrador o vendedor, quiero actualizar los datos de un usuario.
+
+Criterios de aceptacion:
+1. Se pueden editar nombre, apellido, email y telefono.
+2. Se valida nombre requerido y formato de email.
+3. Solo los permisos autorizados permiten cambiar roles.
+4. Un usuario no puede cambiar su propio rol.
+5. Al actualizar la propia cuenta, la sesion local se sincroniza.
+6. Los datos de estudiante no se duplican en users; se gestionan en student_profiles.
+
+--------------------------------------------------------------------
+HU09: ACTIVAR O DESACTIVAR USUARIO
+Estado: Implementada
+
+Como administrador, quiero activar o desactivar usuarios para controlar su acceso.
+
+Criterios de aceptacion:
+1. El administrador confirma antes de cambiar el estado.
+2. Activar establece is_active = 1.
+3. Desactivar establece is_active = 0 y bloquea el login.
+4. No se permite desactivar la propia cuenta.
+
+--------------------------------------------------------------------
+HU10: ELIMINAR USUARIO
+Estado: Implementada
+
+Como administrador, quiero eliminar un usuario cuando sea necesario.
+
+Criterios de aceptacion:
+1. La eliminacion requiere confirmacion.
+2. No se permite que el administrador elimine su propia cuenta.
+3. Al eliminar users, el perfil relacionado en student_profiles se elimina por la llave foranea ON DELETE CASCADE.
+4. Se muestra mensaje de resultado y se actualiza la lista.
+
+--------------------------------------------------------------------
+HU11: EDITAR PERFIL
+Estado: Parcialmente implementada
+
+Como usuario autenticado, quiero actualizar mi informacion personal.
+
+Criterios de aceptacion:
+1. El usuario puede abrir Mi Perfil y consultar sus datos.
+2. Puede modificar los datos generales permitidos, como nombre, email y telefono.
+3. El rol se mantiene protegido y no es editable desde el perfil.
+4. El cambio de contrasena debe manejarse en un flujo separado.
+5. Al guardar, la sesion local debe reflejar los datos actualizados.
+
+Observacion: La edicion del perfil existe; falta formalizar una pantalla independiente para cambiar contrasena.
+
+--------------------------------------------------------------------
+HU12: ASOCIAR PERFIL DE ESTUDIANTE A USUARIO
+Estado: Implementada en backend y formulario movil
+
+Como administrador o vendedor, quiero asociar un perfil estudiantil a un usuario existente para evitar duplicar sus datos personales.
+
+Criterios de aceptacion:
+1. El formulario muestra correos registrados de usuarios con role = user y activos.
+2. No muestra usuarios que ya tengan student_profiles, excepto el usuario actual cuando se edita.
+3. El administrador registra documento, categoria, fecha de nacimiento, direccion, contactos de emergencia y estado.
+4. El backend valida user_id, role = user, is_active = 1 y unicidad de usuario/documento.
+5. El perfil se guarda en student_profiles y los datos generales se consultan desde users.
+6. Al eliminar la cuenta, el perfil estudiantil relacionado se elimina por cascada.
+
+--------------------------------------------------------------------
+CATALOGO Y PRODUCTOS
+Estado: Implementado; requiere base sincronizada
+
+La pantalla publica consulta GET /api/products. La tabla productos se mantiene en el SQL con sus columnas nombre, descripcion, precio, stock, imagen y categoria. El controlador devuelve 500 si MySQL rechaza la consulta; esto permite diferenciar un error real de base de datos de una respuesta 501 incorrecta.
+
+Para recuperar una base perdida, se debe ejecutar nuevamente frontend_web/database/db_node.sql sobre la base db_node. El script crea productos y sus datos iniciales, ademas de users y student_profiles.
+
+--------------------------------------------------------------------
+CONCLUSION
+La documentacion se ajusta al frontend y al modelo actual. La cuenta de usuario vive en users; el perfil de estudiante vive en student_profiles. La autenticacion, registro, cierre de sesion, gestion de usuarios, estados, eliminacion y asociacion estudiantil estan contemplados. HU03 permanece informativa y HU11 queda parcial por el cambio de contrasena independiente.

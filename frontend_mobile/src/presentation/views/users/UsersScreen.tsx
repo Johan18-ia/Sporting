@@ -30,7 +30,16 @@ interface User {
     phone?: string;
     is_active: number;
     image?: string;
+    isStudent?: boolean;
 }
+
+const rolePriority: Record<string, number> = { admin: 0, seller: 1, user: 2 };
+const roleFilters = [
+    { key: 'all', label: 'Todos' },
+    { key: 'admin', label: 'Admin' },
+    { key: 'seller', label: 'Seller' },
+    { key: 'user', label: 'Usuario' }
+] as const;
 
 export const UsersScreen = () => {
     const navigation = useNavigation<any>();
@@ -39,17 +48,25 @@ export const UsersScreen = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [roleFilter, setRoleFilter] = useState<(typeof roleFilters)[number]['key']>('all');
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
     const loadUsers = async () => {
         try {
-            const response = await ApiDelivery.get('/users');
-            // El backend envuelve la respuesta como { success, message, data }.
-            // Antes se asumia que response.data YA era el array.
-            const usersData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-            setUsers(usersData);
-            setFilteredUsers(usersData);
+            const [usersResponse, studentsResponse] = await Promise.all([
+                ApiDelivery.get('/users'),
+                ApiDelivery.get('/students')
+            ]);
+            const usersData = Array.isArray(usersResponse.data) ? usersResponse.data : (usersResponse.data?.data || []);
+            const studentsData = Array.isArray(studentsResponse.data) ? studentsResponse.data : (studentsResponse.data?.data || []);
+            const studentIds = new Set(studentsData.map((item: any) => Number(item.user_id)));
+            const normalizedUsers = usersData.map((item: User) => ({
+                ...item,
+                isStudent: studentIds.has(Number(item.id))
+            }));
+            setUsers(normalizedUsers);
+            setFilteredUsers(normalizedUsers);
         } catch (error) {
             console.error('Error loading users:', error);
             Alert.alert('Error', 'No se pudieron cargar los usuarios');
@@ -66,17 +83,23 @@ export const UsersScreen = () => {
     }, [isFocused]);
 
     useEffect(() => {
+        let filtered = users;
+        if (roleFilter !== 'all') {
+            filtered = filtered.filter(user => user.role === roleFilter);
+        }
         if (searchTerm.trim()) {
-            const filtered = users.filter(user =>
+            filtered = filtered.filter(user =>
                 user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 user.lastname.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 user.email.toLowerCase().includes(searchTerm.toLowerCase())
             );
-            setFilteredUsers(filtered);
-        } else {
-            setFilteredUsers(users);
         }
-    }, [searchTerm, users]);
+        filtered = [...filtered].sort((a, b) => {
+            const priority = (rolePriority[a.role] ?? 99) - (rolePriority[b.role] ?? 99);
+            return priority || `${a.name} ${a.lastname}`.localeCompare(`${b.name} ${b.lastname}`);
+        });
+        setFilteredUsers(filtered);
+    }, [searchTerm, users, roleFilter]);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -157,6 +180,12 @@ export const UsersScreen = () => {
         return { backgroundColor: color.bg, color: color.text };
     };
 
+    const getRoleLabel = (item: User) => {
+        if (item.role === 'admin') return 'Administrador';
+        if (item.role === 'seller') return 'Vendedor';
+        return 'Usuario';
+    };
+
     const renderUserItem = ({ item }: { item: User }) => {
         const roleBadge = getRoleBadge(item.role);
         const isCurrentUser = currentUser?.id === item.id;
@@ -188,10 +217,16 @@ export const UsersScreen = () => {
                     <View style={styles.userMeta}>
                         <View style={[styles.roleBadge, { backgroundColor: roleBadge.backgroundColor }]}>
                             <Text style={[styles.roleBadgeText, { color: roleBadge.color }]}>
-                                {item.role === 'admin' ? 'Administrador' :
-                                 item.role === 'seller' ? 'Vendedor' : 'Usuario'}
+                                {getRoleLabel(item)}
                             </Text>
                         </View>
+                        {item.role === 'user' && (
+                            <View style={[styles.secondaryBadge, item.isStudent ? styles.studentBadge : styles.normalUserBadge]}>
+                                <Text style={[styles.secondaryBadgeText, item.isStudent ? styles.studentBadgeText : styles.normalUserBadgeText]}>
+                                    {item.isStudent ? 'Estudiante' : 'Usuario'}
+                                </Text>
+                            </View>
+                        )}
                         {item.is_active === 0 && (
                             <View style={styles.inactiveBadge}>
                                 <Text style={styles.inactiveBadgeText}>Inactivo</Text>
@@ -243,6 +278,20 @@ export const UsersScreen = () => {
                 >
                     <Ionicons name="add" size={24} color="#fff" />
                 </TouchableOpacity>
+            </View>
+
+            <View style={styles.filterContainer}>
+                {roleFilters.map((filter) => (
+                    <TouchableOpacity
+                        key={filter.key}
+                        style={[styles.filterChip, roleFilter === filter.key && styles.filterChipActive]}
+                        onPress={() => setRoleFilter(filter.key)}
+                    >
+                        <Text style={[styles.filterChipText, roleFilter === filter.key && styles.filterChipTextActive]}>
+                            {filter.label}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
             </View>
 
             {/* User Count */}
@@ -318,6 +367,34 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    filterContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        backgroundColor: '#fff',
+    },
+    filterChip: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        backgroundColor: '#fff',
+    },
+    filterChipActive: {
+        backgroundColor: MyColors.primary,
+        borderColor: MyColors.primary,
+    },
+    filterChipText: {
+        color: '#4b5563',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    filterChipTextActive: {
+        color: '#fff',
     },
     userCount: {
         paddingHorizontal: 16,
@@ -404,6 +481,28 @@ const styles = StyleSheet.create({
     roleBadgeText: {
         fontSize: 11,
         fontWeight: '600',
+    },
+    secondaryBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        borderRadius: 12,
+        marginRight: 6,
+    },
+    studentBadge: {
+        backgroundColor: '#e0f2fe',
+    },
+    normalUserBadge: {
+        backgroundColor: '#f3f4f6',
+    },
+    secondaryBadgeText: {
+        fontSize: 11,
+        fontWeight: '600',
+    },
+    studentBadgeText: {
+        color: '#0369a1',
+    },
+    normalUserBadgeText: {
+        color: '#6b7280',
     },
     inactiveBadge: {
         backgroundColor: '#fee2e2',
