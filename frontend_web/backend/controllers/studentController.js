@@ -11,7 +11,7 @@ module.exports = {
     getAllStudents(req, res) {
         Student.getAll((err, data) => {
             if (err) {
-                return res.status(501).json({
+                return res.status(500).json({
                     success: false,
                     message: 'Error listando estudiantes',
                     error: err
@@ -32,7 +32,7 @@ module.exports = {
         const id = req.params.id;
         Student.findById(id, (err, data) => {
             if (err) {
-                return res.status(501).json({
+                return res.status(500).json({
                     success: false,
                     message: 'Error consultando estudiante',
                     error: err
@@ -57,11 +57,20 @@ module.exports = {
     // ============================================
     createStudent(req, res) {
         const student = req.body;
+
+        if (!student.user_id || !student.document) {
+            return res.status(400).json({
+                success: false,
+                message: 'user_id y document son obligatorios'
+            });
+        }
+
         Student.create(student, (err, data) => {
             if (err) {
-                return res.status(501).json({
+                const duplicate = err.code === 'ER_DUP_ENTRY';
+                return res.status(duplicate ? 409 : 400).json({
                     success: false,
-                    message: 'Error creando estudiante',
+                    message: err.message || 'Error creando estudiante',
                     error: err
                 });
             }
@@ -86,7 +95,7 @@ module.exports = {
         }
         Student.update(student, (err, data) => {
             if (err) {
-                return res.status(501).json({
+                return res.status(err.code === 'ER_DUP_ENTRY' ? 409 : 500).json({
                     success: false,
                     message: 'Error actualizando estudiante',
                     error: err
@@ -107,7 +116,7 @@ module.exports = {
         const id = req.params.id;
         Student.delete(id, (err, data) => {
             if (err) {
-                return res.status(501).json({
+                return res.status(500).json({
                     success: false,
                     message: 'Error eliminando estudiante',
                     error: err
