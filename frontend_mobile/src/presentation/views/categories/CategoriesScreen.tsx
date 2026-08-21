@@ -14,7 +14,8 @@ import {
     ScrollView,
     RefreshControl,
     ActivityIndicator,
-    Alert
+    Alert,
+    Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MyColors } from '../../theme/AppTheme';
@@ -46,6 +47,8 @@ export const CategoriesScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ category_year: '', description: '' });
+    const [showCustomYearInput, setShowCustomYearInput] = useState(false);
+    const [customYear, setCustomYear] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
 
@@ -128,9 +131,28 @@ export const CategoriesScreen = () => {
 
     const resetForm = () => {
         setFormData({ category_year: '', description: '' });
+        setCustomYear('');
+        setShowCustomYearInput(false);
         setIsEditing(false);
         setEditingId(null);
         setShowForm(false);
+    };
+
+    const selectCustomYear = () => {
+        const normalizedYear = customYear.trim();
+        if (!/^\d{4}$/.test(normalizedYear)) {
+            Alert.alert('Error', 'Escribe un año válido de cuatro dígitos');
+            return;
+        }
+
+        if (usedYears.includes(normalizedYear)) {
+            Alert.alert('Error', 'Ese año ya está registrado');
+            return;
+        }
+
+        setFormData({ ...formData, category_year: normalizedYear });
+        setCustomYear('');
+        setShowCustomYearInput(false);
     };
 
     const startEdit = (category: Category) => {
@@ -188,6 +210,13 @@ export const CategoriesScreen = () => {
                     <Text style={styles.formLabel}>Año de nacimiento</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yearScroll}>
                         <View style={styles.yearContainer}>
+                            <TouchableOpacity
+                                style={styles.addYearChip}
+                                onPress={() => setShowCustomYearInput(true)}
+                                accessibilityLabel="Agregar otro año"
+                            >
+                                <Ionicons name="add" size={20} color={MyColors.primary} />
+                            </TouchableOpacity>
                             {YEAR_OPTIONS.map((year) => {
                                 const disabled = usedYears.includes(year);
                                 const selected = formData.category_year === year;
@@ -214,6 +243,40 @@ export const CategoriesScreen = () => {
                             })}
                         </View>
                     </ScrollView>
+
+                    <Modal
+                        visible={showCustomYearInput}
+                        transparent
+                        animationType="fade"
+                        onRequestClose={() => setShowCustomYearInput(false)}
+                    >
+                        <View style={styles.customYearOverlay}>
+                            <View style={styles.customYearModal}>
+                                <Text style={styles.customYearTitle}>Agregar otro año</Text>
+                                <TextInput
+                                    style={styles.formInput}
+                                    placeholder="Ej: 2004"
+                                    placeholderTextColor="#999"
+                                    keyboardType="number-pad"
+                                    maxLength={4}
+                                    value={customYear}
+                                    onChangeText={setCustomYear}
+                                    autoFocus
+                                />
+                                <View style={styles.customYearActions}>
+                                    <TouchableOpacity
+                                        style={styles.customYearCancel}
+                                        onPress={() => setShowCustomYearInput(false)}
+                                    >
+                                        <Text style={styles.customYearCancelText}>Cancelar</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.formSubmit} onPress={selectCustomYear}>
+                                        <Text style={styles.formSubmitText}>Agregar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </Modal>
 
                     <Text style={styles.formLabel}>Descripción</Text>
                     <TextInput
@@ -335,6 +398,50 @@ const styles = StyleSheet.create({
     },
     yearChipTextDisabled: {
         color: '#999',
+    },
+    addYearChip: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: MyColors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 8,
+    },
+    customYearOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        padding: 20,
+    },
+    customYearModal: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 20,
+        width: '90%',
+        maxWidth: 360,
+    },
+    customYearTitle: {
+        color: '#333',
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 16,
+    },
+    customYearActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        gap: 10,
+    },
+    customYearCancel: {
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+    },
+    customYearCancelText: {
+        color: '#666',
+        fontWeight: '600',
     },
     formInput: {
         borderWidth: 1,
