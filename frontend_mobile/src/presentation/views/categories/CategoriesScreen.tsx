@@ -46,16 +46,26 @@ export const CategoriesScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ category_year: '', description: '' });
+    const [showCustomYearInput, setShowCustomYearInput] = useState(false);
+    const [customYear, setCustomYear] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
 
     const loadCategories = async () => {
         try {
             const response = await ApiDelivery.get('/categories');
-            // El backend envuelve la respuesta como { success, message, data }.
-            // Antes se asumia que response.data YA era el array.
-            const categoriesData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-            setCategories(categoriesData);
+            const responseData = response.data;
+            const categoriesData = Array.isArray(responseData)
+                ? responseData
+                : Array.isArray(responseData?.data)
+                    ? responseData.data
+                    : Array.isArray(responseData?.data?.data)
+                        ? responseData.data.data
+                        : [];
+            setCategories(categoriesData.map((category) => ({
+                ...category,
+                category_year: String(category.category_year)
+            })));
         } catch (error) {
             Alert.alert('Error', 'No se pudieron cargar las categorías');
         } finally {
@@ -77,27 +87,68 @@ export const CategoriesScreen = () => {
     // Si se esta editando, el año actual de esa categoría sigue disponible.
     const usedYears = categories
         .filter((c) => !(isEditing && c.id === editingId))
-        .map((c) => c.category_year);
+        .map((c) => String(c.category_year));
 
-    const handleSubmit = async () => {
-        if (!formData.category_year) {
+    const savedYears = Array.from(
+        new Set(categories.map((category) => String(category.category_year)))
+    ).sort((firstYear, secondYear) => Number(firstYear) - Number(secondYear));
+    const availableYears = [
+        ...YEAR_OPTIONS.filter((year) => !savedYears.includes(year)),
+        ...savedYears
+    ];
+
+    const handleSubmit = async (categoryData = formData) => {
+        const enteredYear = customYear.trim();
+        const yearToSave = categoryData.category_year || enteredYear;
+        const dataToSave = { ...categoryData, category_year: yearToSave };
+
+        if (!dataToSave.category_year) {
             Alert.alert('Error', 'Selecciona el año de la categoría');
             return;
         }
+        if (!/^\d{4}$/.test(dataToSave.category_year)) {
+            Alert.alert('Error', 'Escribe un año válido de cuatro dígitos');
+            return;
+        }
+        if (usedYears.includes(dataToSave.category_year)) {
+            Alert.alert('Error', 'Ese año ya está registrado');
+            return;
+        }
 
+        const wasEditing = isEditing;
         try {
-            if (isEditing && editingId) {
-                await ApiDelivery.put('/categories', {
+            let response;
+            if (wasEditing && editingId) {
+                response = await ApiDelivery.put('/categories', {
                     id: editingId,
-                    category_year: formData.category_year,
-                    description: formData.description
+                    category_year: dataToSave.category_year,
+                    description: dataToSave.description
                 });
             } else {
-                await ApiDelivery.post('/categories/create', formData);
+                response = await ApiDelivery.post('/categories/create', dataToSave);
+            }
+            const responsePayload = response.data;
+            const savedCategory = responsePayload?.data?.id
+                ? responsePayload.data
+                : responsePayload?.data?.data;
+            if (savedCategory?.id) {
+                const normalizedCategory = {
+                    ...savedCategory,
+                    category_year: String(savedCategory.category_year)
+                };
+                setCategories((currentCategories) => {
+                    const categoryExists = currentCategories.some((category) => category.id === normalizedCategory.id);
+                    if (categoryExists) {
+                        return currentCategories.map((category) => (
+                            category.id === normalizedCategory.id ? normalizedCategory : category
+                        ));
+                    }
+                    return [...currentCategories, normalizedCategory];
+                });
             }
             resetForm();
-            loadCategories();
-            Alert.alert('Éxito', isEditing ? 'Categoría actualizada' : 'Categoría creada');
+            await loadCategories();
+            Alert.alert('Éxito', wasEditing ? 'Categoría actualizada' : 'Categoría creada');
         } catch (error) {
             Alert.alert('Error', 'No se pudo guardar la categoría');
         }
@@ -128,9 +179,36 @@ export const CategoriesScreen = () => {
 
     const resetForm = () => {
         setFormData({ category_year: '', description: '' });
+        setCustomYear('');
+        setShowCustomYearInput(false);
         setIsEditing(false);
         setEditingId(null);
         setShowForm(false);
+    };
+
+    const selectCustomYear = () => {
+        const normalizedYear = customYear.trim();
+        if (!/^\d{4}$/.test(normalizedYear)) {
+            Alert.alert('Error', 'Escribe un año válido de cuatro dígitos');
+            return;
+        }
+
+        if (usedYears.includes(normalizedYear)) {
+            Alert.alert('Error', 'Ese año ya está registrado');
+            return;
+        }
+
+        setFormData({ ...formData, category_year: normalizedYear });
+    };
+
+    const handleCustomYearBlur = () => {
+        const normalizedYear = customYear.trim();
+        if (/^\d{4}$/.test(normalizedYear) && !usedYears.includes(normalizedYear)) {
+            setFormData((currentFormData) => ({
+                ...currentFormData,
+                category_year: normalizedYear
+            }));
+        }
     };
 
     const startEdit = (category: Category) => {
@@ -188,7 +266,36 @@ export const CategoriesScreen = () => {
                     <Text style={styles.formLabel}>Año de nacimiento</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yearScroll}>
                         <View style={styles.yearContainer}>
-                            {YEAR_OPTIONS.map((year) => {
+                            <TouchableOpacity
+                                style={styles.addYearChip}
+                                onPress={() => setShowCustomYearInput((visible) => !visible)}
+                                accessibilityLabel="Agregar otro año"
+                            >
+                                <Ionicons name={showCustomYearInput ? 'close' : 'add'} size={20} color={MyColors.primary} />
+                            </TouchableOpacity>
+                            {showCustomYearInput && (
+                                <View style={styles.customYearInline}>
+                                    <TextInput
+                                        style={styles.customYearInput}
+                                        placeholder="Ejem: 2004"
+                                        placeholderTextColor="#999"
+                                        keyboardType="number-pad"
+                                        maxLength={4}
+                                        value={customYear}
+                                        onChangeText={setCustomYear}
+                                        onBlur={handleCustomYearBlur}
+                                        autoFocus
+                                    />
+                                    <TouchableOpacity
+                                        style={styles.customYearConfirm}
+                                        onPress={selectCustomYear}
+                                        accessibilityLabel="Confirmar año"
+                                    >
+                                        <Ionicons name="checkmark" size={20} color="#fff" />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                            {!showCustomYearInput && availableYears.map((year) => {
                                 const disabled = usedYears.includes(year);
                                 const selected = formData.category_year === year;
                                 return (
@@ -224,7 +331,7 @@ export const CategoriesScreen = () => {
                         onChangeText={(text) => setFormData({ ...formData, description: text })}
                     />
 
-                    <TouchableOpacity style={styles.formSubmit} onPress={handleSubmit}>
+                    <TouchableOpacity style={styles.formSubmit} onPress={() => handleSubmit()}>
                         <Text style={styles.formSubmitText}>
                             {isEditing ? 'Actualizar' : 'Crear'}
                         </Text>
@@ -335,6 +442,43 @@ const styles = StyleSheet.create({
     },
     yearChipTextDisabled: {
         color: '#999',
+    },
+    addYearChip: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: MyColors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 8,
+    },
+    customYearInline: {
+        flex: 1,
+        minWidth: 220,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 8,
+    },
+    customYearInput: {
+        flex: 1,
+        height: 40,
+        borderWidth: 1,
+        borderColor: MyColors.primary,
+        borderRadius: 20,
+        paddingHorizontal: 10,
+        textAlign: 'center',
+        color: '#333',
+        backgroundColor: '#fff',
+    },
+    customYearConfirm: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        marginLeft: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: MyColors.primary,
     },
     formInput: {
         borderWidth: 1,
