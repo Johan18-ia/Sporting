@@ -62,7 +62,7 @@ export const CategoriesScreen = () => {
                     : Array.isArray(responseData?.data?.data)
                         ? responseData.data.data
                         : [];
-            setCategories(categoriesData.map((category) => ({
+            setCategories((categoriesData as Category[]).map((category: Category) => ({
                 ...category,
                 category_year: String(category.category_year)
             })));

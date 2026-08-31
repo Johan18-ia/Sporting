@@ -96,10 +96,14 @@ const ProductsView = () => {
   // ============================================
   // PRESENTACION 
   // ============================================
+  const totalStock = products.reduce((sum, product) => sum + (Number(product.stock) || 0), 0);
+  const lowStock = products.filter((product) => Number(product.stock) <= 5).length;
+
   return (
     <div>
       <PageHeader
-        title="Mis Productos"
+        title="Productos"
+        description="Gestión del catálogo y disponibilidad del inventario."
         actions={
           <Button
             onClick={() => {
@@ -112,6 +116,30 @@ const ProductsView = () => {
           </Button>
         }
       />
+
+      <div className="panel-summary-grid">
+        <div className="panel-summary-card">
+          <div className="panel-summary-icon">#</div>
+          <div className="panel-summary-meta">
+            <span className="panel-summary-value">{products.length}</span>
+            <span className="panel-summary-label">Productos</span>
+          </div>
+        </div>
+        <div className="panel-summary-card">
+          <div className="panel-summary-icon">S</div>
+          <div className="panel-summary-meta">
+            <span className="panel-summary-value">{totalStock}</span>
+            <span className="panel-summary-label">Stock total</span>
+          </div>
+        </div>
+        <div className="panel-summary-card">
+          <div className="panel-summary-icon">!</div>
+          <div className="panel-summary-meta">
+            <span className="panel-summary-value">{lowStock}</span>
+            <span className="panel-summary-label">Bajo stock</span>
+          </div>
+        </div>
+      </div>
 
       {message && (
         <AlertMessage
@@ -195,7 +223,7 @@ const ProductsView = () => {
                 </td>
                 <td><strong>${parseFloat(p.precio).toLocaleString('es-CO')}</strong></td>
                 <td>
-                  <span style={{ color: p.stock > 0 ? '#0ea371' : '#a90202', fontWeight: 600 }}>
+                  <span className={`pill ${Number(p.stock) > 5 ? 'pill-success' : 'pill-danger'}`}>
                     {p.stock || 0}
                   </span>
                 </td>

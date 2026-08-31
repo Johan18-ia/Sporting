@@ -31,27 +31,19 @@ const ProtectedRoute = ({ children }) => {
 // COMPONENTE: APP
 // ============================================
 function App() {
+    const { user, isAuthenticated } = useAuth()
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Navbar />
             <Routes>
-                {/* ============================================
-                RUTA PÚBLICA - CATÁLOGO (Página de inicio)
-                ============================================ */}
-                <Route path="/" element={<Navigate to="/catalogo" />} />
-                <Route path="/catalogo" element={<CatalogoView />} />
+                <Route path="/" element={<Navigate to={ROUTES.CATALOGO} replace />} />
+                <Route path={ROUTES.CATALOGO} element={<CatalogoView />} />
+                <Route path={ROUTES.LOGIN} element={<LoginView />} />
+                <Route path={ROUTES.REGISTER} element={<RegisterView />} />
 
-                {/* ============================================
-                RUTAS DE AUTENTICACIÓN
-                ============================================ */}
-                <Route path="/login" element={<LoginView />} />
-                <Route path="/register" element={<RegisterView />} />
-
-                {/* ============================================
-                RUTA PROTEGIDA - DASHBOARD
-                ============================================ */}
                 <Route
-                    path="/dashboard/*"
+                    path={`${ROUTES.DASHBOARD}/*`}
                     element={
                         <ProtectedRoute>
                             <DashboardView />
@@ -59,10 +51,7 @@ function App() {
                     }
                 />
 
-                {/* ============================================
-                RUTA 404 - NO ENCONTRADA
-                ============================================ */}
-                <Route path="*" element={<Navigate to="/catalogo" />} />
+                <Route path="*" element={<Navigate to={isAuthenticated && user ? ROUTES.DASHBOARD : ROUTES.CATALOGO} replace />} />
             </Routes>
             <Footer />
         </div>
