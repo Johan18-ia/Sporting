@@ -317,7 +317,7 @@ export const UserFormScreen = () => {
                         {mode === 'edit' && editingUser && currentUser && editingUser.id === currentUser.id ? (
                             <View style={{ paddingVertical: 8 }}>
                                 <Text style={{ fontSize: 15, fontWeight: '600' }}>{
-                                    editingUser.role === 'admin' ? 'Administrador' : editingUser.role === 'seller' ? 'Seller' : 'Usuario'
+                                    editingUser.role === 'admin' ? 'Administrador' : editingUser.role === 'seller' ? 'Moderador' : 'Usuario'
                                 }</Text>
                                 <Text style={{ color: '#888', marginTop: 6 }}>El rol no puede ser modificado desde el perfil.</Text>
                             </View>
@@ -338,7 +338,7 @@ export const UserFormScreen = () => {
                                             formData.role === role && styles.roleOptionTextSelected,
                                             role === 'admin' && currentUser?.role !== 'admin' ? { color: '#aaa' } : {}
                                         ]}>
-                                            {role === 'admin' ? 'Administrador' : role === 'seller' ? 'Seller' : 'Usuario'}
+                                            {role === 'admin' ? 'Administrador' : role === 'seller' ? 'Moderador' : 'Usuario'}
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
@@ -350,7 +350,7 @@ export const UserFormScreen = () => {
                         CATEGORÍA (AÑO) — mismo patron visual de chips
                         que ya usa StudentFormScreen para consistencia.
                         Solo aplica a estudiantes (role === 'user'):
-                        un admin o vendedor no pertenece a una categoria.
+                        un admin o moderador no pertenece a una categoria.
                         ============================================ */}
                     {formData.role === 'user' && (
                     <View style={styles.inputGroup}>

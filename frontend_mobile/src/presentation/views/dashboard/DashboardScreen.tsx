@@ -20,6 +20,7 @@ import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 
 interface DashboardStats {
+    users: number;
     students: number;
     tournaments: number;
     activeTournaments: number;
@@ -32,6 +33,7 @@ export const DashboardScreen = () => {
     const navigation = useNavigation<any>();
     const { user } = useAuth();
     const [stats, setStats] = useState<DashboardStats>({
+        users: 0,
         students: 0,
         tournaments: 0,
         activeTournaments: 0,
@@ -67,7 +69,8 @@ export const DashboardScreen = () => {
             // Promise.allSettled en vez de Promise.all: si UN endpoint falla
             // (ej. Horarios o Torneos con error 501 del backend), los demas
             // igual cargan en vez de tumbar todo el dashboard.
-            const [studentsRes, tournamentsRes, productsRes, categoriesRes, schedulesRes] = await Promise.allSettled([
+            const [usersRes, studentsRes, tournamentsRes, productsRes, categoriesRes, schedulesRes] = await Promise.allSettled([
+                ApiDelivery.get('/users'),
                 ApiDelivery.get('/students'),
                 ApiDelivery.get('/tournaments'),
                 ApiDelivery.get('/products'),
@@ -77,6 +80,7 @@ export const DashboardScreen = () => {
 
             const tournamentsData = extractArray(tournamentsRes, 'torneos');
             setStats({
+                users: extractArray(usersRes, 'usuarios').length,
                 students: extractArray(studentsRes, 'estudiantes').length,
                 tournaments: tournamentsData.length,
                 activeTournaments: tournamentsData.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
@@ -290,6 +294,12 @@ export const DashboardScreen = () => {
                     label="Estudiantes"
                     value={stats.students}
                     onPress={() => navigation.navigate('Students')}
+                />
+                <StatCard
+                    icon="people-outline"
+                    label="Usuarios"
+                    value={stats.users}
+                    onPress={() => navigation.navigate('Users')}
                 />
                 <StatCard
                     icon="pricetag-outline"

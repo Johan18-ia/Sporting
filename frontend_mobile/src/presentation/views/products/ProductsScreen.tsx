@@ -20,6 +20,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
+import { useAuth } from '../../../hooks/useAuth';
 
 interface Product {
     id: number;
@@ -32,6 +33,8 @@ interface Product {
 }
 
 export const ProductsScreen = () => {
+    const { user } = useAuth();
+    const canManageProducts = user?.role === 'admin' || user?.role === 'seller';
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -77,6 +80,8 @@ const loadProducts = async () => {
     };
 
     const handleSubmit = async () => {
+        if (!canManageProducts) return;
+
         if (!formData.nombre || !formData.precio) {
             Alert.alert('Error', 'Nombre y precio son requeridos');
             return;
@@ -106,6 +111,8 @@ const loadProducts = async () => {
     };
 
     const handleDelete = (id: number, nombre: string) => {
+        if (!canManageProducts) return;
+
         Alert.alert(
             'Eliminar Producto',
             `¿Estás seguro de eliminar "${nombre}"?`,
@@ -135,6 +142,8 @@ const loadProducts = async () => {
     };
 
     const startEdit = (product: Product) => {
+        if (!canManageProducts) return;
+
         setFormData({
             nombre: product.nombre,
             descripcion: product.descripcion || '',
@@ -182,14 +191,16 @@ const loadProducts = async () => {
                     </View>
                 </View>
             </View>
-            <View style={styles.productActions}>
-                <TouchableOpacity onPress={() => startEdit(item)} style={styles.actionButton}>
-                    <Ionicons name="create-outline" size={20} color="#f59e0b" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id, item.nombre)} style={styles.actionButton}>
-                    <Ionicons name="trash-outline" size={20} color="#dc3545" />
-                </TouchableOpacity>
-            </View>
+            {canManageProducts && (
+                <View style={styles.productActions}>
+                    <TouchableOpacity onPress={() => startEdit(item)} style={styles.actionButton}>
+                        <Ionicons name="create-outline" size={20} color="#f59e0b" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDelete(item.id, item.nombre)} style={styles.actionButton}>
+                        <Ionicons name="trash-outline" size={20} color="#dc3545" />
+                    </TouchableOpacity>
+                </View>
+            )}
         </View>
     );
 
@@ -207,15 +218,17 @@ const loadProducts = async () => {
             {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Productos ({products.length})</Text>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => {
-                        resetForm();
-                        setModalVisible(true);
-                    }}
-                >
-                    <Ionicons name="add" size={24} color="#fff" />
-                </TouchableOpacity>
+                {canManageProducts && (
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => {
+                            resetForm();
+                            setModalVisible(true);
+                        }}
+                    >
+                        <Ionicons name="add" size={24} color="#fff" />
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* Search */}
