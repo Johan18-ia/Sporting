@@ -5,7 +5,6 @@ import CategoryModel from '../../models/CategoryModel'
 import AlertMessage from '../common/AlertMessage'
 import PageHeader from '../ui/PageHeader'
 import Card from '../ui/Card'
-import Table from '../ui/Table'
 import Button from '../ui/Button'
 
 const SchedulesView = () => {
@@ -89,10 +88,16 @@ const SchedulesView = () => {
     : schedules
 
   const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+  const getDayColor = (day) => ({
+    Lunes: '#2196F3',
+    Martes: '#4CAF50',
+    'Miércoles': '#FF9800',
+    Jueves: '#9C27B0',
+    Viernes: '#00BCD4',
+    Sábado: '#8B0000',
+    Domingo: '#DC3545'
+  }[day] || '#666')
 
-  // ============================================
-  // PRESENTACION — unica parte que cambia
-  // ============================================
   return (
     <div>
       <PageHeader
@@ -110,6 +115,30 @@ const SchedulesView = () => {
           </Button>
         }
       />
+
+      <div className="panel-summary-grid">
+        <div className="panel-summary-card">
+          <div className="panel-summary-icon">H</div>
+          <div className="panel-summary-meta">
+            <span className="panel-summary-value">{schedules.length}</span>
+            <span className="panel-summary-label">Horarios</span>
+          </div>
+        </div>
+        <div className="panel-summary-card">
+          <div className="panel-summary-icon">C</div>
+          <div className="panel-summary-meta">
+            <span className="panel-summary-value">{categories.length}</span>
+            <span className="panel-summary-label">Categorías</span>
+          </div>
+        </div>
+        <div className="panel-summary-card">
+          <div className="panel-summary-icon">D</div>
+          <div className="panel-summary-meta">
+            <span className="panel-summary-value">{new Set(schedules.map((s) => s.day_of_week)).size}</span>
+            <span className="panel-summary-label">Días</span>
+          </div>
+        </div>
+      </div>
 
       {message && (
         <AlertMessage
@@ -158,61 +187,55 @@ const SchedulesView = () => {
         </Card>
       )}
 
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <label style={{ fontWeight: 500, fontSize: '13.5px', color: 'var(--sporting-text-muted)' }}>Filtrar por categoría:</label>
-        <select
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-          style={{ padding: '8px 15px', border: '1px solid #ccc', borderRadius: 'var(--sporting-radius)', fontSize: '14px' }}
-        >
-          <option value="">Todas las categorías</option>
-          {categories.map(cat => (
-            <option key={cat.id} value={cat.id}>
-              {cat.category_year || cat.name_year}
-            </option>
-          ))}
-        </select>
-        <span style={{ color: 'var(--sporting-text-muted)', fontSize: '13.5px' }}>
-          {filteredSchedules.length} horario(s)
-        </span>
+      <div className="ui-card" style={{ padding: '16px' }}>
+        <div className="view-filter" style={{ marginBottom: '8px' }}>
+          <label style={{ fontWeight: 500, fontSize: '13.5px', color: 'var(--sporting-text-muted)' }}>Filtrar por categoría:</label>
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="control-select"
+          >
+            <option value="">Todas las categorías</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>
+                {cat.category_year || cat.name_year}
+              </option>
+            ))}
+          </select>
+          <span style={{ color: 'var(--sporting-text-muted)', fontSize: '13.5px' }}>
+            {filteredSchedules.length} horario(s)
+          </span>
+        </div>
       </div>
 
-      <Table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Categoría</th>
-            <th>Día</th>
-            <th>Horario</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredSchedules.length === 0 ? (
-            <tr>
-              <td colSpan="5" style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
-                No hay horarios registrados
-              </td>
-            </tr>
-          ) : (
-            filteredSchedules.map((s, index) => (
-              <tr key={s.id}>
-                <td>{index + 1}</td>
-                <td>
-                  <span className="badge-sporting badge-sporting-admin">
-                    {s.category_name || `Categoría ${s.id_category}`}
-                  </span>
-                </td>
-                <td><strong>{s.day_of_week}</strong></td>
-                <td>{s.start_time} - {s.end_time}</td>
-                <td>
-                  <Button variant="danger" onClick={() => handleDelete(s.id)}>🗑️</Button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
+      {error && <p style={{ color: '#dc3545' }}>{error}</p>}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {filteredSchedules.length === 0 ? (
+          <div className="ui-card" style={{ textAlign: 'center', color: '#666', padding: '30px 20px' }}>
+            No hay horarios registrados.
+          </div>
+        ) : (
+          filteredSchedules.map((schedule) => (
+            <div key={schedule.id} className="ui-card" style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: getDayColor(schedule.day_of_week), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>
+                  {schedule.day_of_week?.substring(0, 2).toUpperCase() || 'D'}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, color: 'var(--sporting-text)' }}>{schedule.category_name || `Categoría ${schedule.id_category}`}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--sporting-text-muted)' }}>{schedule.day_of_week} · {schedule.start_time} - {schedule.end_time}</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span className="badge-sporting badge-sporting-admin">{schedule.day_of_week}</span>
+                <button className="btn-sporting-danger" type="button" onClick={() => handleDelete(schedule.id)}>Eliminar</button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 }

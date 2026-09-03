@@ -42,7 +42,7 @@ export const ProfileDetailScreen = () => {
             <View style={styles.card}>
                 <Text style={styles.label}>Rol</Text>
                 <Text style={styles.value}>
-                    {user?.role === 'admin' ? 'Administrador' : user?.role === 'seller' ? 'Vendedor' : 'Usuario'}
+                    {user?.role === 'admin' ? 'Administrador' : user?.role === 'seller' ? 'Moderador' : 'Usuario'}
                 </Text>
             </View>
         </View>

@@ -18,6 +18,7 @@ interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     loading: boolean;
+    initialized: boolean;
     error: string | null;
     login: (credentials: UserLogin) => Promise<{ success: boolean; data?: User; error?: string }>;
     register: (userData: UserRegister) => Promise<{ success: boolean; data?: unknown; error?: string }>;
@@ -31,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
+    const [initialized, setInitialized] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
     const { getItem, save } = LocalStorage();
@@ -65,6 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setIsAuthenticated(false);
         } finally {
             setLoading(false);
+            setInitialized(true);
         }
     };
 
@@ -177,6 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         isAuthenticated,
         loading,
+        initialized,
         error,
         login,
         register,

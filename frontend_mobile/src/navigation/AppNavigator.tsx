@@ -25,6 +25,7 @@ import { UserFormScreen } from '../presentation/views/users/UserFormScreen';
 import { CategoriesScreen } from '../presentation/views/categories/CategoriesScreen';
 import { SchedulesScreen } from '../presentation/views/schedules/SchedulesScreen';
 import { ProductsScreen } from '../presentation/views/products/ProductsScreen';
+import { CatalogScreen } from '../presentation/views/catalog/CatalogScreen';
 import { StudentsScreen } from '../presentation/views/students/StudentsScreen';
 import { StudentFormScreen } from '../presentation/views/students/StudentFormScreen';
 import { TournamentsScreen } from '../presentation/views/tournaments/TournamentsScreen';
@@ -46,7 +47,9 @@ const Tab = createBottomTabNavigator();
 const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> }) => {
     const { user } = useAuth();
     const canManageUsers = user?.role === 'admin' || user?.role === 'seller';
-    const initialRouteName = route?.params?.screen || (user?.role === 'user' ? 'Students' : 'Dashboard');
+    const isStudent = user?.role === 'user';
+    const initialRouteName = route?.params?.screen || 'Dashboard';
+    const productsComponent = isStudent ? CatalogScreen : ProductsScreen;
 
     return (
         <Tab.Navigator
@@ -99,13 +102,11 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                 },
             })}
         >
-            {user?.role !== 'user' && (
-                <Tab.Screen
-                    name="Dashboard"
-                    component={DashboardScreen}
-                    options={{ title: 'Inicio', tabBarLabel: 'Inicio' }}
-                />
-            )}
+            <Tab.Screen
+                name="Dashboard"
+                component={DashboardScreen}
+                options={{ title: 'Inicio', tabBarLabel: 'Inicio' }}
+            />
             {canManageUsers && (
                 <Tab.Screen
                     name="Users"
@@ -121,22 +122,24 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                     })}
                 />
             )}
-            <Tab.Screen
-                name="Students"
-                component={StudentsScreen}
-                options={({ navigation }) => ({
-                    title: 'Estudiantes',
-                    tabBarLabel: 'Estudiantes',
-                    headerLeft: () => (
-                        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ marginLeft: 10 }}>
-                            <Ionicons name="arrow-back" size={24} color="#fff" />
-                        </TouchableOpacity>
-                    ),
-                })}
-            />
+            {!isStudent && (
+                <Tab.Screen
+                    name="Students"
+                    component={StudentsScreen}
+                    options={({ navigation }) => ({
+                        title: 'Estudiantes',
+                        tabBarLabel: 'Estudiantes',
+                        headerLeft: () => (
+                            <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ marginLeft: 10 }}>
+                                <Ionicons name="arrow-back" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        ),
+                    })}
+                />
+            )}
             <Tab.Screen
                 name="Products"
-                component={ProductsScreen}
+                component={productsComponent}
                 options={{ title: 'Productos', tabBarLabel: 'Productos' }}
             />
             <Tab.Screen
@@ -152,9 +155,9 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
 // MAIN NAVIGATOR
 // ============================================
 export const AppNavigator = () => {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, initialized } = useAuth();
 
-    if (loading) {
+    if (!initialized) {
         return null; // O un LoadingSpinner
     }
 

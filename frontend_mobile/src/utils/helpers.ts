@@ -246,7 +246,7 @@ export const groupBy = <T>(array: T[], key: keyof T): Record<string, T[]> => {
 export const getRoleName = (role: string): string => {
     const roles: Record<string, string> = {
         admin: 'Administrador',
-        seller: 'Vendedor',
+        seller: 'Moderador',
         user: 'Usuario',
         student: 'Estudiante',
     };

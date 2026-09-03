@@ -78,7 +78,7 @@ export const ProfileScreen = () => {
                 <View style={styles.roleBadge}>
                     <Text style={styles.roleText}>
                         {user?.role === 'admin' ? 'Administrador' :
-                         user?.role === 'seller' ? 'Vendedor' : 'Usuario'}
+                         user?.role === 'seller' ? 'Moderador' : 'Usuario'}
                     </Text>
                 </View>
             </View>
@@ -102,6 +102,14 @@ export const ProfileScreen = () => {
                     label="Notificaciones"
                     onPress={() => Alert.alert('Notificaciones', 'Esta funcionalidad estará disponible pronto.')}
                 />
+
+                {!canManageAdmin && user?.role === 'user' && (
+                    <MenuItem
+                        icon="school-outline"
+                        label="Registrarme como estudiante"
+                        onPress={() => navigation.navigate('StudentForm', { mode: 'create', selfRegister: true })}
+                    />
+                )}
 
                 {canManageAdmin && (
                     <>

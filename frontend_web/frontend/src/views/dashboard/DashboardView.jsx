@@ -26,6 +26,7 @@ import TournamentsView from './TournamentsView'
 import TeamsView from './TeamsView'
 import ReportsView from './ReportsView'
 import StudentDashboardView from './StudentDashboardView'
+import ProfileView from './ProfileView'
 import '../../styles/Dashboard.css'
 import '../../styles/Users.css'
 
@@ -122,6 +123,8 @@ const DashboardView = () => {
   // ============================================
   const renderContent = () => {
     switch (activeTab) {
+      case 'profile':
+        return <ProfileView />
       case 'dashboard':
         return (
           <>
@@ -196,7 +199,7 @@ const DashboardView = () => {
       case 'reports':
         return <ReportsView />
       default:
-        return null
+        return <ProfileView />
     }
   }
 
