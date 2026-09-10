@@ -29,6 +29,33 @@ function verifyToken(req, res, next) {
     });
 }
 
+function optionalVerifyToken(req, res, next) {
+    const authHeader = req.headers["authorization"];
+    if (!authHeader) {
+        return next();
+    }
+
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+        return res.status(403).json({
+            success: false,
+            message: "Formato de token inválido",
+        });
+    }
+
+    jwt.verify(token, keys.secretOrKey, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({
+                success: false,
+                message: "Token inválido o expirado",
+                error: err,
+            });
+        }
+        req.user = decoded;
+        next();
+    });
+}
+
 function authorizeRoles(roles) {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {
@@ -43,5 +70,6 @@ function authorizeRoles(roles) {
 
 module.exports = {
     verifyToken,
+    optionalVerifyToken,
     authorizeRoles,
 };

@@ -24,6 +24,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
+import { useAuth } from '../../../hooks/useAuth';
 
 type StudentFormNavigationProp = StackNavigationProp<RootStackParamList, 'StudentForm'>;
 type StudentFormRouteProp = RouteProp<RootStackParamList, 'StudentForm'>;
@@ -51,7 +52,9 @@ interface FormData {
 export const StudentFormScreen = () => {
     const navigation = useNavigation<StudentFormNavigationProp>();
     const route = useRoute<StudentFormRouteProp>();
+    const { user: authenticatedUser } = useAuth();
     const { student, mode } = route.params || { mode: 'create' };
+    const isSelfRegistration = authenticatedUser?.role === 'user' && route.params?.selfRegister === true;
     
     const [formData, setFormData] = useState<FormData>({
         user_id: '',
@@ -72,6 +75,9 @@ export const StudentFormScreen = () => {
 
     useEffect(() => {
         loadData();
+        if (isSelfRegistration && authenticatedUser?.id) {
+            setFormData((previous) => ({ ...previous, user_id: String(authenticatedUser.id) }));
+        }
         if (student && mode === 'edit') {
             setFormData({
                 user_id: String(student.user_id || ''),
@@ -84,23 +90,24 @@ export const StudentFormScreen = () => {
                 status: student.status || 'pending'
             });
         }
-    }, [student, mode]);
+    }, [student, mode, isSelfRegistration, authenticatedUser?.id]);
 
     const loadData = async () => {
         try {
-            const [usersResponse, studentsResponse, categoriesResponse] = await Promise.all([
-                ApiDelivery.get('/users'),
-                ApiDelivery.get('/students'),
-                ApiDelivery.get('/categories')
-            ]);
-            const usersData = usersResponse.data?.data ?? usersResponse.data ?? [];
+            const requests = [ApiDelivery.get('/students'), ApiDelivery.get('/categories')];
+            if (!isSelfRegistration) requests.unshift(ApiDelivery.get('/users'));
+            const responses = await Promise.all(requests);
+            const usersResponse = isSelfRegistration ? null : responses[0];
+            const studentsResponse = isSelfRegistration ? responses[0] : responses[1];
+            const categoriesResponse = isSelfRegistration ? responses[1] : responses[2];
+            const usersData = usersResponse?.data?.data ?? usersResponse?.data ?? [];
             const studentsData = studentsResponse.data?.data ?? studentsResponse.data ?? [];
             const existingIds = new Set((Array.isArray(studentsData) ? studentsData : []).map((item: any) => Number(item.user_id)));
             const usersAvailable = (Array.isArray(usersData) ? usersData : []).filter((item: User) => {
                 const current = mode === 'edit' && Number(item.id) === Number(student?.user_id);
                 return item.role === 'user' && Number(item.is_active) === 1 && (!existingIds.has(Number(item.id)) || current);
             });
-            setUsers(usersAvailable);
+            setUsers(isSelfRegistration ? [] : usersAvailable);
             const categoriesData = categoriesResponse.data?.data ?? categoriesResponse.data ?? [];
             setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         } catch (error) {
@@ -169,20 +176,29 @@ export const StudentFormScreen = () => {
         >
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.form}>
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Correo registrado *</Text>
-                        <TouchableOpacity
-                            style={[styles.selectorButton, errors.user_id && styles.inputError]}
-                            onPress={() => setShowUserPicker(true)}
-                            disabled={loadingData}
-                        >
-                            <Text style={styles.selectorText}>
-                                {users.find((item) => String(item.id) === formData.user_id)?.email || 'Selecciona un correo'}
-                            </Text>
-                            <Ionicons name="chevron-down" size={18} color="#666" />
-                        </TouchableOpacity>
-                        {errors.user_id && <Text style={styles.errorText}>{errors.user_id}</Text>}
-                    </View>
+                    {isSelfRegistration ? (
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Correo registrado *</Text>
+                            <View style={styles.selectorButton}>
+                                <Text style={styles.selectorText}>{authenticatedUser?.email}</Text>
+                            </View>
+                        </View>
+                    ) : (
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Correo registrado *</Text>
+                            <TouchableOpacity
+                                style={[styles.selectorButton, errors.user_id && styles.inputError]}
+                                onPress={() => setShowUserPicker(true)}
+                                disabled={loadingData}
+                            >
+                                <Text style={styles.selectorText}>
+                                    {users.find((item) => String(item.id) === formData.user_id)?.email || 'Selecciona un correo'}
+                                </Text>
+                                <Ionicons name="chevron-down" size={18} color="#666" />
+                            </TouchableOpacity>
+                            {errors.user_id && <Text style={styles.errorText}>{errors.user_id}</Text>}
+                        </View>
+                    )}
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Documento *</Text>

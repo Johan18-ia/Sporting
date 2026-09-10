@@ -13,7 +13,8 @@ import {
     TextInput,
     RefreshControl,
     ActivityIndicator,
-    Alert
+    Alert,
+    Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
@@ -37,7 +38,7 @@ const rolePriority: Record<string, number> = { admin: 0, seller: 1, user: 2 };
 const roleFilters = [
     { key: 'all', label: 'Todos' },
     { key: 'admin', label: 'Admin' },
-    { key: 'seller', label: 'Seller' },
+    { key: 'seller', label: 'Moderador' },
     { key: 'user', label: 'Usuario' }
 ] as const;
 
@@ -51,6 +52,7 @@ export const UsersScreen = () => {
     const [roleFilter, setRoleFilter] = useState<(typeof roleFilters)[number]['key']>('all');
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [actionUser, setActionUser] = useState<User | null>(null);
 
     const loadUsers = async () => {
         try {
@@ -160,34 +162,27 @@ export const UsersScreen = () => {
     };
 
     const openUserActions = (item: User) => {
-        const options: any[] = [];
-        options.push({ text: 'Editar', onPress: () => navigation.navigate('UserForm', { user: item, mode: 'edit' }) });
-        options.push({ text: item.is_active === 1 ? 'Desactivar' : 'Activar', onPress: () => handleToggleUser(item) });
-        options.push({ text: 'Eliminar', style: 'destructive', onPress: () => handleDeleteUser(item.id, item.name) });
-        options.push({ text: 'Cancelar', style: 'cancel' });
-
-        // Convertir a Alert.alert secuencial: mostrar primer dialog con opciones
-        Alert.alert(item.name, 'Selecciona una acción', options as any);
+        setActionUser(item);
     };
 
-    const getRoleBadge = (role: string) => {
+    const getRoleBadge = (item: User) => {
         const colors = {
             admin: { bg: '#8B0000', text: '#fff' },
             seller: { bg: '#f59e0b', text: '#fff' },
-            user: { bg: '#6b7280', text: '#fff' }
+            user: { bg: item.isStudent ? '#EFF692' : '#C2C2C2', text: '#222' }
         };
-        const color = colors[role as keyof typeof colors] || colors.user;
+        const color = colors[item.role as keyof typeof colors] || colors.user;
         return { backgroundColor: color.bg, color: color.text };
     };
 
     const getRoleLabel = (item: User) => {
         if (item.role === 'admin') return 'Administrador';
-        if (item.role === 'seller') return 'Vendedor';
+        if (item.role === 'seller') return 'Moderador';
         return 'Usuario';
     };
 
     const renderUserItem = ({ item }: { item: User }) => {
-        const roleBadge = getRoleBadge(item.role);
+        const roleBadge = getRoleBadge(item);
         const isCurrentUser = currentUser?.id === item.id;
 
         return (
@@ -217,16 +212,9 @@ export const UsersScreen = () => {
                     <View style={styles.userMeta}>
                         <View style={[styles.roleBadge, { backgroundColor: roleBadge.backgroundColor }]}>
                             <Text style={[styles.roleBadgeText, { color: roleBadge.color }]}>
-                                {getRoleLabel(item)}
+                                {item.role === 'user' && item.isStudent ? 'Estudiante' : getRoleLabel(item)}
                             </Text>
                         </View>
-                        {item.role === 'user' && (
-                            <View style={[styles.secondaryBadge, item.isStudent ? styles.studentBadge : styles.normalUserBadge]}>
-                                <Text style={[styles.secondaryBadgeText, item.isStudent ? styles.studentBadgeText : styles.normalUserBadgeText]}>
-                                    {item.isStudent ? 'Estudiante' : 'Usuario'}
-                                </Text>
-                            </View>
-                        )}
                         {item.is_active === 0 && (
                             <View style={styles.inactiveBadge}>
                                 <Text style={styles.inactiveBadgeText}>Inactivo</Text>
@@ -313,11 +301,123 @@ export const UsersScreen = () => {
                     </View>
                 }
             />
+
+            <Modal
+                visible={actionUser !== null}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setActionUser(null)}
+            >
+                <TouchableOpacity
+                    style={styles.actionModalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setActionUser(null)}
+                >
+                    <View style={styles.actionModalContent}>
+                        <Text style={styles.actionModalTitle}>{actionUser?.name}</Text>
+                        <Text style={styles.actionModalSubtitle}>Selecciona una acción</Text>
+                        <View style={styles.actionModalButtons}>
+                            <TouchableOpacity
+                                style={styles.actionModalButton}
+                                onPress={() => {
+                                    if (!actionUser) return;
+                                    const selectedUser = actionUser;
+                                    setActionUser(null);
+                                    navigation.navigate('UserForm', { user: selectedUser, mode: 'edit' });
+                                }}
+                            >
+                                <Text style={styles.actionModalButtonText}>EDITAR</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.actionModalButton}
+                                onPress={() => {
+                                    if (!actionUser) return;
+                                    const selectedUser = actionUser;
+                                    setActionUser(null);
+                                    handleToggleUser(selectedUser);
+                                }}
+                            >
+                                <Text style={styles.actionModalButtonText}>
+                                    {actionUser?.is_active === 1 ? 'DESACTIVAR' : 'ACTIVAR'}
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.actionModalButton}
+                                onPress={() => {
+                                    if (!actionUser) return;
+                                    const selectedUser = actionUser;
+                                    setActionUser(null);
+                                    handleDeleteUser(selectedUser.id, selectedUser.name);
+                                }}
+                            >
+                                <Text style={styles.actionModalButtonText}>ELIMINAR</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <TouchableOpacity
+                            style={styles.actionModalCancel}
+                            onPress={() => setActionUser(null)}
+                        >
+                            <Text style={styles.actionModalCancelText}>CANCELAR</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
+    actionModalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        padding: 24,
+    },
+    actionModalContent: {
+        width: '100%',
+        maxWidth: 380,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        paddingTop: 22,
+        paddingHorizontal: 22,
+        paddingBottom: 12,
+        elevation: 8,
+    },
+    actionModalTitle: {
+        fontSize: 20,
+        color: '#222',
+    },
+    actionModalSubtitle: {
+        fontSize: 16,
+        color: '#333',
+        marginTop: 12,
+    },
+    actionModalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 28,
+    },
+    actionModalButton: {
+        paddingVertical: 10,
+        paddingHorizontal: 6,
+    },
+    actionModalButtonText: {
+        color: '#0066b3',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    actionModalCancel: {
+        alignSelf: 'flex-end',
+        paddingVertical: 10,
+        paddingHorizontal: 6,
+        marginTop: 4,
+    },
+    actionModalCancelText: {
+        color: '#666',
+        fontSize: 14,
+        fontWeight: '600',
+    },
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',

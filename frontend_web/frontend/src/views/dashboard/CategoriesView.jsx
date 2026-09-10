@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import useCategories from '../../hooks/useCategories';
 import PageHeader from '../ui/PageHeader';
 import Card from '../ui/Card';
-import Table from '../ui/Table';
 import Button from '../ui/Button';
 
 const CategoriesView = () => {
@@ -41,6 +40,23 @@ const CategoriesView = () => {
                 description="Administra los rangos de años de nacimiento para la escuela de microfútbol."
             />
 
+            <div className="panel-summary-grid">
+                <div className="panel-summary-card">
+                    <div className="panel-summary-icon">C</div>
+                    <div className="panel-summary-meta">
+                        <span className="panel-summary-value">{categories.length}</span>
+                        <span className="panel-summary-label">Categorías</span>
+                    </div>
+                </div>
+                <div className="panel-summary-card">
+                    <div className="panel-summary-icon">A</div>
+                    <div className="panel-summary-meta">
+                        <span className="panel-summary-value">{new Set(categories.map((cat) => cat.category_year)).size}</span>
+                        <span className="panel-summary-label">Años</span>
+                    </div>
+                </div>
+            </div>
+
             <Card title="Agregar Categoría">
                 <form onSubmit={handleSubmit}>
                     <div className="ui-field">
@@ -67,42 +83,30 @@ const CategoriesView = () => {
                 </form>
             </Card>
 
-            <h3 className="ui-card-title" style={{ marginBottom: '12px' }}>Categorías Registradas</h3>
+            <h3 className="ui-card-title" style={{ marginBottom: '12px' }}>Categorías registradas</h3>
             {loading && <p>Cargando categorías...</p>}
             {error && <p style={{ color: '#dc3545' }}>{error}</p>}
 
             {!loading && !error && (
-                <Table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Año</th>
-                            <th>Descripción</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {categories.map((cat) => (
-                            <tr key={cat.id}>
-                                <td>{cat.id}</td>
-                                <td><strong>{cat.category_year}</strong></td>
-                                <td>{cat.description}</td>
-                                <td>
-                                    <Button variant="danger" onClick={() => handleDelete(cat.id)}>
-                                        Eliminar
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
-                        {categories.length === 0 && (
-                            <tr>
-                                <td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
-                                    No hay categorías.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </Table>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {categories.length === 0 ? (
+                        <div className="ui-card" style={{ textAlign: 'center', color: '#666', padding: '30px 20px' }}>
+                            No hay categorías registradas.
+                        </div>
+                    ) : (
+                        categories.map((cat) => (
+                            <div key={cat.id} className="ui-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                <div>
+                                    <div style={{ fontWeight: 700, color: 'var(--sporting-text)', fontSize: '15px' }}>{cat.category_year}</div>
+                                    <div style={{ color: 'var(--sporting-text-muted)', fontSize: '13px', marginTop: '4px' }}>{cat.description}</div>
+                                </div>
+                                <button className="btn-sporting-danger" type="button" onClick={() => handleDelete(cat.id)}>
+                                    Eliminar
+                                </button>
+                            </div>
+                        ))
+                    )}
+                </div>
             )}
         </div>
     );

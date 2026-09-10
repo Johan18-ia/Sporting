@@ -273,13 +273,15 @@ const StudentsView = () => {
     // ============================================
     // RENDERIZADO
     // ============================================
+    const totalStudents = students.length
+    const byCategory = categories.length
+
     return (
         <div style={containerStyles}>
-            {/* ============================================
-            HEADER
-            ============================================ */}
-            <div style={headerStyles}>
-                <h2 style={{ color: '#333', margin: 0 }}>Gestión de Estudiantes</h2>
+            <div className="view-toolbar">
+                <div>
+                    <h2 style={{ color: '#333', margin: 0 }}>Gestión de Estudiantes</h2>
+                </div>
                 {canCreate() && (
                     <button
                         onClick={() => {
@@ -297,19 +299,28 @@ const StudentsView = () => {
                             })
                             setShowForm(!showForm)
                         }}
-                        style={{
-                            background: '#8B0000',
-                            color: 'white',
-                            border: 'none',
-                            padding: '10px 20px',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 600
-                        }}
+                        className="btn-sporting-primary"
                     >
                         {showForm ? '✕ Cancelar' : '+ Nuevo Estudiante'}
                     </button>
                 )}
+            </div>
+
+            <div className="panel-summary-grid">
+                <div className="panel-summary-card">
+                    <div className="panel-summary-icon">E</div>
+                    <div className="panel-summary-meta">
+                        <span className="panel-summary-value">{totalStudents}</span>
+                        <span className="panel-summary-label">Estudiantes</span>
+                    </div>
+                </div>
+                <div className="panel-summary-card">
+                    <div className="panel-summary-icon">C</div>
+                    <div className="panel-summary-meta">
+                        <span className="panel-summary-value">{byCategory}</span>
+                        <span className="panel-summary-label">Categorías</span>
+                    </div>
+                </div>
             </div>
 
             {/* ============================================
@@ -586,12 +597,12 @@ const StudentsView = () => {
             {/* ============================================
             FILTROS
             ============================================ */}
-            <div style={filterStyles}>
+            <div className="view-filter">
                 <label style={{ fontWeight: 500 }}>Filtrar por categoría:</label>
                 <select
+                    className="control-select"
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
-                    style={selectStyles}
                 >
                     <option value="">Todas las categorías</option>
                     {categories.map(cat => (
@@ -692,7 +703,7 @@ const StudentsView = () => {
                                                 }}
                                                 title={canEdit() ? 'Editar' : 'Sin permisos'}
                                             >
-                                                
+                                                Editar
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(s.id, s.name)}
@@ -709,7 +720,7 @@ const StudentsView = () => {
                                                 }}
                                                 title={canDelete() ? 'Eliminar' : 'Sin permisos'}
                                             >
-                                                
+                                                Eliminar
                                             </button>
                                         </div>
                                     </td>

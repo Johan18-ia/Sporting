@@ -1,14 +1,36 @@
 // src/views/dashboard/UsersView.jsx
-// ====================================================
-// VISTA: GESTIÓN DE USUARIOS
-// ====================================================
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import useUsers from '../../hooks/useUsers'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
 import UserForm from './UserForm'
 import UserDetails from './UserDetails'
 import '../../styles/Users.css'
+
+const roleFilters = [
+    { key: 'all', label: 'Todos' },
+    { key: 'admin', label: 'Administradores' },
+    { key: 'seller', label: 'Vendedores' },
+    { key: 'customer', label: 'Clientes' }
+]
+
+const getRoleLabel = (role) => {
+    switch (role) {
+        case 'admin': return 'Administrador'
+        case 'seller': return 'Vendedor'
+        case 'customer': return 'Cliente'
+        default: return 'Usuario'
+    }
+}
+
+const getRoleBadgeClass = (role) => {
+    switch (role) {
+        case 'admin': return 'badge-sporting badge-sporting-admin'
+        case 'seller': return 'badge-sporting badge-sporting-user'
+        case 'customer': return 'badge-sporting badge-sporting-secondary'
+        default: return 'badge-sporting badge-sporting-user'
+    }
+}
 
 const UsersView = () => {
     const { users, loading, error, deleteUser, loadUsers, toggleUserStatus } = useUsers()
@@ -19,84 +41,43 @@ const UsersView = () => {
     const [editMode, setEditMode] = useState(false)
     const [message, setMessage] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
+    const [roleFilter, setRoleFilter] = useState('all')
 
-    // ============================================
-    // FILTRAR USUARIOS
-    // ============================================
-    const filteredUsers = users.filter(user =>
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.id?.toString().includes(searchTerm) ||
-        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.lastname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.document?.includes(searchTerm) ||
-        user.role?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    const filteredUsers = useMemo(() => {
+        const criteria = searchTerm.trim().toLowerCase()
 
-    // ============================================
-    // PERMISOS
-    // ============================================
+        return users.filter((user) => {
+            const matchesRole = roleFilter === 'all' || user.role === roleFilter
+            const matchesSearch = !criteria || [
+                user.email,
+                user.id,
+                user.name,
+                user.lastname,
+                user.document,
+                user.role
+            ].some((value) => String(value ?? '').toLowerCase().includes(criteria))
+
+            return matchesRole && matchesSearch
+        })
+    }, [users, roleFilter, searchTerm])
+
     const canEdit = (user) => {
         if (!currentUser) return false
-        if (currentUser.role === 'admin') return true
-        if (currentUser.role === 'seller') return true
-        return false
+        return currentUser.role === 'admin' || currentUser.role === 'seller' || currentUser.id === user.id
     }
 
     const canDelete = (user) => {
         if (!currentUser) return false
-        if (currentUser.role !== 'admin') return false
-        if (currentUser.id === user.id) return false
-        return true
+        return currentUser.role === 'admin' && currentUser.id !== user.id
     }
 
     const canToggleStatus = (user) => {
         if (!currentUser) return false
-        if (currentUser.role !== 'admin') return false
-        if (currentUser.id === user.id) return false
-        return true
+        return currentUser.role === 'admin' && currentUser.id !== user.id
     }
 
-    const canCreateUser = () => {
-        return currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
-    }
+    const canCreateUser = () => currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
 
-    // ============================================
-    // BADGES DE ROL
-    // ============================================
-    const getRoleBadgeClass = (role) => {
-        switch (role) {
-            case 'admin': return 'role-badge role-admin'
-            case 'seller': return 'role-badge role-seller'
-            case 'customer': return 'role-badge role-customer'
-            default: return 'role-badge role-user'
-        }
-    }
-
-    const getRoleText = (role) => {
-        switch (role) {
-            case 'admin': return ' Administrador'
-            case 'seller': return ' Vendedor'
-            case 'customer': return ' Cliente'
-            default: return ' Usuario'
-        }
-    }
-
-    const getStatusBadge = (isActive) => {
-        if (isActive === undefined || isActive === null) return null
-        return {
-            background: isActive ? '#10b981' : '#8B0000',
-            color: 'white',
-            padding: '2px 10px',
-            borderRadius: '12px',
-            fontSize: '11px',
-            fontWeight: 600,
-            cursor: 'pointer'
-        }
-    }
-
-    // ============================================
-    // MANEJADORES
-    // ============================================
     const handleDelete = async (user) => {
         if (!canDelete(user)) {
             setMessage({ type: 'error', text: 'No tiene permisos para eliminar este usuario' })
@@ -108,10 +89,10 @@ const UsersView = () => {
             try {
                 await deleteUser(user.id)
                 setMessage({ type: 'success', text: 'Usuario eliminado exitosamente' })
-                setTimeout(() => setMessage(null), 3000)
             } catch (err) {
                 setMessage({ type: 'error', text: err.error || 'Error al eliminar usuario' })
             }
+            setTimeout(() => setMessage(null), 3000)
         }
     }
 
@@ -122,17 +103,17 @@ const UsersView = () => {
             return
         }
 
-        const newStatus = user.is_active === 1 ? 0 : 1
-        const action = newStatus === 1 ? 'activar' : 'desactivar'
+        const nextStatus = user.is_active === 1 ? 0 : 1
+        const action = nextStatus === 1 ? 'activar' : 'desactivar'
 
         if (window.confirm(`¿Estás seguro de ${action} al usuario "${user.email}"?`)) {
             try {
-                await toggleUserStatus(user.id, newStatus === 1)
+                await toggleUserStatus(user.id, nextStatus === 1)
                 setMessage({ type: 'success', text: `Usuario ${action}do exitosamente` })
-                setTimeout(() => setMessage(null), 3000)
             } catch (err) {
                 setMessage({ type: 'error', text: err.error || `Error al ${action} usuario` })
             }
+            setTimeout(() => setMessage(null), 3000)
         }
     }
 
@@ -175,9 +156,6 @@ const UsersView = () => {
         setSelectedUser(null)
     }
 
-    // ============================================
-    // RENDERIZADO
-    // ============================================
     if (loading && users.length === 0) {
         return <div className="loading-container">Cargando usuarios...</div>
     }
@@ -193,13 +171,18 @@ const UsersView = () => {
         )
     }
 
+    const activeUsers = users.filter((user) => user.is_active !== 0).length
+    const adminUsers = users.filter((user) => user.role === 'admin').length
+
     return (
-        <div className="users-container">
-            <div className="users-header">
-                <h2>Tus estudiantes</h2>
+        <div>
+            <div className="view-toolbar">
+                <div>
+                    <h2 style={{ margin: 0, color: '#333' }}>Usuarios del sistema</h2>
+                </div>
                 {canCreateUser() && (
                     <button
-                        className="btn-primary"
+                        className="btn-sporting-primary"
                         onClick={() => {
                             setSelectedUser(null)
                             setEditMode(false)
@@ -212,22 +195,58 @@ const UsersView = () => {
                 )}
             </div>
 
+            <div className="panel-summary-grid">
+                <div className="panel-summary-card">
+                    <div className="panel-summary-icon">U</div>
+                    <div className="panel-summary-meta">
+                        <span className="panel-summary-value">{users.length}</span>
+                        <span className="panel-summary-label">Usuarios</span>
+                    </div>
+                </div>
+                <div className="panel-summary-card">
+                    <div className="panel-summary-icon">A</div>
+                    <div className="panel-summary-meta">
+                        <span className="panel-summary-value">{activeUsers}</span>
+                        <span className="panel-summary-label">Activos</span>
+                    </div>
+                </div>
+                <div className="panel-summary-card">
+                    <div className="panel-summary-icon">R</div>
+                    <div className="panel-summary-meta">
+                        <span className="panel-summary-value">{adminUsers}</span>
+                        <span className="panel-summary-label">Administradores</span>
+                    </div>
+                </div>
+            </div>
+
             {message && (
-                <AlertMessage
-                    type={message.type}
-                    message={message.text}
-                    onClose={() => setMessage(null)}
-                />
+                <AlertMessage type={message.type} message={message.text} onClose={() => setMessage(null)} />
             )}
 
-            <div className="users-search">
-                <input
-                    type="text"
-                    placeholder="Buscar por email, nombre, documento, ID o rol..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search-input"
-                />
+            <div className="ui-card" style={{ padding: '16px' }}>
+                <div className="view-filter" style={{ marginBottom: '12px' }}>
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Buscar usuario..."
+                        className="control-input"
+                    />
+                </div>
+
+                <div className="view-filter" style={{ marginBottom: '8px' }}>
+                    {roleFilters.map((filter) => (
+                        <button
+                            key={filter.key}
+                            type="button"
+                            className={roleFilter === filter.key ? 'btn-sporting-primary' : 'btn-sporting-secondary'}
+                            onClick={() => setRoleFilter(filter.key)}
+                            style={{ padding: '8px 14px', fontSize: '12px' }}
+                        >
+                            {filter.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {error && !error.includes('No tiene permisos') && (
@@ -237,86 +256,61 @@ const UsersView = () => {
                 </div>
             )}
 
-            <div className="users-table-container">
-                <table className="users-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Documento</th>
-                            <th>Email</th>
-                            <th>Rol</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredUsers.length === 0 ? (
-                            <tr>
-                                <td colSpan="7" className="no-data">
-                                    No hay usuarios registrados
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredUsers.map((user) => (
-                                <tr key={user.id} className={currentUser?.id === user.id ? 'current-user-row' : ''}>
-                                    <td>{user.id}</td>
-                                    <td>
-                                        <strong>{user.name} {user.lastname || ''}</strong>
-                                        <div style={{ fontSize: '11px', color: '#888' }}>
-                                            {user.birth_date ? ` ${user.birth_date}` : ''}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {filteredUsers.length === 0 ? (
+                    <div className="ui-card" style={{ textAlign: 'center', color: '#666', padding: '30px 20px' }}>
+                        No se encontraron usuarios con ese filtro.
+                    </div>
+                ) : (
+                    filteredUsers.map((user) => (
+                        <div key={user.id} className="ui-card" style={{ padding: '16px', border: currentUser?.id === user.id ? '2px solid rgba(139, 0, 0, 0.35)' : '1px solid var(--sporting-border)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(139, 0, 0, 0.08)', color: 'var(--sporting-red)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                                        {user.name?.[0]?.toUpperCase() || 'U'}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 700, color: 'var(--sporting-text)', fontSize: '15px' }}>
+                                            {user.name} {user.lastname || ''}
+                                            {currentUser?.id === user.id && (
+                                                <span className="pill pill-success" style={{ marginLeft: '8px' }}>Tú</span>
+                                            )}
                                         </div>
-                                    </td>
-                                    <td style={{ fontSize: '13px', color: '#666' }}>
-                                        {user.document || '—'}
-                                    </td>
-                                    <td>{user.email}</td>
-                                    <td>
-                                        <span className={getRoleBadgeClass(user.role)}>
-                                            {getRoleText(user.role)}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {user.is_active !== undefined && (
-                                            <span
-                                                style={getStatusBadge(user.is_active)}
-                                                onClick={() => handleToggleStatus(user)}
-                                                title={`${user.is_active ? 'Desactivar' : 'Activar'} usuario`}
-                                            >
-                                                {user.is_active ? '✅ Activo' : '❌ Inactivo'}
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="actions">
+                                        <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{user.email}</div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <span className={getRoleBadgeClass(user.role)}>{getRoleLabel(user.role)}</span>
+                                    {user.is_active !== undefined && (
                                         <button
-                                            className="btn-view"
-                                            onClick={() => handleViewDetails(user)}
-                                            title="Ver detalles"
+                                            type="button"
+                                            className={user.is_active ? 'pill pill-success' : 'pill pill-danger'}
+                                            onClick={() => handleToggleStatus(user)}
+                                            disabled={!canToggleStatus(user)}
+                                            title={user.is_active ? 'Desactivar usuario' : 'Activar usuario'}
+                                            style={{ border: 'none', cursor: canToggleStatus(user) ? 'pointer' : 'default' }}
                                         >
-                                            
+                                            {user.is_active ? 'Activo' : 'Inactivo'}
                                         </button>
-                                        <button
-                                            className="btn-edit"
-                                            onClick={() => handleEdit(user)}
-                                            title="Editar"
-                                            disabled={!canEdit(user)}
-                                        >
-                                            
-                                        </button>
-                                        <button
-                                            className="btn-delete"
-                                            onClick={() => handleDelete(user)}
-                                            title="Eliminar"
-                                            disabled={!canDelete(user)}
-                                        >
-                                            
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px 16px', marginTop: '14px', fontSize: '13px', color: 'var(--sporting-text-muted)' }}>
+                                <div><strong style={{ color: 'var(--sporting-text)' }}>Documento:</strong> {user.document || '—'}</div>
+                                <div><strong style={{ color: 'var(--sporting-text)' }}>Rol:</strong> {getRoleLabel(user.role)}</div>
+                                <div><strong style={{ color: 'var(--sporting-text)' }}>ID:</strong> #{user.id}</div>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+                                <button className="btn-sporting-secondary" type="button" onClick={() => handleViewDetails(user)}>Ver</button>
+                                <button className="btn-sporting-secondary" type="button" onClick={() => handleEdit(user)} disabled={!canEdit(user)}>Editar</button>
+                                <button className="btn-sporting-danger" type="button" onClick={() => handleDelete(user)} disabled={!canDelete(user)}>Eliminar</button>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
 
             {showForm && (

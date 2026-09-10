@@ -77,6 +77,7 @@ const TournamentsView = () => {
     );
   };
 
+  const activeTournaments = tournaments.filter((t) => (t.status || 'Activo') === 'Activo').length;
 
   return (
     <div>
@@ -85,11 +86,34 @@ const TournamentsView = () => {
         description="Organice campeonatos e inscriba a los estudiantes de la escuela en sus respectivas competiciones."
       />
 
+      <div className="panel-summary-grid">
+        <div className="panel-summary-card">
+          <div className="panel-summary-icon">T</div>
+          <div className="panel-summary-meta">
+            <span className="panel-summary-value">{tournaments.length}</span>
+            <span className="panel-summary-label">Torneos</span>
+          </div>
+        </div>
+        <div className="panel-summary-card">
+          <div className="panel-summary-icon">A</div>
+          <div className="panel-summary-meta">
+            <span className="panel-summary-value">{activeTournaments}</span>
+            <span className="panel-summary-label">Activos</span>
+          </div>
+        </div>
+        <div className="panel-summary-card">
+          <div className="panel-summary-icon">C</div>
+          <div className="panel-summary-meta">
+            <span className="panel-summary-value">{categories.length}</span>
+            <span className="panel-summary-label">Categorías</span>
+          </div>
+        </div>
+      </div>
+
       {message && <AlertMessage type="success" message={message} onClose={() => setMessage(null)} />}
       {error && <AlertMessage type="error" message={error} onClose={() => setError(null)} />}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '20px' }}>
-
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
         <Card title="Nuevo Torneo Interno">
           <form onSubmit={handleCreateTournament}>
             <div className="ui-field">
@@ -119,7 +143,7 @@ const TournamentsView = () => {
           </form>
         </Card>
 
-        <Card title="Inscribir Estudiante en Competencia">
+        <Card title="Inscribir Estudiante">
           <form onSubmit={handleEnrollStudent}>
             <div className="ui-field">
               <label>Seleccionar Torneo</label>
@@ -149,12 +173,12 @@ const TournamentsView = () => {
               </select>
             </div>
 
-            <Button type="submit" fullWidth>Confirmar Inscripcion de Alumno</Button>
+            <Button type="submit" fullWidth>Confirmar Inscripción</Button>
           </form>
         </Card>
       </div>
 
-      <h3 className="ui-card-title" style={{ margin: '24px 0 12px 0' }}>Lista de Encuentros e Inscritos</h3>
+      <h3 className="ui-card-title" style={{ margin: '24px 0 12px 0' }}>Participantes y encuentros</h3>
 
       {loading ? (
         <p style={{ color: 'var(--sporting-text-muted)', fontStyle: 'italic' }}>Procesando registros deportivos...</p>
@@ -164,24 +188,27 @@ const TournamentsView = () => {
             <div key={tournament.id} className="ui-card" style={{ padding: 0, overflow: 'hidden' }}>
               <div style={{
                 background: 'var(--sporting-red)', color: 'white', padding: '12px 20px',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px'
               }}>
                 <span style={{ fontWeight: 600, fontSize: '15px' }}>{tournament.name}</span>
                 <span className="badge-sporting" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                  Categoria: {tournament.category}
+                  {tournament.category || 'Sin categoría'}
                 </span>
               </div>
               <div style={{ padding: '16px' }}>
-                <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', color: 'var(--sporting-text-muted)', textTransform: 'uppercase' }}>
-                  Jugadores Inscritos para Enfrentamientos
-                </h4>
-                {tournament.students.length === 0 ? (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                  <h4 style={{ margin: 0, fontSize: '13px', color: 'var(--sporting-text-muted)', textTransform: 'uppercase' }}>
+                    Participantes
+                  </h4>
+                  <span className="pill pill-success">{(tournament.students || []).length} inscritos</span>
+                </div>
+                {(tournament.students || []).length === 0 ? (
                   <p style={{ margin: 0, color: '#999', fontSize: '13px', fontStyle: 'italic' }}>
-                    No hay estudiantes inscritos en este fixture todavia.
+                    No hay estudiantes inscritos en este fixture todavía.
                   </p>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
-                    {tournament.students.map((st, i) => (
+                    {(tournament.students || []).map((st, i) => (
                       <div key={i} style={{
                         background: 'var(--sporting-light-gray)', padding: '10px',
                         borderRadius: 'var(--sporting-radius)', border: '1px solid var(--sporting-border)', fontSize: '13px'

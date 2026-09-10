@@ -33,7 +33,7 @@ router.get(
 router.post(
     '/create',
     verifyToken,
-    authorizeRoles(['admin', 'seller']),
+    authorizeRoles(['admin', 'seller', 'user']),
     studentController.createStudent
 );
 

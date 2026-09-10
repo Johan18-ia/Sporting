@@ -37,7 +37,7 @@ export type RootStackParamList = {
     
     // Students
     Students: undefined;
-    StudentForm: { student?: any; mode: 'create' | 'edit' };
+    StudentForm: { student?: any; mode: 'create' | 'edit'; selfRegister?: boolean };
     
     // Tournaments
     Tournaments: undefined;
