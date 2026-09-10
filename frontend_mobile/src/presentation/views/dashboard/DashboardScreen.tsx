@@ -179,15 +179,6 @@ export const DashboardScreen = () => {
         </TouchableOpacity>
     );
 
-    const QuickAction = ({ icon, label, onPress }: any) => (
-        <TouchableOpacity style={styles.quickAction} onPress={onPress} activeOpacity={0.7}>
-            <View style={styles.quickActionIcon}>
-                <Ionicons name={icon} size={22} color={MyColors.primary} />
-            </View>
-            <Text style={styles.quickActionLabel}>{label}</Text>
-        </TouchableOpacity>
-    );
-
     const activeTournaments = myTournaments.filter((t) => (t.status || 'Activo') === 'Activo').length;
 
     if (isStudent) {
@@ -333,37 +324,6 @@ export const DashboardScreen = () => {
                 />
             </View>
 
-            {/* Quick Actions */}
-            <View style={styles.quickActionsSection}>
-                <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-                <View style={styles.quickActionsGrid}>
-                    <QuickAction
-                        icon="person-add-outline"
-                        label="Nuevo Usuario"
-                        onPress={() => navigation.navigate('UserForm', { mode: 'create' })}
-                    />
-                    <QuickAction
-                        icon="school-outline"
-                        label="Nuevo Estudiante"
-                        onPress={() => navigation.navigate('StudentForm', { mode: 'create' })}
-                    />
-                    <QuickAction
-                        icon="trophy-outline"
-                        label="Torneos"
-                        onPress={() => navigation.navigate('Tournaments')}
-                    />
-                    <QuickAction
-                        icon="calendar-outline"
-                        label="Horarios"
-                        onPress={() => navigation.navigate('Schedules')}
-                    />
-                    <QuickAction
-                        icon="bar-chart-outline"
-                        label="Reportes"
-                        onPress={() => navigation.navigate('Reports')}
-                    />
-                </View>
-            </View>
         </ScrollView>
     );
 };
@@ -455,30 +415,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
         marginBottom: 16,
-    },
-    quickActionsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-    },
-    quickAction: {
-        width: '30%',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    quickActionIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: 'rgba(139, 0, 0, 0.08)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 6,
-    },
-    quickActionLabel: {
-        fontSize: 11,
-        color: '#555',
-        textAlign: 'center',
     },
     profileCard: {
         backgroundColor: '#fff',
