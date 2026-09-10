@@ -7,6 +7,7 @@ import { User } from '../domain/entities/User';
 
 export type RootStackParamList = {
     // Public
+    Welcome: undefined;
     Home: undefined;
     PublicTabs: undefined;
     SobreNosotros: undefined;
@@ -37,7 +38,7 @@ export type RootStackParamList = {
     
     // Students
     Students: undefined;
-    StudentForm: { student?: any; mode: 'create' | 'edit'; selfRegister?: boolean };
+    StudentForm: { student?: any; mode: 'create' | 'edit' };
     
     // Tournaments
     Tournaments: undefined;
