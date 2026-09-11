@@ -1,9 +1,8 @@
 // Encargado: Horarios
-// Descripción: Gestión y visualización de horarios por categoría y día
+// Descripción: Gestión de horarios de entrenamiento por categoría
 // Archivo: src/presentation/views/schedules/SchedulesScreen.tsx
 // ============================================
-// src/presentation/views/schedules/SchedulesScreen.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -37,6 +36,14 @@ interface Category {
 }
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+const DAY_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+/** Devuelve el día de la semana en español según la fecha actual (0=Lunes ... 6=Domingo). */
+const getTodayDayName = (): string => {
+    const jsDay = new Date().getDay(); // 0=Domingo ... 6=Sábado
+    const map = [6, 0, 1, 2, 3, 4, 5]; // convierte a índice de DAYS
+    return DAYS[map[jsDay]];
+};
 
 export const SchedulesScreen = () => {
     const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -45,8 +52,9 @@ export const SchedulesScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [filterCategory, setFilterCategory] = useState('');
+    const [selectedDay, setSelectedDay] = useState<string>(getTodayDayName());
     const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
-    
+
     const [formData, setFormData] = useState({
         id_category: '',
         day_of_week: 'Lunes',
@@ -54,28 +62,33 @@ export const SchedulesScreen = () => {
         end_time: '10:00'
     });
 
+    // ============================================
+    // LOGICA DE DATOS — sin cambios funcionales
+    // ============================================
     const loadData = async () => {
-    try {
-        const [schedulesRes, categoriesRes] = await Promise.all([
-            ApiDelivery.get('/schedules'),
-            ApiDelivery.get('/categories')
-        ]);
-    
-        const categoriesData = categoriesRes.data?.data || [];
-        setCategories(categoriesData);
-    
-        const schedulesData = schedulesRes.data?.data || [];
-        const enriched = schedulesData.map((s: any) => ({
-            ...s,
-            category_name: categoriesData.find((c: any) => c.id === s.id_category)?.category_year || 'Sin categoría'
-        }));
-        setSchedules(enriched);
-    } catch (error) {
-        Alert.alert('Error', 'No se pudieron cargar los horarios');
-    } finally {
-        setLoading(false);
-        setRefreshing(false);
-    }
+        try {
+            const [schedulesRes, categoriesRes] = await Promise.all([
+                ApiDelivery.get('/schedules'),
+                ApiDelivery.get('/categories')
+            ]);
+
+            const categoriesData = categoriesRes.data?.data || [];
+            setCategories(categoriesData);
+
+            const schedulesData = schedulesRes.data?.data || [];
+            const enriched = schedulesData.map((s: any) => ({
+                ...s,
+                category_name:
+                    categoriesData.find((c: any) => c.id === s.id_category)?.category_year ||
+                    'Sin categoría'
+            }));
+            setSchedules(enriched);
+        } catch (error) {
+            Alert.alert('Error', 'No se pudieron cargar los horarios');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
     };
 
     useEffect(() => {
@@ -95,7 +108,7 @@ export const SchedulesScreen = () => {
 
         try {
             if (editingSchedule) {
-                await ApiDelivery.put('/schedules', { 
+                await ApiDelivery.put('/schedules', {
                     id: editingSchedule.id,
                     ...formData,
                     id_category: parseInt(formData.id_category)
@@ -138,7 +151,12 @@ export const SchedulesScreen = () => {
     };
 
     const resetForm = () => {
-        setFormData({ id_category: '', day_of_week: 'Lunes', start_time: '08:00', end_time: '10:00' });
+        setFormData({
+            id_category: '',
+            day_of_week: selectedDay || 'Lunes',
+            start_time: '08:00',
+            end_time: '10:00'
+        });
         setEditingSchedule(null);
         setModalVisible(false);
     };
@@ -154,46 +172,29 @@ export const SchedulesScreen = () => {
         setModalVisible(true);
     };
 
-    const filteredSchedules = filterCategory
-        ? schedules.filter(s => s.id_category === parseInt(filterCategory))
-        : schedules;
+    // ============================================
+    // FILTROS VISUALES — día + categoría
+    // ============================================
+    const daySchedules = useMemo(() => {
+        let list = schedules.filter((s) => s.day_of_week === selectedDay);
+        if (filterCategory) {
+            list = list.filter((s) => s.id_category === parseInt(filterCategory));
+        }
+        return list.slice().sort((a, b) =>
+            String(a.start_time).localeCompare(String(b.start_time))
+        );
+    }, [schedules, selectedDay, filterCategory]);
 
-    const getDayColor = (day: string) => {
-        const colors: Record<string, string> = {
-            'Lunes': '#2196F3',
-            'Martes': '#4CAF50',
-            'Miércoles': '#FF9800',
-            'Jueves': '#9C27B0',
-            'Viernes': '#00BCD4',
-            'Sábado': '#8B0000',
-            'Domingo': '#dc3545'
-        };
-        return colors[day] || '#666';
-    };
+    const countByDay = (day: string) =>
+        schedules.filter((s) => {
+            if (s.day_of_week !== day) return false;
+            if (filterCategory && s.id_category !== parseInt(filterCategory)) return false;
+            return true;
+        }).length;
 
-    const renderScheduleItem = ({ item }: { item: Schedule }) => (
-        <View style={styles.scheduleCard}>
-            <View style={[styles.dayIndicator, { backgroundColor: getDayColor(item.day_of_week) }]}>
-                <Text style={styles.dayIndicatorText}>{item.day_of_week.substring(0, 3)}</Text>
-            </View>
-            <View style={styles.scheduleInfo}>
-                <Text style={styles.categoryName}>{item.category_name}</Text>
-                <Text style={styles.scheduleTime}>
-                    <Ionicons name="time-outline" size={14} color="#666" />
-                    {' '}{item.start_time} - {item.end_time}
-                </Text>
-            </View>
-            <View style={styles.scheduleActions}>
-                <TouchableOpacity onPress={() => startEdit(item)} style={styles.actionButton}>
-                    <Ionicons name="create-outline" size={20} color="#f59e0b" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.actionButton}>
-                    <Ionicons name="trash-outline" size={20} color="#dc3545" />
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
-
+    // ============================================
+    // PRESENTACION — timeline estilo mock, tonos rojos
+    // ============================================
     if (loading) {
         return (
             <View style={styles.centerContainer}>
@@ -205,39 +206,84 @@ export const SchedulesScreen = () => {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
+            {/* Header suave */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Horarios de Entrenamiento</Text>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.headerTitle}>Horarios</Text>
+                    <Text style={styles.headerSub}>Entrenamientos por categoría</Text>
+                </View>
                 <TouchableOpacity
                     style={styles.addButton}
                     onPress={() => {
                         resetForm();
                         setModalVisible(true);
                     }}
+                    activeOpacity={0.8}
                 >
                     <Ionicons name="add" size={24} color="#fff" />
                 </TouchableOpacity>
             </View>
 
-            {/* Filter */}
+            {/* Selector de días */}
+            <View style={styles.daysRow}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.daysScroll}
+                >
+                    {DAYS.map((day, index) => {
+                        const active = selectedDay === day;
+                        const count = countByDay(day);
+                        return (
+                            <TouchableOpacity
+                                key={day}
+                                style={[styles.dayPill, active && styles.dayPillActive]}
+                                onPress={() => setSelectedDay(day)}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={[styles.dayPillShort, active && styles.dayPillShortActive]}>
+                                    {DAY_SHORT[index]}
+                                </Text>
+                                <Text style={[styles.dayPillNum, active && styles.dayPillNumActive]}>
+                                    {count}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            </View>
+
+            {/* Filtro por categoría */}
             <View style={styles.filterContainer}>
-                <Text style={styles.filterLabel}>Filtrar por categoría:</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterOptions}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <TouchableOpacity
                         style={[styles.filterChip, !filterCategory && styles.filterChipActive]}
                         onPress={() => setFilterCategory('')}
                     >
-                        <Text style={[styles.filterChipText, !filterCategory && styles.filterChipTextActive]}>
-                            Todos
+                        <Text
+                            style={[
+                                styles.filterChipText,
+                                !filterCategory && styles.filterChipTextActive
+                            ]}
+                        >
+                            Todas
                         </Text>
                     </TouchableOpacity>
                     {categories.map((cat) => (
                         <TouchableOpacity
                             key={cat.id}
-                            style={[styles.filterChip, filterCategory === String(cat.id) && styles.filterChipActive]}
+                            style={[
+                                styles.filterChip,
+                                filterCategory === String(cat.id) && styles.filterChipActive
+                            ]}
                             onPress={() => setFilterCategory(String(cat.id))}
                         >
-                            <Text style={[styles.filterChipText, filterCategory === String(cat.id) && styles.filterChipTextActive]}>
+                            <Text
+                                style={[
+                                    styles.filterChipText,
+                                    filterCategory === String(cat.id) && styles.filterChipTextActive
+                                ]}
+                            >
                                 {cat.category_year}
                             </Text>
                         </TouchableOpacity>
@@ -245,118 +291,198 @@ export const SchedulesScreen = () => {
                 </ScrollView>
             </View>
 
-            <Text style={styles.countText}>{filteredSchedules.length} horario(s)</Text>
+            {/* Título de sección + timeline */}
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Entrenamientos</Text>
+                <Text style={styles.sectionCount}>
+                    {daySchedules.length} · {selectedDay}
+                </Text>
+            </View>
 
             <FlatList
-                data={filteredSchedules}
-                renderItem={renderScheduleItem}
+                data={daySchedules}
                 keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={styles.timelineContent}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[MyColors.primary]} />
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[MyColors.primary]}
+                    />
                 }
-                contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="calendar-outline" size={60} color="#ccc" />
-                        <Text style={styles.emptyText}>No hay horarios registrados</Text>
+                    <View style={styles.emptyBox}>
+                        <View style={styles.emptyIconCircle}>
+                            <Ionicons name="calendar-outline" size={28} color={MyColors.primary} />
+                        </View>
+                        <Text style={styles.emptyTitle}>Sin entrenamientos</Text>
+                        <Text style={styles.emptyText}>
+                            No hay horarios para {selectedDay}
+                            {filterCategory ? ' en esta categoría' : ''}.
+                        </Text>
                     </View>
                 }
+                renderItem={({ item, index }) => {
+                    const isLast = index === daySchedules.length - 1;
+                    return (
+                        <View style={styles.timelineRow}>
+                            <View style={styles.timeCol}>
+                                <Text style={styles.timeLabel}>{item.start_time}</Text>
+                                <Text style={styles.timeLabelEnd}>{item.end_time}</Text>
+                            </View>
+
+                            <View style={styles.lineCol}>
+                                <View style={styles.dot} />
+                                {!isLast && <View style={styles.line} />}
+                            </View>
+
+                            <TouchableOpacity
+                                style={styles.eventCard}
+                                onPress={() => startEdit(item)}
+                                activeOpacity={0.85}
+                            >
+                                <View style={styles.eventCardTop}>
+                                    <Text style={styles.eventTitle} numberOfLines={1}>
+                                        {item.category_name}
+                                    </Text>
+                                    <View style={styles.eventActions}>
+                                        <TouchableOpacity
+                                            onPress={() => startEdit(item)}
+                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                            style={styles.eventActionBtn}
+                                        >
+                                            <Ionicons name="create-outline" size={16} color="#fff" />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => handleDelete(item.id)}
+                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                            style={styles.eventActionBtn}
+                                        >
+                                            <Ionicons name="trash-outline" size={16} color="#fff" />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                                <Text style={styles.eventMeta}>
+                                    {item.day_of_week} · {item.start_time} – {item.end_time}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    );
+                }}
             />
 
-            {/* Modal para crear/editar */}
+            {/* Modal crear / editar */}
             <Modal
                 visible={modalVisible}
                 animationType="slide"
-                transparent={true}
+                transparent
                 onRequestClose={resetForm}
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>
-                                {editingSchedule ? 'Editar Horario' : 'Nuevo Horario'}
+                                {editingSchedule ? 'Editar horario' : 'Nuevo horario'}
                             </Text>
                             <TouchableOpacity onPress={resetForm}>
-                                <Ionicons name="close" size={24} color="#333" />
+                                <Ionicons name="close" size={24} color="#666" />
                             </TouchableOpacity>
                         </View>
 
-                        <ScrollView>
-                            <View style={styles.modalBody}>
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Categoría *</Text>
-                                    <View style={styles.categoryGrid}>
-                                        {categories.map((cat) => (
-                                            <TouchableOpacity
-                                                key={cat.id}
+                        <ScrollView contentContainerStyle={styles.modalBody}>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Categoría *</Text>
+                                <View style={styles.categoryGrid}>
+                                    {categories.map((cat) => (
+                                        <TouchableOpacity
+                                            key={cat.id}
+                                            style={[
+                                                styles.categoryOption,
+                                                formData.id_category === String(cat.id) &&
+                                                    styles.categoryOptionSelected
+                                            ]}
+                                            onPress={() =>
+                                                setFormData({
+                                                    ...formData,
+                                                    id_category: String(cat.id)
+                                                })
+                                            }
+                                        >
+                                            <Text
                                                 style={[
-                                                    styles.categoryOption,
-                                                    formData.id_category === String(cat.id) && styles.categoryOptionSelected
-                                                ]}
-                                                onPress={() => setFormData({ ...formData, id_category: String(cat.id) })}
-                                            >
-                                                <Text style={[
                                                     styles.categoryOptionText,
-                                                    formData.id_category === String(cat.id) && styles.categoryOptionTextSelected
-                                                ]}>
-                                                    {cat.category_year}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </View>
-                                </View>
-
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Día de la Semana *</Text>
-                                    <View style={styles.dayGrid}>
-                                        {DAYS.map((day) => (
-                                            <TouchableOpacity
-                                                key={day}
-                                                style={[
-                                                    styles.dayOption,
-                                                    formData.day_of_week === day && styles.dayOptionSelected,
-                                                    { backgroundColor: formData.day_of_week === day ? getDayColor(day) : '#f0f0f0' }
+                                                    formData.id_category === String(cat.id) &&
+                                                        styles.categoryOptionTextSelected
                                                 ]}
-                                                onPress={() => setFormData({ ...formData, day_of_week: day })}
                                             >
-                                                <Text style={[
-                                                    styles.dayOptionText,
-                                                    formData.day_of_week === day && styles.dayOptionTextSelected
-                                                ]}>
-                                                    {day.substring(0, 3)}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </View>
+                                                {cat.category_year}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
                                 </View>
-
-                                <View style={styles.row}>
-                                    <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                                        <Text style={styles.label}>Hora Inicio *</Text>
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="08:00"
-                                            value={formData.start_time}
-                                            onChangeText={(text) => setFormData({ ...formData, start_time: text })}
-                                        />
-                                    </View>
-                                    <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                                        <Text style={styles.label}>Hora Fin *</Text>
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="10:00"
-                                            value={formData.end_time}
-                                            onChangeText={(text) => setFormData({ ...formData, end_time: text })}
-                                        />
-                                    </View>
-                                </View>
-
-                                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                                    <Text style={styles.submitButtonText}>
-                                        {editingSchedule ? 'Actualizar Horario' : 'Crear Horario'}
-                                    </Text>
-                                </TouchableOpacity>
                             </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Día *</Text>
+                                <View style={styles.dayGrid}>
+                                    {DAYS.map((day, index) => (
+                                        <TouchableOpacity
+                                            key={day}
+                                            style={[
+                                                styles.dayOption,
+                                                formData.day_of_week === day && {
+                                                    backgroundColor: MyColors.primary,
+                                                    borderColor: MyColors.primary
+                                                }
+                                            ]}
+                                            onPress={() =>
+                                                setFormData({ ...formData, day_of_week: day })
+                                            }
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.dayOptionText,
+                                                    formData.day_of_week === day &&
+                                                        styles.dayOptionTextSelected
+                                                ]}
+                                            >
+                                                {DAY_SHORT[index]}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                                    <Text style={styles.label}>Hora inicio *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="08:00"
+                                        value={formData.start_time}
+                                        onChangeText={(text) =>
+                                            setFormData({ ...formData, start_time: text })
+                                        }
+                                    />
+                                </View>
+                                <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                                    <Text style={styles.label}>Hora fin *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="10:00"
+                                        value={formData.end_time}
+                                        onChangeText={(text) =>
+                                            setFormData({ ...formData, end_time: text })
+                                        }
+                                    />
+                                </View>
+                            </View>
+
+                            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+                                <Text style={styles.submitButtonText}>
+                                    {editingSchedule ? 'Actualizar horario' : 'Crear horario'}
+                                </Text>
+                            </TouchableOpacity>
                         </ScrollView>
                     </View>
                 </View>
@@ -368,174 +494,292 @@ export const SchedulesScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#F6F4F4',
     },
     centerContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: '#F6F4F4',
     },
     loadingText: {
         marginTop: 12,
-        fontSize: 16,
-        color: '#666',
+        fontSize: 15,
+        color: '#8A7A7A',
     },
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 8,
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        letterSpacing: -0.3,
+    },
+    headerSub: {
+        fontSize: 13,
+        color: '#8A7A7A',
+        marginTop: 2,
     },
     addButton: {
         backgroundColor: MyColors.primary,
-        width: 40,
-        height: 40,
-        borderRadius: 8,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
+        shadowColor: '#8B0000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    daysRow: {
+        paddingTop: 8,
+        paddingBottom: 4,
+    },
+    daysScroll: {
+        paddingHorizontal: 16,
+        gap: 10,
+    },
+    dayPill: {
+        width: 56,
+        paddingVertical: 12,
+        borderRadius: 18,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        marginRight: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(139, 0, 0, 0.06)',
+        shadowColor: '#8B0000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+        elevation: 1,
+    },
+    dayPillActive: {
+        backgroundColor: MyColors.primary,
+        borderColor: 'transparent',
+        shadowOpacity: 0.2,
+        elevation: 4,
+    },
+    dayPillShort: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#9A8585',
+        marginBottom: 4,
+    },
+    dayPillShortActive: {
+        color: 'rgba(255,255,255,0.85)',
+    },
+    dayPillNum: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1A1A1A',
+    },
+    dayPillNumActive: {
+        color: '#FFFFFF',
     },
     filterContainer: {
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    filterLabel: {
-        fontSize: 13,
-        color: '#666',
-        marginBottom: 6,
-    },
-    filterOptions: {
-        flexDirection: 'row',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
     },
     filterChip: {
         paddingHorizontal: 14,
-        paddingVertical: 6,
+        paddingVertical: 7,
         borderRadius: 16,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#FFFFFF',
         marginRight: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(139, 0, 0, 0.08)',
     },
     filterChipActive: {
         backgroundColor: MyColors.primary,
+        borderColor: MyColors.primary,
     },
     filterChipText: {
         fontSize: 13,
-        color: '#666',
+        color: '#6B5555',
+        fontWeight: '500',
     },
     filterChipTextActive: {
         color: '#fff',
         fontWeight: '600',
     },
-    countText: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        fontSize: 13,
-        color: '#666',
-        backgroundColor: '#f5f5f5',
-    },
-    listContent: {
-        padding: 12,
-    },
-    scheduleCard: {
+    sectionHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingBottom: 8,
+        paddingTop: 4,
     },
-    dayIndicator: {
-        width: 40,
-        height: 40,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
+    sectionTitle: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        letterSpacing: -0.2,
     },
-    dayIndicatorText: {
+    sectionCount: {
         fontSize: 12,
-        fontWeight: 'bold',
-        color: '#fff',
+        color: '#9A8585',
+        fontWeight: '500',
     },
-    scheduleInfo: {
-        flex: 1,
+    timelineContent: {
+        paddingHorizontal: 16,
+        paddingBottom: 32,
+        paddingTop: 4,
+        flexGrow: 1,
     },
-    categoryName: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#333',
+    timelineRow: {
+        flexDirection: 'row',
+        minHeight: 88,
     },
-    scheduleTime: {
+    timeCol: {
+        width: 52,
+        paddingTop: 4,
+        alignItems: 'flex-end',
+        paddingRight: 10,
+    },
+    timeLabel: {
         fontSize: 13,
-        color: '#666',
+        fontWeight: '700',
+        color: '#1A1A1A',
+    },
+    timeLabelEnd: {
+        fontSize: 11,
+        color: '#9A8585',
         marginTop: 2,
     },
-    scheduleActions: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    actionButton: {
-        padding: 6,
-    },
-    emptyContainer: {
+    lineCol: {
+        width: 16,
         alignItems: 'center',
-        paddingVertical: 40,
+    },
+    dot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: MyColors.primary,
+        marginTop: 6,
+        borderWidth: 2,
+        borderColor: 'rgba(139, 0, 0, 0.2)',
+    },
+    line: {
+        flex: 1,
+        width: 2,
+        backgroundColor: 'rgba(139, 0, 0, 0.12)',
+        marginTop: 4,
+        marginBottom: 0,
+    },
+    eventCard: {
+        flex: 1,
+        backgroundColor: MyColors.primary,
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 14,
+        marginBottom: 12,
+        marginLeft: 6,
+        shadowColor: '#8B0000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.18,
+        shadowRadius: 10,
+        elevation: 4,
+    },
+    eventCardTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 6,
+    },
+    eventTitle: {
+        flex: 1,
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginRight: 8,
+    },
+    eventMeta: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.8)',
+        fontWeight: '500',
+    },
+    eventActions: {
+        flexDirection: 'row',
+        gap: 6,
+    },
+    eventActionBtn: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: 'rgba(255,255,255,0.18)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    emptyBox: {
+        alignItems: 'center',
+        paddingTop: 48,
+        paddingHorizontal: 32,
+    },
+    emptyIconCircle: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: 'rgba(139, 0, 0, 0.08)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 14,
+    },
+    emptyTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 6,
     },
     emptyText: {
-        fontSize: 16,
-        color: '#999',
-        marginTop: 12,
+        fontSize: 13,
+        color: '#8A7A7A',
+        textAlign: 'center',
+        lineHeight: 18,
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0.45)',
         justifyContent: 'flex-end',
     },
     modalContent: {
         backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        maxHeight: '80%',
-        paddingBottom: 30,
+        borderTopLeftRadius: 22,
+        borderTopRightRadius: 22,
+        maxHeight: '85%',
+        paddingBottom: 28,
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
+        padding: 18,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderBottomColor: '#f0eaea',
     },
     modalTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
+        fontWeight: '700',
+        color: '#1A1A1A',
     },
     modalBody: {
-        padding: 16,
+        padding: 18,
     },
     inputGroup: {
         marginBottom: 16,
     },
     label: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
-        color: '#333',
+        color: '#6B5555',
         marginBottom: 8,
     },
     row: {
@@ -544,12 +788,13 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
+        borderColor: 'rgba(139, 0, 0, 0.12)',
+        borderRadius: 12,
         paddingHorizontal: 14,
-        paddingVertical: 10,
+        paddingVertical: 12,
         fontSize: 15,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#FAF8F8',
+        color: '#1A1A1A',
     },
     categoryGrid: {
         flexDirection: 'row',
@@ -557,12 +802,13 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     categoryOption: {
-        paddingHorizontal: 16,
+        paddingHorizontal: 14,
         paddingVertical: 8,
-        borderRadius: 8,
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: 'rgba(139, 0, 0, 0.12)',
         marginBottom: 4,
+        backgroundColor: '#FAF8F8',
     },
     categoryOptionSelected: {
         backgroundColor: MyColors.primary,
@@ -570,7 +816,8 @@ const styles = StyleSheet.create({
     },
     categoryOptionText: {
         fontSize: 13,
-        color: '#666',
+        color: '#6B5555',
+        fontWeight: '500',
     },
     categoryOptionTextSelected: {
         color: '#fff',
@@ -579,38 +826,41 @@ const styles = StyleSheet.create({
     dayGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 6,
+        gap: 8,
     },
     dayOption: {
-        width: 44,
-        height: 44,
-        borderRadius: 8,
+        width: 46,
+        height: 46,
+        borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    dayOptionSelected: {
-        borderColor: 'transparent',
+        borderColor: 'rgba(139, 0, 0, 0.12)',
+        backgroundColor: '#FAF8F8',
     },
     dayOptionText: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#666',
+        color: '#6B5555',
     },
     dayOptionTextSelected: {
         color: '#fff',
     },
     submitButton: {
         backgroundColor: MyColors.primary,
-        borderRadius: 8,
-        paddingVertical: 14,
+        borderRadius: 14,
+        paddingVertical: 15,
         alignItems: 'center',
-        marginTop: 10,
+        marginTop: 8,
+        shadowColor: '#8B0000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 3,
     },
     submitButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '700',
     },
 });

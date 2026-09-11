@@ -1,8 +1,7 @@
 // Encargado: Categorías
-// Descripción: Gestión de categorías (año de nacimiento) y selección para estudiantes
+// Descripción: CRUD de categorías (año de nacimiento) — UI alineada al resto
 // Archivo: src/presentation/views/categories/CategoriesScreen.tsx
 // ============================================
-// src/presentation/views/categories/CategoriesScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
     View,
@@ -17,6 +16,7 @@ import {
     Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 
@@ -27,12 +27,6 @@ interface Category {
     created_at?: string;
 }
 
-// ============================================
-// Rango de años disponibles para elegir al crear una
-// categoría (años de nacimiento de los estudiantes).
-// Ajusta CURRENT_YEAR o el rango si tu escuela maneja
-// otras edades.
-// ============================================
 const CURRENT_YEAR = new Date().getFullYear();
 const MIN_YEAR = 2005;
 const YEAR_OPTIONS = Array.from(
@@ -41,31 +35,22 @@ const YEAR_OPTIONS = Array.from(
 );
 
 export const CategoriesScreen = () => {
+    const navigation = useNavigation<any>();
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ category_year: '', description: '' });
-    const [showCustomYearInput, setShowCustomYearInput] = useState(false);
-    const [customYear, setCustomYear] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
 
     const loadCategories = async () => {
         try {
             const response = await ApiDelivery.get('/categories');
-            const responseData = response.data;
-            const categoriesData = Array.isArray(responseData)
-                ? responseData
-                : Array.isArray(responseData?.data)
-                    ? responseData.data
-                    : Array.isArray(responseData?.data?.data)
-                        ? responseData.data.data
-                        : [];
-            setCategories((categoriesData as Category[]).map((category: Category) => ({
-                ...category,
-                category_year: String(category.category_year)
-            })));
+            const categoriesData = Array.isArray(response.data)
+                ? response.data
+                : response.data?.data || [];
+            setCategories(categoriesData);
         } catch (error) {
             Alert.alert('Error', 'No se pudieron cargar las categorías');
         } finally {
@@ -83,159 +68,69 @@ export const CategoriesScreen = () => {
         loadCategories();
     };
 
-    // Años ya usados por otra categoría (para no dejar crear duplicados).
-    // Si se esta editando, el año actual de esa categoría sigue disponible.
     const usedYears = categories
         .filter((c) => !(isEditing && c.id === editingId))
-        .map((c) => String(c.category_year));
+        .map((c) => c.category_year);
 
-    const savedYears = Array.from(
-        new Set(categories.map((category) => String(category.category_year)))
-    ).sort((firstYear, secondYear) => Number(firstYear) - Number(secondYear));
-    const availableYears = [
-        ...YEAR_OPTIONS.filter((year) => !savedYears.includes(year)),
-        ...savedYears
-    ];
-
-    const handleSubmit = async (categoryData = formData) => {
-        const enteredYear = customYear.trim();
-        const yearToSave = categoryData.category_year || enteredYear;
-        const dataToSave = { ...categoryData, category_year: yearToSave };
-
-        if (!dataToSave.category_year) {
+    const handleSubmit = async () => {
+        if (!formData.category_year) {
             Alert.alert('Error', 'Selecciona el año de la categoría');
             return;
         }
-        if (!/^\d{4}$/.test(dataToSave.category_year)) {
-            Alert.alert('Error', 'Escribe un año válido de cuatro dígitos');
-            return;
-        }
-        if (usedYears.includes(dataToSave.category_year)) {
-            Alert.alert('Error', 'Ese año ya está registrado');
-            return;
-        }
 
-        const wasEditing = isEditing;
         try {
-            let response;
-            if (wasEditing && editingId) {
-                response = await ApiDelivery.put('/categories', {
+            if (isEditing && editingId) {
+                await ApiDelivery.put('/categories', {
                     id: editingId,
-                    category_year: dataToSave.category_year,
-                    description: dataToSave.description
+                    category_year: formData.category_year,
+                    description: formData.description
                 });
             } else {
-                response = await ApiDelivery.post('/categories/create', dataToSave);
-            }
-            const responsePayload = response.data;
-            const savedCategory = responsePayload?.data?.id
-                ? responsePayload.data
-                : responsePayload?.data?.data;
-            if (savedCategory?.id) {
-                const normalizedCategory = {
-                    ...savedCategory,
-                    category_year: String(savedCategory.category_year)
-                };
-                setCategories((currentCategories) => {
-                    const categoryExists = currentCategories.some((category) => category.id === normalizedCategory.id);
-                    if (categoryExists) {
-                        return currentCategories.map((category) => (
-                            category.id === normalizedCategory.id ? normalizedCategory : category
-                        ));
-                    }
-                    return [...currentCategories, normalizedCategory];
-                });
+                await ApiDelivery.post('/categories/create', formData);
             }
             resetForm();
-            await loadCategories();
-            Alert.alert('Éxito', wasEditing ? 'Categoría actualizada' : 'Categoría creada');
+            loadCategories();
+            Alert.alert('Éxito', isEditing ? 'Categoría actualizada' : 'Categoría creada');
         } catch (error) {
             Alert.alert('Error', 'No se pudo guardar la categoría');
         }
     };
 
     const handleDelete = (id: number, name: string) => {
-        Alert.alert(
-            'Eliminar Categoría',
-            `¿Estás seguro de eliminar "${name}"?`,
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Eliminar',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await ApiDelivery.delete(`/categories/delete/${id}`);
-                            loadCategories();
-                            Alert.alert('Éxito', 'Categoría eliminada');
-                        } catch (error) {
-                            Alert.alert('Error', 'No se pudo eliminar la categoría');
-                        }
+        Alert.alert('Eliminar Categoría', `¿Estás seguro de eliminar "${name}"?`, [
+            { text: 'Cancelar', style: 'cancel' },
+            {
+                text: 'Eliminar',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await ApiDelivery.delete(`/categories/delete/${id}`);
+                        loadCategories();
+                        Alert.alert('Éxito', 'Categoría eliminada');
+                    } catch (error) {
+                        Alert.alert('Error', 'No se pudo eliminar la categoría');
                     }
                 }
-            ]
-        );
+            }
+        ]);
     };
 
     const resetForm = () => {
         setFormData({ category_year: '', description: '' });
-        setCustomYear('');
-        setShowCustomYearInput(false);
         setIsEditing(false);
         setEditingId(null);
         setShowForm(false);
     };
 
-    const selectCustomYear = () => {
-        const normalizedYear = customYear.trim();
-        if (!/^\d{4}$/.test(normalizedYear)) {
-            Alert.alert('Error', 'Escribe un año válido de cuatro dígitos');
-            return;
-        }
-
-        if (usedYears.includes(normalizedYear)) {
-            Alert.alert('Error', 'Ese año ya está registrado');
-            return;
-        }
-
-        setFormData({ ...formData, category_year: normalizedYear });
-    };
-
-    const handleCustomYearBlur = () => {
-        const normalizedYear = customYear.trim();
-        if (/^\d{4}$/.test(normalizedYear) && !usedYears.includes(normalizedYear)) {
-            setFormData((currentFormData) => ({
-                ...currentFormData,
-                category_year: normalizedYear
-            }));
-        }
-    };
-
     const startEdit = (category: Category) => {
-        setFormData({ category_year: category.category_year, description: category.description || '' });
+        setFormData({
+            category_year: category.category_year,
+            description: category.description || ''
+        });
         setIsEditing(true);
         setEditingId(category.id);
         setShowForm(true);
     };
-
-    const renderCategoryItem = ({ item }: { item: Category }) => (
-        <View style={styles.categoryCard}>
-            <View style={styles.categoryInfo}>
-                <Text style={styles.categoryYear}>{item.category_year}</Text>
-                {item.description && (
-                    <Text style={styles.categoryDescription}>{item.description}</Text>
-                )}
-            </View>
-            <View style={styles.categoryActions}>
-                <TouchableOpacity onPress={() => startEdit(item)} style={styles.actionButton}>
-                    <Ionicons name="create-outline" size={20} color="#f59e0b" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id, item.category_year)} style={styles.actionButton}>
-                    <Ionicons name="trash-outline" size={20} color="#dc3545" />
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
 
     if (loading) {
         return (
@@ -249,89 +144,84 @@ export const CategoriesScreen = () => {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Categorías ({categories.length})</Text>
+                <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+                </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.headerTitle}>Categorías</Text>
+                    <Text style={styles.headerSub}>{categories.length} registradas</Text>
+                </View>
                 <TouchableOpacity
                     style={styles.addButton}
                     onPress={() => {
-                        resetForm();
-                        setShowForm(!showForm);
+                        if (showForm) {
+                            resetForm();
+                        } else {
+                            resetForm();
+                            setShowForm(true);
+                        }
                     }}
+                    activeOpacity={0.8}
                 >
                     <Ionicons name={showForm ? 'close' : 'add'} size={24} color="#fff" />
                 </TouchableOpacity>
             </View>
 
             {showForm && (
-                <View style={styles.formContainer}>
+                <View style={styles.formCard}>
+                    <Text style={styles.formTitle}>
+                        {isEditing ? 'Editar categoría' : 'Nueva categoría'}
+                    </Text>
+
                     <Text style={styles.formLabel}>Año de nacimiento</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yearScroll}>
-                        <View style={styles.yearContainer}>
-                            <TouchableOpacity
-                                style={styles.addYearChip}
-                                onPress={() => setShowCustomYearInput((visible) => !visible)}
-                                accessibilityLabel="Agregar otro año"
-                            >
-                                <Ionicons name={showCustomYearInput ? 'close' : 'add'} size={20} color={MyColors.primary} />
-                            </TouchableOpacity>
-                            {showCustomYearInput && (
-                                <View style={styles.customYearInline}>
-                                    <TextInput
-                                        style={styles.customYearInput}
-                                        placeholder="Ejem: 2004"
-                                        placeholderTextColor="#999"
-                                        keyboardType="number-pad"
-                                        maxLength={4}
-                                        value={customYear}
-                                        onChangeText={setCustomYear}
-                                        onBlur={handleCustomYearBlur}
-                                        autoFocus
-                                    />
-                                    <TouchableOpacity
-                                        style={styles.customYearConfirm}
-                                        onPress={selectCustomYear}
-                                        accessibilityLabel="Confirmar año"
-                                    >
-                                        <Ionicons name="checkmark" size={20} color="#fff" />
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                            {!showCustomYearInput && availableYears.map((year) => {
-                                const disabled = usedYears.includes(year);
-                                const selected = formData.category_year === year;
-                                return (
-                                    <TouchableOpacity
-                                        key={year}
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.yearScroll}
+                    >
+                        {YEAR_OPTIONS.map((year) => {
+                            const disabled = usedYears.includes(year);
+                            const selected = formData.category_year === year;
+                            return (
+                                <TouchableOpacity
+                                    key={year}
+                                    style={[
+                                        styles.yearChip,
+                                        selected && styles.yearChipSelected,
+                                        disabled && !selected && styles.yearChipDisabled
+                                    ]}
+                                    disabled={disabled}
+                                    onPress={() =>
+                                        setFormData({ ...formData, category_year: year })
+                                    }
+                                    activeOpacity={0.85}
+                                >
+                                    <Text
                                         style={[
-                                            styles.yearChip,
-                                            selected && styles.yearChipSelected,
-                                            disabled && !selected && styles.yearChipDisabled
-                                        ]}
-                                        disabled={disabled}
-                                        onPress={() => setFormData({ ...formData, category_year: year })}
-                                    >
-                                        <Text style={[
                                             styles.yearChipText,
                                             selected && styles.yearChipTextSelected,
                                             disabled && !selected && styles.yearChipTextDisabled
-                                        ]}>
-                                            {year}
-                                        </Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
+                                        ]}
+                                    >
+                                        {year}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </ScrollView>
 
                     <Text style={styles.formLabel}>Descripción</Text>
                     <TextInput
                         style={styles.formInput}
                         placeholder="Ej: Categoría Benjamín"
-                        placeholderTextColor="#999"
+                        placeholderTextColor="#B0A0A0"
                         value={formData.description}
-                        onChangeText={(text) => setFormData({ ...formData, description: text })}
+                        onChangeText={(text) =>
+                            setFormData({ ...formData, description: text })
+                        }
                     />
 
-                    <TouchableOpacity style={styles.formSubmit} onPress={() => handleSubmit()}>
+                    <TouchableOpacity style={styles.formSubmit} onPress={handleSubmit}>
                         <Text style={styles.formSubmitText}>
                             {isEditing ? 'Actualizar' : 'Crear'}
                         </Text>
@@ -341,18 +231,66 @@ export const CategoriesScreen = () => {
 
             <FlatList
                 data={categories}
-                renderItem={renderCategoryItem}
                 keyExtractor={(item) => item.id.toString()}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[MyColors.primary]} />
-                }
                 contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="pricetag-outline" size={60} color="#ccc" />
-                        <Text style={styles.emptyText}>No hay categorías registradas</Text>
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[MyColors.primary]}
+                    />
+                }
+                ListHeaderComponent={
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Listado</Text>
+                        <Text style={styles.sectionCount}>
+                            {categories.length} categorí
+                            {categories.length !== 1 ? 'as' : 'a'}
+                        </Text>
                     </View>
                 }
+                ListEmptyComponent={
+                    <View style={styles.emptyBox}>
+                        <View style={styles.emptyIconCircle}>
+                            <Ionicons name="pricetag-outline" size={28} color={MyColors.primary} />
+                        </View>
+                        <Text style={styles.emptyTitle}>Sin categorías</Text>
+                        <Text style={styles.emptyText}>
+                            Crea la primera con el botón +.
+                        </Text>
+                    </View>
+                }
+                renderItem={({ item }) => (
+                    <View style={styles.categoryCard}>
+                        <View style={styles.catAvatar}>
+                            <Text style={styles.catAvatarText}>
+                                {String(item.category_year).slice(-2)}
+                            </Text>
+                        </View>
+                        <View style={styles.categoryInfo}>
+                            <Text style={styles.categoryYear}>{item.category_year}</Text>
+                            {!!item.description && (
+                                <Text style={styles.categoryDescription} numberOfLines={2}>
+                                    {item.description}
+                                </Text>
+                            )}
+                        </View>
+                        <View style={styles.categoryActions}>
+                            <TouchableOpacity
+                                style={styles.actionBtn}
+                                onPress={() => startEdit(item)}
+                            >
+                                <Ionicons name="create-outline" size={16} color={MyColors.primary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.actionBtn}
+                                onPress={() => handleDelete(item.id, item.category_year)}
+                            >
+                                <Ionicons name="trash-outline" size={16} color="#C45C5C" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
             />
         </View>
     );
@@ -361,67 +299,96 @@ export const CategoriesScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#F6F4F4',
     },
     centerContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: '#F6F4F4',
     },
     loadingText: {
         marginTop: 12,
-        fontSize: 16,
-        color: '#666',
+        fontSize: 15,
+        color: '#8A7A7A',
     },
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
+        paddingHorizontal: 12,
+        paddingTop: 12,
+        paddingBottom: 8,
+        gap: 8,
+    },
+    backBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
         backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        letterSpacing: -0.3,
+    },
+    headerSub: {
+        fontSize: 13,
+        color: '#8A7A7A',
+        marginTop: 2,
     },
     addButton: {
         backgroundColor: MyColors.primary,
-        width: 40,
-        height: 40,
-        borderRadius: 8,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
+        shadowColor: '#8B0000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 4,
     },
-    formContainer: {
-        backgroundColor: '#fff',
+    formCard: {
+        marginHorizontal: 16,
+        marginBottom: 12,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 18,
         padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderWidth: 1,
+        borderColor: 'rgba(139, 0, 0, 0.06)',
+        shadowColor: '#8B0000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.06,
+        shadowRadius: 10,
+        elevation: 2,
+    },
+    formTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 14,
     },
     formLabel: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#333',
+        color: '#6B5555',
         marginBottom: 8,
     },
     yearScroll: {
-        marginBottom: 14,
-    },
-    yearContainer: {
-        flexDirection: 'row',
+        paddingBottom: 14,
         gap: 8,
     },
     yearChip: {
-        paddingVertical: 8,
-        paddingHorizontal: 14,
-        borderRadius: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 16,
         borderWidth: 1,
-        borderColor: '#ddd',
-        backgroundColor: '#f8f9fa',
+        borderColor: 'rgba(139, 0, 0, 0.1)',
+        backgroundColor: '#FAF8F8',
         marginRight: 8,
     },
     yearChipSelected: {
@@ -429,12 +396,12 @@ const styles = StyleSheet.create({
         borderColor: MyColors.primary,
     },
     yearChipDisabled: {
-        opacity: 0.4,
+        opacity: 0.35,
     },
     yearChipText: {
-        fontSize: 13,
-        color: '#666',
-        fontWeight: '500',
+        fontSize: 14,
+        color: '#6B5555',
+        fontWeight: '600',
     },
     yearChipTextSelected: {
         color: '#fff',
@@ -443,108 +410,131 @@ const styles = StyleSheet.create({
     yearChipTextDisabled: {
         color: '#999',
     },
-    addYearChip: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: MyColors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 8,
-    },
-    customYearInline: {
-        flex: 1,
-        minWidth: 220,
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginRight: 8,
-    },
-    customYearInput: {
-        flex: 1,
-        height: 40,
-        borderWidth: 1,
-        borderColor: MyColors.primary,
-        borderRadius: 20,
-        paddingHorizontal: 10,
-        textAlign: 'center',
-        color: '#333',
-        backgroundColor: '#fff',
-    },
-    customYearConfirm: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        marginLeft: 6,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: MyColors.primary,
-    },
     formInput: {
         borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
+        borderColor: 'rgba(139, 0, 0, 0.12)',
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
         fontSize: 15,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#FAF8F8',
+        color: '#1A1A1A',
         marginBottom: 14,
     },
     formSubmit: {
         backgroundColor: MyColors.primary,
-        borderRadius: 8,
-        paddingVertical: 10,
+        borderRadius: 14,
+        paddingVertical: 14,
         alignItems: 'center',
+        shadowColor: '#8B0000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 3,
     },
     formSubmitText: {
         color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    sectionTitle: {
         fontSize: 15,
-        fontWeight: '600',
+        fontWeight: '700',
+        color: '#1A1A1A',
+    },
+    sectionCount: {
+        fontSize: 12,
+        color: '#9A8585',
+        fontWeight: '500',
     },
     listContent: {
-        padding: 12,
+        paddingHorizontal: 16,
+        paddingBottom: 28,
+        paddingTop: 4,
     },
     categoryCard: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 14,
         marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        borderWidth: 1,
+        borderColor: 'rgba(139, 0, 0, 0.04)',
+        shadowColor: '#8B0000',
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.05,
-        shadowRadius: 4,
+        shadowRadius: 8,
         elevation: 2,
+    },
+    catAvatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: 'rgba(139, 0, 0, 0.1)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    catAvatarText: {
+        fontSize: 14,
+        fontWeight: '800',
+        color: MyColors.primary,
     },
     categoryInfo: {
         flex: 1,
     },
     categoryYear: {
         fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
+        fontWeight: '700',
+        color: '#1A1A1A',
     },
     categoryDescription: {
-        fontSize: 14,
-        color: '#666',
+        fontSize: 13,
+        color: '#8A7A7A',
         marginTop: 2,
     },
     categoryActions: {
         flexDirection: 'row',
-        gap: 8,
+        gap: 6,
     },
-    actionButton: {
-        padding: 6,
-    },
-    emptyContainer: {
+    actionBtn: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        backgroundColor: 'rgba(139, 0, 0, 0.06)',
         alignItems: 'center',
-        paddingVertical: 40,
+        justifyContent: 'center',
+    },
+    emptyBox: {
+        alignItems: 'center',
+        paddingTop: 40,
+        paddingHorizontal: 32,
+    },
+    emptyIconCircle: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: 'rgba(139, 0, 0, 0.08)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 14,
+    },
+    emptyTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 6,
     },
     emptyText: {
-        fontSize: 16,
-        color: '#999',
-        marginTop: 12,
+        fontSize: 13,
+        color: '#8A7A7A',
+        textAlign: 'center',
     },
 });

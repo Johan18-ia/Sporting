@@ -1,28 +1,11 @@
 // src/presentation/views/welcome/WelcomeScreen.tsx
-// ====================================================
-// PANTALLA DE BIENVENIDA — primera pantalla que ve
-// cualquier persona sin sesión iniciada. Fondo en
-// degradado de rojos (sin usar ninguna libreria nueva,
-// para no depender de una instalacion adicional), con
-// dos botones funcionales hacia Login y Registro.
-//
-// Diseño responsive: usa flex y porcentajes en vez de
-// medidas fijas, y SafeAreaView para respetar el notch
-// y la barra inferior en cualquier tamaño de celular.
-// ====================================================
-import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet, useWindowDimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet, useWindowDimensions, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MyColors } from '../../theme/AppTheme';
 
-// ============================================
-// Simula un degradado apilando franjas delgadas cuyo color
-// se va interpolando entre un rojo oscuro y uno mas vivo.
-// Evita instalar expo-linear-gradient (menos riesgo de que
-// algo falle en la instalacion).
-// ============================================
-const GRADIENT_TOP = '#2b0505';    // granate muy oscuro
-const GRADIENT_BOTTOM = '#a11d1d'; // rojo mas vivo
+const GRADIENT_TOP = '#3a0a0a';    
+const GRADIENT_BOTTOM = '#8B0000'; 
 
 const hexToRgb = (hex: string) => {
     const value = hex.replace('#', '');
@@ -42,12 +25,13 @@ const mixColor = (start: string, end: string, factor: number) => {
     return `rgb(${r}, ${g}, ${b})`;
 };
 
-const GRADIENT_BANDS = 24;
+const GRADIENT_BANDS = 90;
 
 export const WelcomeScreen = () => {
     const navigation = useNavigation<any>();
     const { height } = useWindowDimensions();
-    const bandHeight = height / GRADIENT_BANDS + 1; // +1 para evitar lineas visibles entre bandas
+    const bandHeight = height / GRADIENT_BANDS + 0.5;
+    const [logoFailed, setLogoFailed] = useState(false);
 
     return (
         <View style={styles.root}>
@@ -58,6 +42,7 @@ export const WelcomeScreen = () => {
                         key={i}
                         style={{
                             height: bandHeight,
+                            marginTop: i === 0 ? 0 : -0.5,
                             backgroundColor: mixColor(GRADIENT_TOP, GRADIENT_BOTTOM, i / (GRADIENT_BANDS - 1)),
                         }}
                     />
@@ -65,10 +50,10 @@ export const WelcomeScreen = () => {
             </View>
 
             <SafeAreaView style={styles.safeArea}>
-                {/* Texto superior, minimalista */}
+                {/* Texto superior + logo, minimalista */}
                 <View style={styles.headerArea}>
                     <Text style={styles.title}>BIENVENIDO DE VUELTA</Text>
-                    <Text style={styles.subtitle}>Sporting Club</Text>
+                    <Text style={styles.subtitle}>Sporting</Text>
                 </View>
 
                 {/* Botones inferiores */}
@@ -120,6 +105,11 @@ const styles = StyleSheet.create({
         marginTop: 6,
         textTransform: 'uppercase',
         letterSpacing: 1,
+    },
+    logo: {
+        width: 96,
+        height: 96,
+        marginTop: 24,
     },
     actionsArea: {
         marginBottom: '6%',
