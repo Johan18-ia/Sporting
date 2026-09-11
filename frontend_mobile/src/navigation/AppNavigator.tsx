@@ -6,7 +6,7 @@
 // Se integran pantallas nuevas como Login, Register, ProfileDetail, Settings, UserForm y Users.
 // ============================================
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { NavigationContainer, RouteProp } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -64,7 +64,7 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                             iconName = focused ? 'people' : 'people-outline';
                             break;
                         case 'Students':
-                            iconName = focused ? 'school' : 'school-outline';
+                            iconName = 'add';
                             break;
                         case 'Products':
                             iconName = focused ? 'bag' : 'bag-outline';
@@ -76,6 +76,27 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                             iconName = 'home-outline';
                     }
                     
+                    if (route.name === 'Students') {
+                        return (
+                            <View
+                                style={{
+                                    width: 58,
+                                    height: 58,
+                                    borderRadius: 29,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: MyColors.primary,
+                                    marginTop: -18,
+                                    borderWidth: 3,
+                                    borderColor: MyColors.white,
+                                    elevation: 4,
+                                }}
+                            >
+                                <Ionicons name="add" size={30} color={MyColors.white} />
+                            </View>
+                        );
+                    }
+
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
                 tabBarActiveTintColor: MyColors.primary,
@@ -93,6 +114,10 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                     borderTopColor: '#eee',
                     height: 60,
                     paddingBottom: 5,
+                },
+                tabBarItemStyle: {
+                    flex: 1,
+                    alignItems: 'center',
                 },
                 tabBarLabelStyle: {
                     fontSize: 11,
@@ -127,13 +152,20 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                 component={StudentsScreen}
                 options={({ navigation }) => ({
                     title: 'Estudiantes',
-                    tabBarLabel: 'Estudiantes',
+                    tabBarShowLabel: false,
+                    tabBarLabel: '',
+                    tabBarLabelStyle: { display: 'none' },
                     headerLeft: () => (
                         <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ marginLeft: 10 }}>
                             <Ionicons name="arrow-back" size={24} color="#fff" />
                         </TouchableOpacity>
                     ),
                 })}
+                listeners={{
+                    tabPress: (event) => {
+                        event.preventDefault();
+                    },
+                }}
             />
             <Tab.Screen
                 name="Products"

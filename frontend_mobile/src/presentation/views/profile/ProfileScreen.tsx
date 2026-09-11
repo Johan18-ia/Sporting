@@ -62,7 +62,11 @@ export const ProfileScreen = () => {
     );
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+        >
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.avatarContainer}>
@@ -164,6 +168,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+    },
+    scrollContent: {
+        paddingBottom: 110,
     },
     header: {
         backgroundColor: '#fff',
