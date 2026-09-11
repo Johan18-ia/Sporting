@@ -301,37 +301,6 @@ export const DashboardScreen = () => {
                 />
             </View>
 
-            {/* Quick Actions */}
-            <View style={styles.quickActionsSection}>
-                <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-                <View style={styles.quickActionsGrid}>
-                    <QuickAction
-                        icon="person-add-outline"
-                        label="Nuevo Usuario"
-                        onPress={() => navigation.navigate('UserForm', { mode: 'create' })}
-                    />
-                    <QuickAction
-                        icon="school-outline"
-                        label="Nuevo Estudiante"
-                        onPress={() => navigation.navigate('StudentForm', { mode: 'create' })}
-                    />
-                    <QuickAction
-                        icon="trophy-outline"
-                        label="Torneos"
-                        onPress={() => navigation.navigate('Tournaments')}
-                    />
-                    <QuickAction
-                        icon="calendar-outline"
-                        label="Horarios"
-                        onPress={() => navigation.navigate('Schedules')}
-                    />
-                    <QuickAction
-                        icon="bar-chart-outline"
-                        label="Reportes"
-                        onPress={() => navigation.navigate('Reports')}
-                    />
-                </View>
-            </View>
         </ScrollView>
     );
 };
