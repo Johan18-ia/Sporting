@@ -40,9 +40,11 @@ export const DashboardScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [myTournaments, setMyTournaments] = useState<any[]>([]);
     const [mySchedules, setMySchedules] = useState<any[]>([]);
+    const [availableTournaments, setAvailableTournaments] = useState<any[]>([]);
     const [studentError, setStudentError] = useState<string | null>(null);
 
-    const isStudent = user?.role === 'user';
+    const isStudent = user?.role === 'user' && (user?.isStudent === true || Boolean(user?.studentProfile));
+    const isRegularUser = user?.role === 'user' && !isStudent;
     const extractArray = (result: PromiseSettledResult<any>, label: string): any[] => {
         if (result.status === 'rejected') {
             console.error(`Error cargando ${label}:`, result.reason?.message || result.reason);
@@ -82,15 +84,19 @@ export const DashboardScreen = () => {
     useEffect(() => {
         if (isStudent) {
             loadStudentData();
+        } else if (isRegularUser) {
+            loadRegularUserData();
         } else {
             loadStats();
         }
-    }, [isStudent]);
+    }, [isStudent, isRegularUser]);
 
     const onRefresh = () => {
         setRefreshing(true);
         if (isStudent) {
             loadStudentData();
+        } else if (isRegularUser) {
+            loadRegularUserData();
         } else {
             loadStats();
         }
@@ -114,7 +120,7 @@ export const DashboardScreen = () => {
                 : (schedulesRes.data?.data || []);
 
             const userId = user?.id;
-            const categoryId = user?.category_id;
+            const categoryId = user?.studentProfile?.category_id || user?.category_id;
 
             const myTournamentsData = tournamentsData.filter((t: any) =>
                 Array.isArray(t.students) && userId
@@ -133,6 +139,31 @@ export const DashboardScreen = () => {
             setStudentError('No se pudieron cargar los datos del estudiante');
         } finally {
             setStudentLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const loadRegularUserData = async () => {
+        setLoading(true);
+        try {
+            const [tournamentsRes, productsRes] = await Promise.all([
+                ApiDelivery.get('/tournaments'),
+                ApiDelivery.get('/products')
+            ]);
+            const tournaments = tournamentsRes.data?.data || tournamentsRes.data || [];
+            const products = productsRes.data?.data || productsRes.data || [];
+            const tournamentList = Array.isArray(tournaments) ? tournaments : [];
+            setAvailableTournaments(tournamentList);
+            setStats((previous) => ({
+                ...previous,
+                tournaments: tournamentList.length,
+                activeTournaments: tournamentList.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
+                products: Array.isArray(products) ? products.length : 0
+            }));
+        } catch (error) {
+            console.error('Error loading user data:', error);
+        } finally {
+            setLoading(false);
             setRefreshing(false);
         }
     };
@@ -178,22 +209,23 @@ export const DashboardScreen = () => {
         return (
             <ScrollView
                 style={styles.container}
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={styles.studentScrollContent}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[MyColors.primary]} />
                 }
             >
-                <View style={styles.header}>
+                <View style={styles.studentHeader}>
                     <View style={{ flex: 1 }}>
-                        <Text style={styles.greeting}>Hola, {user?.name || 'Estudiante'}</Text>
-                        <Text style={styles.greetingSub}>Panel de estudiante</Text>
+                        <Text style={styles.studentEyebrow}>SPORTING CLUB</Text>
+                        <Text style={styles.studentGreeting}>Hola, {user?.name || 'Estudiante'}</Text>
+                        <Text style={styles.studentGreetingSub}>Panel de estudiante</Text>
                     </View>
                     <TouchableOpacity
-                        style={styles.profileButton}
+                        style={styles.studentProfileButton}
                         onPress={() => navigation.navigate('Profile')}
                     >
-                        <View style={styles.profileAvatar}>
-                            <Ionicons name="person" size={20} color={MyColors.primary} />
+                        <View style={styles.studentProfileAvatar}>
+                            <Ionicons name="person-outline" size={21} color={MyColors.primary} />
                         </View>
                     </TouchableOpacity>
                 </View>
@@ -204,16 +236,59 @@ export const DashboardScreen = () => {
                     </View>
                 ) : null}
 
-                <View style={styles.statsList}>
-                    <StatCard icon="school-outline" label="Categoría" value={user?.category_id || 'Sin asignar'} onPress={() => {}} accent />
-                    <StatCard icon="time-outline" label="Mis Horarios" value={mySchedules.length} onPress={() => {}} />
-                    <StatCard icon="trophy-outline" label="Mis Torneos" value={myTournaments.length} onPress={() => {}} />
-                    <StatCard icon="checkmark-circle-outline" label="Activos" value={activeTournaments} onPress={() => {}} />
+                <View style={styles.studentCategoryCard}>
+                    <View style={styles.studentCategoryIcon}>
+                        <Ionicons name="school-outline" size={25} color="#fff" />
+                    </View>
+                    <View style={styles.studentCategoryCopy}>
+                        <Text style={styles.studentCategoryLabel}>CATEGORÍA</Text>
+                        <Text style={styles.studentCategoryValue}>
+                            {user?.studentProfile?.category_year || user?.category_id || 'Sin asignar'}
+                        </Text>
+                        <Text style={styles.studentCategoryMeta}>Tu categoría actual</Text>
+                    </View>
+                    <View style={styles.studentCategoryMark}>
+                        <Ionicons name="checkmark-circle" size={22} color="rgba(255,255,255,0.82)" />
+                    </View>
                 </View>
 
-                <View style={styles.quickActionsSection}>
-                    <Text style={styles.sectionTitle}>Accesos</Text>
-                    <View style={styles.quickActionsGrid}>
+                <View style={styles.studentSectionHeading}>
+                    <Text style={styles.studentSectionTitle}>Resumen</Text>
+                    <Text style={styles.studentSectionHint}>Tu actividad</Text>
+                </View>
+
+                <View style={styles.studentStatsCard}>
+                    <View style={styles.studentStatItem}>
+                        <View style={styles.studentStatIcon}>
+                            <Ionicons name="time-outline" size={19} color={MyColors.primary} />
+                        </View>
+                        <Text style={styles.studentStatValue}>{isLoading ? '—' : mySchedules.length}</Text>
+                        <Text style={styles.studentStatLabel}>Horarios</Text>
+                    </View>
+                    <View style={styles.studentStatDivider} />
+                    <View style={styles.studentStatItem}>
+                        <View style={styles.studentStatIcon}>
+                            <Ionicons name="trophy-outline" size={19} color={MyColors.primary} />
+                        </View>
+                        <Text style={styles.studentStatValue}>{isLoading ? '—' : myTournaments.length}</Text>
+                        <Text style={styles.studentStatLabel}>Torneos</Text>
+                    </View>
+                    <View style={styles.studentStatDivider} />
+                    <View style={styles.studentStatItem}>
+                        <View style={styles.studentStatIcon}>
+                            <Ionicons name="checkmark-circle-outline" size={19} color={MyColors.primary} />
+                        </View>
+                        <Text style={styles.studentStatValue}>{isLoading ? '—' : activeTournaments}</Text>
+                        <Text style={styles.studentStatLabel}>Activos</Text>
+                    </View>
+                </View>
+
+                <View style={styles.studentSectionHeading}>
+                    <Text style={styles.studentSectionTitle}>Accesos</Text>
+                    <Text style={styles.studentSectionHint}>Accede rápidamente</Text>
+                </View>
+                <View style={styles.studentQuickActionsCard}>
+                    <View style={styles.studentQuickActionsGrid}>
                         <QuickAction
                             icon="calendar-outline"
                             label="Horarios"
@@ -230,6 +305,94 @@ export const DashboardScreen = () => {
                             onPress={() => navigation.navigate('Profile')}
                         />
                     </View>
+                </View>
+
+                <View style={styles.studentListSection}>
+                    <View style={styles.studentSectionHeadingInline}>
+                        <Text style={styles.studentSectionTitle}>Mis horarios</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('Schedules')}>
+                            <Text style={styles.studentSectionLink}>Ver todos</Text>
+                        </TouchableOpacity>
+                    </View>
+                    {mySchedules.length === 0 ? (
+                        <Text style={styles.studentEmptyText}>No tienes horarios asignados todavía.</Text>
+                    ) : mySchedules.map((schedule) => (
+                        <View key={schedule.id} style={styles.studentListItem}>
+                            <View style={styles.studentListIcon}>
+                                <Ionicons name="calendar-outline" size={18} color={MyColors.primary} />
+                            </View>
+                            <View style={styles.studentListCopy}>
+                                <Text style={styles.studentListItemTitle}>{schedule.day_of_week}</Text>
+                                <Text style={styles.studentListItemText}>
+                                {schedule.start_time} - {schedule.end_time}{schedule.field_name ? ` · ${schedule.field_name}` : ''}
+                                </Text>
+                            </View>
+                        </View>
+                    ))}
+                </View>
+
+                <View style={styles.studentListSection}>
+                    <View style={styles.studentSectionHeadingInline}>
+                        <Text style={styles.studentSectionTitle}>Mis torneos</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('Tournaments')}>
+                            <Text style={styles.studentSectionLink}>Ver todos</Text>
+                        </TouchableOpacity>
+                    </View>
+                    {myTournaments.length === 0 ? (
+                        <Text style={styles.studentEmptyText}>No participas en torneos actualmente.</Text>
+                    ) : myTournaments.map((tournament) => (
+                        <View key={tournament.id} style={styles.studentListItem}>
+                            <View style={styles.studentListIcon}>
+                                <Ionicons name="trophy-outline" size={18} color={MyColors.primary} />
+                            </View>
+                            <View style={styles.studentListCopy}>
+                                <Text style={styles.studentListItemTitle}>{tournament.name}</Text>
+                                <Text style={styles.studentListItemText}>
+                                {tournament.category || 'Sin categoría'} · {tournament.status || 'Activo'} · {tournament.students?.length || 0} participantes
+                                </Text>
+                            </View>
+                        </View>
+                    ))}
+                </View>
+            </ScrollView>
+        );
+    }
+
+    if (isRegularUser) {
+        return (
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[MyColors.primary]} />}
+            >
+                <View style={styles.header}>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.greeting}>¡Bienvenido! {user?.name || 'Usuario'}</Text>
+                        <Text style={styles.greetingSub}>Consulta torneos y productos del club</Text>
+                    </View>
+                    <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
+                        <View style={styles.profileAvatar}><Ionicons name="person" size={20} color={MyColors.primary} /></View>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.statsList}>
+                    <StatCard icon="trophy-outline" label="Torneos disponibles" value={stats.tournaments} onPress={() => navigation.navigate('Tournaments')} accent />
+                    <StatCard icon="checkmark-circle-outline" label="Torneos activos" value={stats.activeTournaments} onPress={() => navigation.navigate('Tournaments')} />
+                    <StatCard icon="bag-outline" label="Productos en catálogo" value={stats.products} onPress={() => navigation.navigate('Products')} />
+                </View>
+
+                <View style={styles.quickActionsSection}>
+                    <Text style={styles.sectionTitle}>Torneos disponibles</Text>
+                    {availableTournaments.length === 0 ? (
+                        <Text style={styles.emptyText}>No hay torneos disponibles.</Text>
+                    ) : availableTournaments.slice(0, 5).map((tournament) => (
+                        <View key={tournament.id} style={styles.listItem}>
+                            <Text style={styles.listItemTitle}>{tournament.name}</Text>
+                            <Text style={styles.listItemText}>
+                                {tournament.category || 'Sin categoría'} · {tournament.status || 'Activo'} · {tournament.students?.length || 0} participantes
+                            </Text>
+                        </View>
+                    ))}
                 </View>
             </ScrollView>
         );
@@ -301,37 +464,6 @@ export const DashboardScreen = () => {
                 />
             </View>
 
-            {/* Quick Actions */}
-            <View style={styles.quickActionsSection}>
-                <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-                <View style={styles.quickActionsGrid}>
-                    <QuickAction
-                        icon="person-add-outline"
-                        label="Nuevo Usuario"
-                        onPress={() => navigation.navigate('UserForm', { mode: 'create' })}
-                    />
-                    <QuickAction
-                        icon="school-outline"
-                        label="Nuevo Estudiante"
-                        onPress={() => navigation.navigate('StudentForm', { mode: 'create' })}
-                    />
-                    <QuickAction
-                        icon="trophy-outline"
-                        label="Torneos"
-                        onPress={() => navigation.navigate('Tournaments')}
-                    />
-                    <QuickAction
-                        icon="calendar-outline"
-                        label="Horarios"
-                        onPress={() => navigation.navigate('Schedules')}
-                    />
-                    <QuickAction
-                        icon="bar-chart-outline"
-                        label="Reportes"
-                        onPress={() => navigation.navigate('Reports')}
-                    />
-                </View>
-            </View>
         </ScrollView>
     );
 };
@@ -339,10 +471,239 @@ export const DashboardScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F6F4F4',
+        backgroundColor: '#F7F7F8',
     },
     scrollContent: {
         paddingBottom: 28,
+    },
+    studentScrollContent: {
+        paddingBottom: 34,
+    },
+    studentHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 22,
+        paddingTop: 18,
+        paddingBottom: 19,
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0E7E7',
+    },
+    studentEyebrow: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: MyColors.primary,
+        letterSpacing: 1.3,
+        marginBottom: 5,
+    },
+    studentGreeting: {
+        fontSize: 25,
+        fontWeight: '800',
+        color: '#202124',
+        letterSpacing: -0.4,
+    },
+    studentGreetingSub: {
+        fontSize: 13,
+        color: '#867979',
+        marginTop: 3,
+    },
+    studentProfileButton: {
+        marginLeft: 14,
+    },
+    studentProfileAvatar: {
+        width: 45,
+        height: 45,
+        borderRadius: 14,
+        backgroundColor: '#FFF1F1',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#F1D6D6',
+    },
+    studentCategoryCard: {
+        marginHorizontal: 18,
+        marginTop: 20,
+        padding: 19,
+        minHeight: 124,
+        borderRadius: 18,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: MyColors.primary,
+        shadowColor: '#8B0000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.17,
+        shadowRadius: 12,
+        elevation: 4,
+    },
+    studentCategoryIcon: {
+        width: 52,
+        height: 52,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.16)',
+        marginRight: 14,
+    },
+    studentCategoryCopy: {
+        flex: 1,
+    },
+    studentCategoryLabel: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: 'rgba(255,255,255,0.72)',
+        letterSpacing: 1.1,
+    },
+    studentCategoryValue: {
+        fontSize: 32,
+        fontWeight: '800',
+        color: '#FFFFFF',
+        lineHeight: 38,
+        marginTop: 1,
+    },
+    studentCategoryMeta: {
+        fontSize: 11,
+        color: 'rgba(255,255,255,0.78)',
+        marginTop: 1,
+    },
+    studentCategoryMark: {
+        alignSelf: 'flex-start',
+        marginTop: 1,
+    },
+    studentSectionHeading: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        marginHorizontal: 20,
+        marginTop: 25,
+        marginBottom: 11,
+    },
+    studentSectionHeadingInline: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 11,
+    },
+    studentSectionTitle: {
+        fontSize: 17,
+        fontWeight: '800',
+        color: '#242326',
+        letterSpacing: -0.2,
+    },
+    studentSectionHint: {
+        fontSize: 11,
+        color: '#958686',
+    },
+    studentSectionLink: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: MyColors.primary,
+    },
+    studentStatsCard: {
+        marginHorizontal: 18,
+        paddingVertical: 15,
+        paddingHorizontal: 8,
+        borderRadius: 17,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#EEE7E7',
+        shadowColor: '#3D2020',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.06,
+        shadowRadius: 9,
+        elevation: 2,
+    },
+    studentStatItem: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    studentStatIcon: {
+        width: 34,
+        height: 34,
+        borderRadius: 11,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FFF1F1',
+        marginBottom: 7,
+    },
+    studentStatValue: {
+        fontSize: 23,
+        lineHeight: 26,
+        fontWeight: '800',
+        color: '#242326',
+    },
+    studentStatLabel: {
+        fontSize: 11,
+        color: '#887878',
+        marginTop: 2,
+    },
+    studentStatDivider: {
+        width: 1,
+        height: 58,
+        backgroundColor: '#EEE7E7',
+    },
+    studentQuickActionsCard: {
+        marginHorizontal: 18,
+        padding: 12,
+        borderRadius: 17,
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#EEE7E7',
+        shadowColor: '#3D2020',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.05,
+        shadowRadius: 9,
+        elevation: 2,
+    },
+    studentQuickActionsGrid: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    studentListSection: {
+        marginHorizontal: 18,
+        marginTop: 25,
+    },
+    studentListItem: {
+        minHeight: 66,
+        paddingHorizontal: 13,
+        paddingVertical: 11,
+        marginBottom: 8,
+        borderRadius: 14,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#EEE7E7',
+    },
+    studentListIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 11,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FFF1F1',
+        marginRight: 11,
+    },
+    studentListCopy: {
+        flex: 1,
+    },
+    studentListItemTitle: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#2A2729',
+        marginBottom: 3,
+    },
+    studentListItemText: {
+        fontSize: 12,
+        color: '#837777',
+        lineHeight: 17,
+    },
+    studentEmptyText: {
+        fontSize: 13,
+        color: '#837777',
+        paddingVertical: 15,
+        paddingHorizontal: 2,
     },
     header: {
         flexDirection: 'row',
@@ -473,24 +834,24 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     quickAction: {
-        width: '30%',
+        width: '31%',
         alignItems: 'center',
-        marginBottom: 14,
+        paddingVertical: 8,
     },
     quickActionIcon: {
-        width: 52,
-        height: 52,
-        borderRadius: 26,
-        backgroundColor: 'rgba(139, 0, 0, 0.08)',
+        width: 45,
+        height: 45,
+        borderRadius: 14,
+        backgroundColor: '#FFF1F1',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 8,
+        marginBottom: 9,
     },
     quickActionLabel: {
-        fontSize: 11,
-        color: '#6B5555',
+        fontSize: 12,
+        color: '#4F4444',
         textAlign: 'center',
-        fontWeight: '500',
+        fontWeight: '700',
     },
     // Conservados por si se usan en otros flujos del mismo archivo
     profileCard: {

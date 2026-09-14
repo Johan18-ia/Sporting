@@ -78,6 +78,15 @@ module.exports = {
                     image: myUser.image,
                     role: myUser.role,
                     is_active: isActive,
+                    studentProfile: myUser.student_profile_id ? {
+                        id: myUser.student_profile_id,
+                        user_id: myUser.id,
+                        category_id: myUser.student_category_id,
+                        category_year: myUser.student_category_year,
+                        status: myUser.student_status
+                    } : null,
+                    isStudent: Boolean(myUser.student_profile_id),
+                    category_id: myUser.student_category_id || null,
                     session_token: `JWT ${token}`,
                 };
 

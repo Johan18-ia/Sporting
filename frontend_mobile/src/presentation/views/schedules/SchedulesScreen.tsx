@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
+import { useAuth } from '../../../hooks/useAuth';
 
 interface Schedule {
     id: number;
@@ -43,6 +44,8 @@ const getTodayDayName = (): string => {
 };
 
 export const SchedulesScreen = () => {
+    const { user } = useAuth();
+    const isStudent = user?.role === 'user' && (user?.isStudent === true || Boolean(user?.studentProfile));
     const [schedules, setSchedules] = useState<Schedule[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
@@ -67,17 +70,24 @@ export const SchedulesScreen = () => {
                 ApiDelivery.get('/categories')
             ]);
 
-            const categoriesData = categoriesRes.data?.data || [];
+            const categoriesData = Array.isArray(categoriesRes.data)
+                ? categoriesRes.data
+                : categoriesRes.data?.data || [];
             setCategories(categoriesData);
 
-            const schedulesData = schedulesRes.data?.data || [];
+            const schedulesData = Array.isArray(schedulesRes.data)
+                ? schedulesRes.data
+                : schedulesRes.data?.data || [];
             const enriched = schedulesData.map((s: any) => ({
                 ...s,
                 category_name:
                     categoriesData.find((c: any) => c.id === s.id_category)?.category_year ||
                     'Sin categoría'
             }));
-            setSchedules(enriched);
+            const categoryId = user?.studentProfile?.category_id || user?.category_id;
+            setSchedules(isStudent && categoryId
+                ? enriched.filter((schedule: Schedule) => Number(schedule.id_category) === Number(categoryId))
+                : enriched);
         } catch (error) {
             Alert.alert('Error', 'No se pudieron cargar los horarios');
         } finally {
@@ -96,6 +106,10 @@ export const SchedulesScreen = () => {
     };
 
     const handleSubmit = async () => {
+        if (isStudent) {
+            return;
+        }
+
         if (!formData.id_category || !formData.day_of_week) {
             Alert.alert('Error', 'Todos los campos son requeridos');
             return;
@@ -123,6 +137,10 @@ export const SchedulesScreen = () => {
     };
 
     const handleDelete = (id: number) => {
+        if (isStudent) {
+            return;
+        }
+
         Alert.alert(
             'Eliminar Horario',
             '¿Estás seguro de eliminar este horario?',
@@ -157,6 +175,10 @@ export const SchedulesScreen = () => {
     };
 
     const startEdit = (schedule: Schedule) => {
+        if (isStudent) {
+            return;
+        }
+
         setFormData({
             id_category: String(schedule.id_category),
             day_of_week: schedule.day_of_week,
@@ -169,6 +191,11 @@ export const SchedulesScreen = () => {
 
 
     const daySchedules = useMemo(() => {
+        if (isStudent) {
+            return schedules.slice().sort((a, b) =>
+                `${a.day_of_week}-${a.start_time}`.localeCompare(`${b.day_of_week}-${b.start_time}`)
+            );
+        }
         let list = schedules.filter((s) => s.day_of_week === selectedDay);
         if (filterCategory) {
             list = list.filter((s) => s.id_category === parseInt(filterCategory));
@@ -200,19 +227,21 @@ export const SchedulesScreen = () => {
             {/* Header suave */}
             <View style={styles.header}>
                 <View style={{ flex: 1 }}>
-                    <Text style={styles.headerTitle}>Horarios</Text>
-                    <Text style={styles.headerSub}>Entrenamientos por categoría</Text>
+                    <Text style={styles.headerTitle}>{isStudent ? 'Mis Horarios' : 'Horarios'}</Text>
+                    <Text style={styles.headerSub}>{isStudent ? 'Entrenamientos de tu categoría' : 'Entrenamientos por categoría'}</Text>
                 </View>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => {
-                        resetForm();
-                        setModalVisible(true);
-                    }}
-                    activeOpacity={0.8}
-                >
-                    <Ionicons name="add" size={24} color="#fff" />
-                </TouchableOpacity>
+                {!isStudent && (
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => {
+                            resetForm();
+                            setModalVisible(true);
+                        }}
+                        activeOpacity={0.8}
+                    >
+                        <Ionicons name="add" size={24} color="#fff" />
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* Selector de días */}
@@ -245,7 +274,7 @@ export const SchedulesScreen = () => {
             </View>
 
             {/* Filtro por categoría */}
-            <View style={styles.filterContainer}>
+            {!isStudent && <View style={styles.filterContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <TouchableOpacity
                         style={[styles.filterChip, !filterCategory && styles.filterChipActive]}
@@ -280,7 +309,7 @@ export const SchedulesScreen = () => {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
-            </View>
+            </View>}
 
             {/* Título de sección + timeline */}
             <View style={styles.sectionHeader}>
@@ -329,29 +358,31 @@ export const SchedulesScreen = () => {
 
                             <TouchableOpacity
                                 style={styles.eventCard}
-                                onPress={() => startEdit(item)}
+                                onPress={isStudent ? undefined : () => startEdit(item)}
                                 activeOpacity={0.85}
                             >
                                 <View style={styles.eventCardTop}>
                                     <Text style={styles.eventTitle} numberOfLines={1}>
                                         {item.category_name}
                                     </Text>
-                                    <View style={styles.eventActions}>
-                                        <TouchableOpacity
-                                            onPress={() => startEdit(item)}
-                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                            style={styles.eventActionBtn}
-                                        >
-                                            <Ionicons name="create-outline" size={16} color="#fff" />
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            onPress={() => handleDelete(item.id)}
-                                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                            style={styles.eventActionBtn}
-                                        >
-                                            <Ionicons name="trash-outline" size={16} color="#fff" />
-                                        </TouchableOpacity>
-                                    </View>
+                                    {!isStudent && (
+                                        <View style={styles.eventActions}>
+                                            <TouchableOpacity
+                                                onPress={() => startEdit(item)}
+                                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                                style={styles.eventActionBtn}
+                                            >
+                                                <Ionicons name="create-outline" size={16} color="#fff" />
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                onPress={() => handleDelete(item.id)}
+                                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                                style={styles.eventActionBtn}
+                                            >
+                                                <Ionicons name="trash-outline" size={16} color="#fff" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
                                 </View>
                                 <Text style={styles.eventMeta}>
                                     {item.day_of_week} · {item.start_time} – {item.end_time}
