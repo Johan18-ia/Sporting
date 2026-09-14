@@ -66,7 +66,7 @@ INSERT INTO users (
 ) VALUES (
     'Albeiro',
     'Ramos',
-    'admin@gmail.com',
+    'admi@gmail.com',
     '$2b$10$NR8eRuuAB12JoHe81ZYnG.i2/5k/D5TKrxc7Pk74W4rgzADdABM9G',
     '3103103101',
     NULL,
