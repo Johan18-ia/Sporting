@@ -19,6 +19,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
+import { useAuth } from '../../../hooks/useAuth';
 
 interface Tournament {
     id: number;
@@ -41,6 +42,9 @@ interface Student {
 const STATUS_FILTERS = ['Todos', 'Activo', 'Inscripciones', 'En Progreso', 'Finalizado'];
 
 export const TournamentsScreen = () => {
+    const { user } = useAuth();
+    const canManageTournaments = user?.role === 'admin' || user?.role === 'seller';
+    const isStudent = user?.role === 'user' && (user?.isStudent === true || Boolean(user?.studentProfile));
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
@@ -71,7 +75,16 @@ export const TournamentsScreen = () => {
                 ApiDelivery.get('/categories')
             ]);
 
-            setTournaments(tournamentsRes.data?.data || []);
+            const allTournaments = tournamentsRes.data?.data || [];
+            const studentProfileId = user?.studentProfile?.id;
+            const visibleTournaments = isStudent && studentProfileId
+                ? allTournaments.filter((t: Tournament) =>
+                    Array.isArray(t.students) && t.students.some((student: any) =>
+                        Number(student.id) === Number(studentProfileId) || Number(student.student_id) === Number(studentProfileId)
+                    )
+                )
+                : allTournaments;
+            setTournaments(visibleTournaments);
             setStudents(studentsRes.data?.data || []);
             setCategories(categoriesRes.data?.data || []);
         } catch (error) {
@@ -236,12 +249,14 @@ export const TournamentsScreen = () => {
                         <Text style={styles.detailNavTitle} numberOfLines={1}>
                             {live.name}
                         </Text>
-                        <TouchableOpacity
-                            style={styles.backBtn}
-                            onPress={() => handleDelete(live.id, live.name)}
-                        >
-                            <Ionicons name="trash-outline" size={20} color={MyColors.primary} />
-                        </TouchableOpacity>
+                        {canManageTournaments ? (
+                            <TouchableOpacity
+                                style={styles.backBtn}
+                                onPress={() => handleDelete(live.id, live.name)}
+                            >
+                                <Ionicons name="trash-outline" size={20} color={MyColors.primary} />
+                            </TouchableOpacity>
+                        ) : <View style={styles.backBtn} />}
                     </View>
 
                     <View style={styles.scoreCard}>
@@ -393,18 +408,20 @@ export const TournamentsScreen = () => {
                         )}
                     </View>
 
-                    <View style={styles.detailActions}>
-                        <TouchableOpacity
-                            style={styles.detailPrimaryBtn}
-                            onPress={() => {
-                                setSelectedTournament(live);
-                                setEnrollModalVisible(true);
-                            }}
-                        >
-                            <Ionicons name="person-add" size={18} color="#fff" />
-                            <Text style={styles.detailPrimaryBtnText}>Inscribir estudiante</Text>
-                        </TouchableOpacity>
-                    </View>
+                    {canManageTournaments && (
+                        <View style={styles.detailActions}>
+                            <TouchableOpacity
+                                style={styles.detailPrimaryBtn}
+                                onPress={() => {
+                                    setSelectedTournament(live);
+                                    setEnrollModalVisible(true);
+                                }}
+                            >
+                                <Ionicons name="person-add" size={18} color="#fff" />
+                                <Text style={styles.detailPrimaryBtnText}>Inscribir estudiante</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </ScrollView>
 
                 <Modal
@@ -482,16 +499,18 @@ export const TournamentsScreen = () => {
                     <Text style={styles.headerTitle}>Torneos</Text>
                     <Text style={styles.headerSub}>{tournaments.length} registrados</Text>
                 </View>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => {
-                        resetForm();
-                        setModalVisible(true);
-                    }}
-                    activeOpacity={0.8}
-                >
-                    <Ionicons name="add" size={24} color="#fff" />
-                </TouchableOpacity>
+                {canManageTournaments && (
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => {
+                            resetForm();
+                            setModalVisible(true);
+                        }}
+                        activeOpacity={0.8}
+                    >
+                        <Ionicons name="add" size={24} color="#fff" />
+                    </TouchableOpacity>
+                )}
             </View>
 
             <View style={styles.filterRow}>
@@ -573,27 +592,27 @@ export const TournamentsScreen = () => {
                             </View>
 
                             <View style={styles.matchRight}>
-                                <TouchableOpacity
-                                    style={styles.matchIconBtn}
-                                    onPress={() => {
-                                        setSelectedTournament(item);
-                                        setEnrollModalVisible(true);
-                                    }}
-                                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                                >
-                                    <Ionicons
-                                        name="person-add-outline"
-                                        size={18}
-                                        color={MyColors.primary}
-                                    />
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.matchIconBtn}
-                                    onPress={() => handleDelete(item.id, item.name)}
-                                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                                >
-                                    <Ionicons name="trash-outline" size={18} color="#C45C5C" />
-                                </TouchableOpacity>
+                                {canManageTournaments && (
+                                    <>
+                                        <TouchableOpacity
+                                            style={styles.matchIconBtn}
+                                            onPress={() => {
+                                                setSelectedTournament(item);
+                                                setEnrollModalVisible(true);
+                                            }}
+                                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                        >
+                                            <Ionicons name="person-add-outline" size={18} color={MyColors.primary} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={styles.matchIconBtn}
+                                            onPress={() => handleDelete(item.id, item.name)}
+                                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                        >
+                                            <Ionicons name="trash-outline" size={18} color="#C45C5C" />
+                                        </TouchableOpacity>
+                                    </>
+                                )}
                             </View>
                         </TouchableOpacity>
                     );

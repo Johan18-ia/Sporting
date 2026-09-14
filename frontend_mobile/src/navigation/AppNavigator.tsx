@@ -28,6 +28,7 @@ import { UserFormScreen } from '../presentation/views/users/UserFormScreen';
 import { CategoriesScreen } from '../presentation/views/categories/CategoriesScreen';
 import { SchedulesScreen } from '../presentation/views/schedules/SchedulesScreen';
 import { ProductsScreen } from '../presentation/views/products/ProductsScreen';
+import { CatalogScreen } from '../presentation/views/catalog/CatalogScreen';
 import { StudentsScreen } from '../presentation/views/students/StudentsScreen';
 import { StudentFormScreen } from '../presentation/views/students/StudentFormScreen';
 import { TournamentsScreen } from '../presentation/views/tournaments/TournamentsScreen';
@@ -53,7 +54,20 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
     const [quickActionsVisible, setQuickActionsVisible] = useState(false);
     const radialProgress = useRef(new Animated.Value(0)).current;
     const canManageUsers = user?.role === 'admin' || user?.role === 'seller';
-    const initialRouteName = route?.params?.screen || (user?.role === 'user' ? 'Students' : 'Dashboard');
+    const isStudent = user?.role === 'user' && (user?.isStudent === true || Boolean(user?.studentProfile));
+    const isRegularUser = user?.role === 'user' && !isStudent;
+    const requestedRoute = route?.params?.screen;
+    const initialRouteName = requestedRoute === 'Students' && !canManageUsers
+            ? 'Dashboard'
+            : requestedRoute || 'Dashboard';
+    const productsComponent = canManageUsers ? ProductsScreen : CatalogScreen;
+    const backToHomeOptions = (navigation: any) => ({
+        headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ marginLeft: 10 }}>
+                <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+        ),
+    });
     const quickActions = [
         { icon: 'person-add-outline' as const, label: 'Nuevo Usuario', action: () => navigation.navigate('UserForm', { mode: 'create' }) },
         { icon: 'school-outline' as const, label: 'Nuevo Estudiante', action: () => navigation.navigate('StudentForm', { mode: 'create' }) },
@@ -114,6 +128,12 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                         case 'Students':
                             iconName = 'add';
                             break;
+                        case 'Schedules':
+                            iconName = focused ? 'calendar' : 'calendar-outline';
+                            break;
+                        case 'Tournaments':
+                            iconName = focused ? 'trophy' : 'trophy-outline';
+                            break;
                         case 'Products':
                             iconName = focused ? 'bag' : 'bag-outline';
                             break;
@@ -152,13 +172,11 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                 },
                 })}
             >
-            {user?.role !== 'user' && (
-                <Tab.Screen
-                    name="Dashboard"
-                    component={DashboardScreen}
-                    options={{ title: 'Inicio', tabBarLabel: 'Inicio' }}
-                />
-            )}
+            <Tab.Screen
+                name="Dashboard"
+                component={DashboardScreen}
+                options={{ title: 'Inicio', tabBarLabel: 'Inicio' }}
+            />
             {canManageUsers && (
                 <Tab.Screen
                     name="Users"
@@ -174,10 +192,11 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                     })}
                 />
             )}
-            <Tab.Screen
-                name="Students"
-                component={StudentsScreen}
-                options={({ navigation }) => ({
+            {canManageUsers && (
+                <Tab.Screen
+                    name="Students"
+                    component={StudentsScreen}
+                    options={({ navigation }) => ({
                     title: 'Estudiantes',
                     tabBarShowLabel: false,
                     tabBarLabel: '',
@@ -198,22 +217,64 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                             <Ionicons name="arrow-back" size={24} color="#fff" />
                         </TouchableOpacity>
                     ),
-                })}
-                listeners={{
-                    tabPress: (event) => {
-                        event.preventDefault();
-                    },
-                }}
-            />
+                    })}
+                    listeners={{
+                        tabPress: (event) => {
+                            event.preventDefault();
+                        },
+                    }}
+                />
+            )}
+            {isStudent && (
+                <Tab.Screen
+                    name="Schedules"
+                    component={SchedulesScreen}
+                    options={({ navigation }) => ({
+                        title: 'Mis Horarios',
+                        tabBarLabel: 'Horarios',
+                        ...backToHomeOptions(navigation),
+                    })}
+                />
+            )}
+            {isRegularUser && (
+                <Tab.Screen
+                    name="Tournaments"
+                    component={TournamentsScreen}
+                    options={({ navigation }) => ({
+                        title: 'Torneos',
+                        tabBarLabel: 'Torneos',
+                        ...backToHomeOptions(navigation),
+                    })}
+                />
+            )}
+            {isStudent && (
+                <Tab.Screen
+                    name="Tournaments"
+                    component={TournamentsScreen}
+                    options={({ navigation }) => ({
+                        title: 'Mis Torneos',
+                        tabBarLabel: 'Torneos',
+                        ...backToHomeOptions(navigation),
+                    })}
+                />
+            )}
             <Tab.Screen
                 name="Products"
-                component={ProductsScreen}
-                options={{ title: 'Productos', tabBarLabel: 'Productos' }}
+                component={productsComponent}
+                options={({ navigation }) => ({
+                    title: 'Productos',
+                    tabBarLabel: 'Productos',
+                    ...backToHomeOptions(navigation),
+                })}
             />
             <Tab.Screen
                 name="Profile"
                 component={ProfileScreen}
-                options={{ title: 'Perfil', tabBarLabel: 'Perfil' }}
+                options={({ navigation }) => ({
+                    title: 'Perfil',
+                    tabBarLabel: 'Perfil',
+                    ...backToHomeOptions(navigation),
+                })}
             />
             </Tab.Navigator>
 

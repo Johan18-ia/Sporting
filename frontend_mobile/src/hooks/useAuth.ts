@@ -13,6 +13,7 @@ import { RemoveUserLocalUseCase } from '../domain/useCases/userLocal/RemoveUserL
 import { LoginAuthUseCase } from '../domain/useCases/auth/LoginAuth';
 import { RegisterAuthUseCase } from '../domain/useCases/auth/RegisterAuth';
 import { LocalStorage } from '../data/sources/local/LocalStorage';
+import { ApiDelivery } from '../data/sources/remote/api/ApiDelivery';
 
 interface AuthContextType {
     user: User | null;
@@ -53,9 +54,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('  Usuario:', userData ? 'Existe' : 'No existe');
 
             if (token && userData) {
-                setUser(userData);
+                let hydratedUser = userData;
+                if (userData.role === 'user') {
+                    try {
+                        const response = await ApiDelivery.get('/students');
+                        const students = Array.isArray(response.data)
+                            ? response.data
+                            : response.data?.data || [];
+                        const studentProfile = students.find(
+                            (student: any) => Number(student.user_id) === Number(userData.id)
+                        ) || null;
+                        hydratedUser = {
+                            ...userData,
+                            isStudent: Boolean(studentProfile),
+                            studentProfile,
+                            category_id: studentProfile?.category_id ?? userData.category_id
+                        };
+                        await SaveUserLocalUseCase(hydratedUser);
+                    } catch (profileError) {
+                        console.warn('No se pudo verificar el perfil estudiantil:', profileError);
+                    }
+                }
+                setUser(hydratedUser);
                 setIsAuthenticated(true);
-                console.log('Sesion activa para:', userData.name);
+                console.log('Sesion activa para:', hydratedUser.name);
             } else {
                 setUser(null);
                 setIsAuthenticated(false);
@@ -106,6 +128,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     role: payload?.role || 'user',
                     image: payload?.image || '',
                     category_id: payload?.category_id,
+                    isStudent: payload?.isStudent === true || Boolean(payload?.studentProfile),
+                    studentProfile: payload?.studentProfile || null,
                     session_token: token
                 };
                 await SaveUserLocalUseCase(userData);

@@ -40,9 +40,11 @@ export const DashboardScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [myTournaments, setMyTournaments] = useState<any[]>([]);
     const [mySchedules, setMySchedules] = useState<any[]>([]);
+    const [availableTournaments, setAvailableTournaments] = useState<any[]>([]);
     const [studentError, setStudentError] = useState<string | null>(null);
 
-    const isStudent = user?.role === 'user';
+    const isStudent = user?.role === 'user' && (user?.isStudent === true || Boolean(user?.studentProfile));
+    const isRegularUser = user?.role === 'user' && !isStudent;
     const extractArray = (result: PromiseSettledResult<any>, label: string): any[] => {
         if (result.status === 'rejected') {
             console.error(`Error cargando ${label}:`, result.reason?.message || result.reason);
@@ -82,15 +84,19 @@ export const DashboardScreen = () => {
     useEffect(() => {
         if (isStudent) {
             loadStudentData();
+        } else if (isRegularUser) {
+            loadRegularUserData();
         } else {
             loadStats();
         }
-    }, [isStudent]);
+    }, [isStudent, isRegularUser]);
 
     const onRefresh = () => {
         setRefreshing(true);
         if (isStudent) {
             loadStudentData();
+        } else if (isRegularUser) {
+            loadRegularUserData();
         } else {
             loadStats();
         }
@@ -114,7 +120,7 @@ export const DashboardScreen = () => {
                 : (schedulesRes.data?.data || []);
 
             const userId = user?.id;
-            const categoryId = user?.category_id;
+            const categoryId = user?.studentProfile?.category_id || user?.category_id;
 
             const myTournamentsData = tournamentsData.filter((t: any) =>
                 Array.isArray(t.students) && userId
@@ -133,6 +139,31 @@ export const DashboardScreen = () => {
             setStudentError('No se pudieron cargar los datos del estudiante');
         } finally {
             setStudentLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const loadRegularUserData = async () => {
+        setLoading(true);
+        try {
+            const [tournamentsRes, productsRes] = await Promise.all([
+                ApiDelivery.get('/tournaments'),
+                ApiDelivery.get('/products')
+            ]);
+            const tournaments = tournamentsRes.data?.data || tournamentsRes.data || [];
+            const products = productsRes.data?.data || productsRes.data || [];
+            const tournamentList = Array.isArray(tournaments) ? tournaments : [];
+            setAvailableTournaments(tournamentList);
+            setStats((previous) => ({
+                ...previous,
+                tournaments: tournamentList.length,
+                activeTournaments: tournamentList.filter((t: any) => (t.status || 'Activo') === 'Activo').length,
+                products: Array.isArray(products) ? products.length : 0
+            }));
+        } catch (error) {
+            console.error('Error loading user data:', error);
+        } finally {
+            setLoading(false);
             setRefreshing(false);
         }
     };
@@ -205,7 +236,7 @@ export const DashboardScreen = () => {
                 ) : null}
 
                 <View style={styles.statsList}>
-                    <StatCard icon="school-outline" label="Categoría" value={user?.category_id || 'Sin asignar'} onPress={() => {}} accent />
+                    <StatCard icon="school-outline" label="Categoría" value={user?.studentProfile?.category_year || user?.category_id || 'Sin asignar'} onPress={() => {}} accent />
                     <StatCard icon="time-outline" label="Mis Horarios" value={mySchedules.length} onPress={() => {}} />
                     <StatCard icon="trophy-outline" label="Mis Torneos" value={myTournaments.length} onPress={() => {}} />
                     <StatCard icon="checkmark-circle-outline" label="Activos" value={activeTournaments} onPress={() => {}} />
@@ -230,6 +261,74 @@ export const DashboardScreen = () => {
                             onPress={() => navigation.navigate('Profile')}
                         />
                     </View>
+                </View>
+
+                <View style={styles.quickActionsSection}>
+                    <Text style={styles.sectionTitle}>Mis horarios</Text>
+                    {mySchedules.length === 0 ? (
+                        <Text style={styles.emptyText}>No tienes horarios asignados todavía.</Text>
+                    ) : mySchedules.map((schedule) => (
+                        <View key={schedule.id} style={styles.listItem}>
+                            <Text style={styles.listItemTitle}>{schedule.day_of_week}</Text>
+                            <Text style={styles.listItemText}>
+                                {schedule.start_time} - {schedule.end_time}{schedule.field_name ? ` · ${schedule.field_name}` : ''}
+                            </Text>
+                        </View>
+                    ))}
+                </View>
+
+                <View style={styles.quickActionsSection}>
+                    <Text style={styles.sectionTitle}>Mis torneos</Text>
+                    {myTournaments.length === 0 ? (
+                        <Text style={styles.emptyText}>No participas en torneos actualmente.</Text>
+                    ) : myTournaments.map((tournament) => (
+                        <View key={tournament.id} style={styles.listItem}>
+                            <Text style={styles.listItemTitle}>{tournament.name}</Text>
+                            <Text style={styles.listItemText}>
+                                {tournament.category || 'Sin categoría'} · {tournament.status || 'Activo'} · {tournament.students?.length || 0} participantes
+                            </Text>
+                        </View>
+                    ))}
+                </View>
+            </ScrollView>
+        );
+    }
+
+    if (isRegularUser) {
+        return (
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[MyColors.primary]} />}
+            >
+                <View style={styles.header}>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.greeting}>¡Bienvenido! {user?.name || 'Usuario'}</Text>
+                        <Text style={styles.greetingSub}>Consulta torneos y productos del club</Text>
+                    </View>
+                    <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
+                        <View style={styles.profileAvatar}><Ionicons name="person" size={20} color={MyColors.primary} /></View>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.statsList}>
+                    <StatCard icon="trophy-outline" label="Torneos disponibles" value={stats.tournaments} onPress={() => navigation.navigate('Tournaments')} accent />
+                    <StatCard icon="checkmark-circle-outline" label="Torneos activos" value={stats.activeTournaments} onPress={() => navigation.navigate('Tournaments')} />
+                    <StatCard icon="bag-outline" label="Productos en catálogo" value={stats.products} onPress={() => navigation.navigate('Products')} />
+                </View>
+
+                <View style={styles.quickActionsSection}>
+                    <Text style={styles.sectionTitle}>Torneos disponibles</Text>
+                    {availableTournaments.length === 0 ? (
+                        <Text style={styles.emptyText}>No hay torneos disponibles.</Text>
+                    ) : availableTournaments.slice(0, 5).map((tournament) => (
+                        <View key={tournament.id} style={styles.listItem}>
+                            <Text style={styles.listItemTitle}>{tournament.name}</Text>
+                            <Text style={styles.listItemText}>
+                                {tournament.category || 'Sin categoría'} · {tournament.status || 'Activo'} · {tournament.students?.length || 0} participantes
+                            </Text>
+                        </View>
+                    ))}
                 </View>
             </ScrollView>
         );
