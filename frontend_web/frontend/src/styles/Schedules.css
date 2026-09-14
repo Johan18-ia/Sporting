@@ -1,0 +1,350 @@
+/* ============================================
+   HORARIOS — timeline + días (alineado al móvil)
+   ============================================ */
+
+.sch-page {
+  max-width: 960px;
+}
+
+.sch-form-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(139, 0, 0, 0.06);
+  box-shadow: 0 4px 16px rgba(139, 0, 0, 0.05);
+}
+
+.sch-form-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 16px;
+}
+
+.sch-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+  margin-bottom: 16px;
+}
+
+.sch-day-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sch-day-opt {
+  min-width: 44px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(139, 0, 0, 0.12);
+  background: #faf8f8;
+  color: #6b5555;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sch-day-opt:hover {
+  border-color: rgba(139, 0, 0, 0.3);
+}
+
+.sch-day-opt.is-active {
+  background: var(--sporting-red, #8b0000);
+  border-color: var(--sporting-red, #8b0000);
+  color: #fff;
+}
+
+.sch-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.sch-filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b5555;
+}
+
+.sch-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sch-filter-chip {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(139, 0, 0, 0.1);
+  background: #fff;
+  color: #6b5555;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sch-filter-chip:hover {
+  border-color: rgba(139, 0, 0, 0.25);
+}
+
+.sch-filter-chip.is-active {
+  background: var(--sporting-red, #8b0000);
+  border-color: var(--sporting-red, #8b0000);
+  color: #fff;
+}
+
+.sch-days-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sch-day-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(139, 0, 0, 0.06);
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(139, 0, 0, 0.04);
+}
+
+.sch-day-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.08);
+}
+
+.sch-day-pill.is-active {
+  background: var(--sporting-red, #8b0000);
+  border-color: transparent;
+  box-shadow: 0 6px 16px rgba(139, 0, 0, 0.22);
+}
+
+.sch-day-pill-short {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.sch-day-pill.is-active .sch-day-pill-short {
+  color: #fff;
+}
+
+.sch-day-pill-count {
+  font-size: 11px;
+  color: #9a8585;
+  margin-top: 3px;
+}
+
+.sch-day-pill.is-active .sch-day-pill-count {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sch-timeline-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 22px;
+  border: 1px solid rgba(139, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(139, 0, 0, 0.05);
+}
+
+.sch-timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.sch-timeline-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.sch-timeline-meta {
+  font-size: 13px;
+  color: #9a8585;
+  font-weight: 500;
+}
+
+.sch-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.sch-timeline-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-height: 72px;
+}
+
+.sch-time-col {
+  width: 64px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 4px;
+}
+
+.sch-time-start {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.sch-time-end {
+  font-size: 12px;
+  color: #9a8585;
+  margin-top: 2px;
+}
+
+.sch-line-col {
+  width: 28px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.sch-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sporting-red, #8b0000);
+  border: 3px solid #f3eaea;
+  box-shadow: 0 0 0 2px var(--sporting-red, #8b0000);
+  z-index: 1;
+  margin-top: 6px;
+}
+
+.sch-line {
+  flex: 1;
+  width: 2px;
+  background: #e8d5d5;
+  margin-top: 4px;
+}
+
+.sch-event-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #faf8f8;
+  border: 1px solid rgba(139, 0, 0, 0.06);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-left: 8px;
+  margin-bottom: 12px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.sch-event-card:hover {
+  box-shadow: 0 4px 14px rgba(139, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.sch-event-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sch-event-cat {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.sch-event-range {
+  font-size: 13px;
+  color: #8a7a7a;
+  font-weight: 500;
+}
+
+.sch-event-delete {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(139, 0, 0, 0.06);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.sch-event-delete:hover {
+  background: rgba(139, 0, 0, 0.14);
+}
+
+.sch-empty {
+  text-align: center;
+  color: #9a8585;
+  padding: 24px;
+}
+
+.sch-empty-box {
+  text-align: center;
+  padding: 36px 20px;
+}
+
+.sch-empty-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+  opacity: 0.7;
+}
+
+.sch-empty-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 6px;
+}
+
+.sch-empty-text {
+  font-size: 13px;
+  color: #8a7a7a;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .sch-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sch-days-row {
+    gap: 8px;
+  }
+
+  .sch-day-pill {
+    min-width: 56px;
+    padding: 10px 8px;
+  }
+
+  .sch-time-col {
+    width: 52px;
+  }
+
+  .sch-event-card {
+    padding: 12px;
+  }
+}

@@ -1,7 +1,4 @@
-// Encargado: Horarios
-// Descripción: Gestión de horarios de entrenamiento por categoría
 // Archivo: src/presentation/views/schedules/SchedulesScreen.tsx
-// ============================================
 import React, { useState, useEffect, useMemo } from 'react';
 import {
     View,
@@ -38,10 +35,10 @@ interface Category {
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const DAY_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-/** Devuelve el día de la semana en español según la fecha actual (0=Lunes ... 6=Domingo). */
+
 const getTodayDayName = (): string => {
-    const jsDay = new Date().getDay(); // 0=Domingo ... 6=Sábado
-    const map = [6, 0, 1, 2, 3, 4, 5]; // convierte a índice de DAYS
+    const jsDay = new Date().getDay(); 
+    const map = [6, 0, 1, 2, 3, 4, 5]; 
     return DAYS[map[jsDay]];
 };
 
@@ -62,9 +59,7 @@ export const SchedulesScreen = () => {
         end_time: '10:00'
     });
 
-    // ============================================
-    // LOGICA DE DATOS — sin cambios funcionales
-    // ============================================
+
     const loadData = async () => {
         try {
             const [schedulesRes, categoriesRes] = await Promise.all([
@@ -172,9 +167,7 @@ export const SchedulesScreen = () => {
         setModalVisible(true);
     };
 
-    // ============================================
-    // FILTROS VISUALES — día + categoría
-    // ============================================
+
     const daySchedules = useMemo(() => {
         let list = schedules.filter((s) => s.day_of_week === selectedDay);
         if (filterCategory) {
@@ -192,9 +185,7 @@ export const SchedulesScreen = () => {
             return true;
         }).length;
 
-    // ============================================
-    // PRESENTACION — timeline estilo mock, tonos rojos
-    // ============================================
+
     if (loading) {
         return (
             <View style={styles.centerContainer}>

@@ -1,11 +1,20 @@
 // src/views/dashboard/SchedulesView.jsx
-import React, { useState, useEffect } from 'react'
+// Horarios — diseño alineado al móvil (días + timeline), estándares web
+import React, { useState, useEffect, useMemo } from 'react'
 import ScheduleModel from '../../models/ScheduleModel'
 import CategoryModel from '../../models/CategoryModel'
 import AlertMessage from '../common/AlertMessage'
 import PageHeader from '../ui/PageHeader'
-import Card from '../ui/Card'
 import Button from '../ui/Button'
+import '../../styles/Schedules.css'
+
+const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+const DAY_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+const getTodayDayName = () => {
+  const map = [6, 0, 1, 2, 3, 4, 5]
+  return DAYS[map[new Date().getDay()]]
+}
 
 const SchedulesView = () => {
   const [schedules, setSchedules] = useState([])
@@ -15,6 +24,7 @@ const SchedulesView = () => {
   const [message, setMessage] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [filterCategory, setFilterCategory] = useState('')
+  const [selectedDay, setSelectedDay] = useState(getTodayDayName())
   const [formData, setFormData] = useState({
     id_category: '',
     day_of_week: 'Lunes',
@@ -44,7 +54,7 @@ const SchedulesView = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e) => {
@@ -61,7 +71,13 @@ const SchedulesView = () => {
     if (result.success) {
       setMessage({ type: 'success', text: 'Horario asignado exitosamente' })
       setShowForm(false)
-      setFormData({ id_category: '', day_of_week: 'Lunes', start_time: '08:00', end_time: '10:00' })
+      setFormData({
+        id_category: '',
+        day_of_week: selectedDay || 'Lunes',
+        start_time: '08:00',
+        end_time: '10:00'
+      })
+      if (formData.day_of_week) setSelectedDay(formData.day_of_week)
       loadData()
     } else {
       setMessage({ type: 'error', text: result.error })
@@ -83,31 +99,46 @@ const SchedulesView = () => {
     }
   }
 
-  const filteredSchedules = filterCategory
-    ? schedules.filter(s => s.id_category === parseInt(filterCategory))
-    : schedules
+  const filteredByCategory = useMemo(() => {
+    return filterCategory
+      ? schedules.filter((s) => String(s.id_category) === String(filterCategory))
+      : schedules
+  }, [schedules, filterCategory])
 
-  const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-  const getDayColor = (day) => ({
-    Lunes: '#2196F3',
-    Martes: '#4CAF50',
-    'Miércoles': '#FF9800',
-    Jueves: '#9C27B0',
-    Viernes: '#00BCD4',
-    Sábado: '#8B0000',
-    Domingo: '#DC3545'
-  }[day] || '#666')
+  const daySchedules = useMemo(() => {
+    return filteredByCategory
+      .filter((s) => s.day_of_week === selectedDay)
+      .slice()
+      .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)))
+  }, [filteredByCategory, selectedDay])
+
+  const countByDay = (day) =>
+    filteredByCategory.filter((s) => s.day_of_week === day).length
+
+  const catLabel = (s) =>
+    s.category_name ||
+    categories.find((c) => c.id === s.id_category)?.category_year ||
+    categories.find((c) => c.id === s.id_category)?.name_year ||
+    `Categoría ${s.id_category}`
 
   return (
-    <div>
+    <div className="sch-page">
       <PageHeader
         title="Horarios de Entrenamiento"
+        description="Organiza los entrenamientos por día y categoría"
         actions={
           <Button
             onClick={() => {
-              setShowForm(!showForm)
-              if (!showForm) {
-                setFormData({ id_category: '', day_of_week: 'Lunes', start_time: '08:00', end_time: '10:00' })
+              if (showForm) {
+                setShowForm(false)
+              } else {
+                setFormData({
+                  id_category: '',
+                  day_of_week: selectedDay || 'Lunes',
+                  start_time: '08:00',
+                  end_time: '10:00'
+                })
+                setShowForm(true)
               }
             }}
           >
@@ -115,30 +146,6 @@ const SchedulesView = () => {
           </Button>
         }
       />
-
-      <div className="panel-summary-grid">
-        <div className="panel-summary-card">
-          <div className="panel-summary-icon">H</div>
-          <div className="panel-summary-meta">
-            <span className="panel-summary-value">{schedules.length}</span>
-            <span className="panel-summary-label">Horarios</span>
-          </div>
-        </div>
-        <div className="panel-summary-card">
-          <div className="panel-summary-icon">C</div>
-          <div className="panel-summary-meta">
-            <span className="panel-summary-value">{categories.length}</span>
-            <span className="panel-summary-label">Categorías</span>
-          </div>
-        </div>
-        <div className="panel-summary-card">
-          <div className="panel-summary-icon">D</div>
-          <div className="panel-summary-meta">
-            <span className="panel-summary-value">{new Set(schedules.map((s) => s.day_of_week)).size}</span>
-            <span className="panel-summary-label">Días</span>
-          </div>
-        </div>
-      </div>
 
       {message && (
         <AlertMessage
@@ -149,91 +156,182 @@ const SchedulesView = () => {
       )}
 
       {showForm && (
-        <Card title="Asignar Horario">
+        <div className="sch-form-card">
+          <h3 className="sch-form-title">Asignar horario</h3>
           <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 15px' }}>
+            <div className="sch-form-grid">
               <div className="ui-field">
                 <label>Categoría *</label>
-                <select name="id_category" value={formData.id_category} onChange={handleChange} required>
+                <select
+                  name="id_category"
+                  value={formData.id_category}
+                  onChange={handleChange}
+                  required
+                >
                   <option value="">Seleccionar categoría</option>
-                  {categories.map(cat => (
+                  {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
-                      {cat.category_year || cat.name_year} - {cat.description || ''}
+                      {cat.category_year || cat.name_year}
+                      {cat.description ? ` — ${cat.description}` : ''}
                     </option>
                   ))}
                 </select>
               </div>
+
               <div className="ui-field">
                 <label>Día *</label>
-                <select name="day_of_week" value={formData.day_of_week} onChange={handleChange} required>
-                  {days.map(d => (
-                    <option key={d} value={d}>{d}</option>
+                <div className="sch-day-options">
+                  {DAYS.map((d, i) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`sch-day-opt ${
+                        formData.day_of_week === d ? 'is-active' : ''
+                      }`}
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, day_of_week: d }))
+                      }
+                    >
+                      {DAY_SHORT[i]}
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
+
               <div className="ui-field">
-                <label>Hora Inicio *</label>
-                <input type="time" name="start_time" value={formData.start_time} onChange={handleChange} required />
+                <label>Hora inicio *</label>
+                <input
+                  type="time"
+                  name="start_time"
+                  value={formData.start_time}
+                  onChange={handleChange}
+                  required
+                />
               </div>
+
               <div className="ui-field">
-                <label>Hora Fin *</label>
-                <input type="time" name="end_time" value={formData.end_time} onChange={handleChange} required />
+                <label>Hora fin *</label>
+                <input
+                  type="time"
+                  name="end_time"
+                  value={formData.end_time}
+                  onChange={handleChange}
+                  required
+                />
               </div>
             </div>
+
             <Button type="submit" disabled={loading}>
-              {loading ? 'Guardando...' : 'Asignar Horario'}
+              {loading ? 'Guardando...' : 'Asignar horario'}
             </Button>
           </form>
-        </Card>
+        </div>
       )}
 
-      <div className="ui-card" style={{ padding: '16px' }}>
-        <div className="view-filter" style={{ marginBottom: '8px' }}>
-          <label style={{ fontWeight: 500, fontSize: '13.5px', color: 'var(--sporting-text-muted)' }}>Filtrar por categoría:</label>
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="control-select"
+      <div className="sch-filter-row">
+        <span className="sch-filter-label">Categoría</span>
+        <div className="sch-filter-chips">
+          <button
+            type="button"
+            className={`sch-filter-chip ${!filterCategory ? 'is-active' : ''}`}
+            onClick={() => setFilterCategory('')}
           >
-            <option value="">Todas las categorías</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>
-                {cat.category_year || cat.name_year}
-              </option>
-            ))}
-          </select>
-          <span style={{ color: 'var(--sporting-text-muted)', fontSize: '13.5px' }}>
-            {filteredSchedules.length} horario(s)
-          </span>
+            Todas
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              className={`sch-filter-chip ${
+                String(filterCategory) === String(cat.id) ? 'is-active' : ''
+              }`}
+              onClick={() =>
+                setFilterCategory(
+                  String(filterCategory) === String(cat.id) ? '' : String(cat.id)
+                )
+              }
+            >
+              {cat.category_year || cat.name_year}
+            </button>
+          ))}
         </div>
       </div>
 
-      {error && <p style={{ color: '#dc3545' }}>{error}</p>}
+      <div className="sch-days-row">
+        {DAYS.map((day, i) => {
+          const active = selectedDay === day
+          const count = countByDay(day)
+          return (
+            <button
+              key={day}
+              type="button"
+              className={`sch-day-pill ${active ? 'is-active' : ''}`}
+              onClick={() => setSelectedDay(day)}
+            >
+              <span className="sch-day-pill-short">{DAY_SHORT[i]}</span>
+              <span className="sch-day-pill-count">
+                {count} {count === 1 ? 'sesión' : 'sesiones'}
+              </span>
+            </button>
+          )
+        })}
+      </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        {filteredSchedules.length === 0 ? (
-          <div className="ui-card" style={{ textAlign: 'center', color: '#666', padding: '30px 20px' }}>
-            No hay horarios registrados.
+      <div className="sch-timeline-card">
+        <div className="sch-timeline-header">
+          <h3 className="sch-timeline-title">{selectedDay}</h3>
+          <span className="sch-timeline-meta">
+            {daySchedules.length} horario
+            {daySchedules.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        {loading && schedules.length === 0 ? (
+          <p className="sch-empty">Cargando horarios...</p>
+        ) : daySchedules.length === 0 ? (
+          <div className="sch-empty-box">
+            <div className="sch-empty-icon">⏱</div>
+            <p className="sch-empty-title">Sin horarios este día</p>
+            <p className="sch-empty-text">
+              Asigna un entrenamiento para {selectedDay} con el botón superior.
+            </p>
           </div>
         ) : (
-          filteredSchedules.map((schedule) => (
-            <div key={schedule.id} className="ui-card" style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: getDayColor(schedule.day_of_week), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>
-                  {schedule.day_of_week?.substring(0, 2).toUpperCase() || 'D'}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, color: 'var(--sporting-text)' }}>{schedule.category_name || `Categoría ${schedule.id_category}`}</div>
-                  <div style={{ fontSize: '13px', color: 'var(--sporting-text-muted)' }}>{schedule.day_of_week} · {schedule.start_time} - {schedule.end_time}</div>
-                </div>
-              </div>
+          <div className="sch-timeline">
+            {daySchedules.map((s, index) => {
+              const isLast = index === daySchedules.length - 1
+              return (
+                <div key={s.id} className="sch-timeline-row">
+                  <div className="sch-time-col">
+                    <span className="sch-time-start">{s.start_time}</span>
+                    <span className="sch-time-end">{s.end_time}</span>
+                  </div>
 
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span className="badge-sporting badge-sporting-admin">{schedule.day_of_week}</span>
-                <button className="btn-sporting-danger" type="button" onClick={() => handleDelete(schedule.id)}>Eliminar</button>
-              </div>
-            </div>
-          ))
+                  <div className="sch-line-col">
+                    <span className="sch-dot" />
+                    {!isLast && <span className="sch-line" />}
+                  </div>
+
+                  <div className="sch-event-card">
+                    <div className="sch-event-body">
+                      <span className="sch-event-cat">{catLabel(s)}</span>
+                      <span className="sch-event-range">
+                        {s.start_time} — {s.end_time}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="sch-event-delete"
+                      onClick={() => handleDelete(s.id)}
+                      title="Eliminar horario"
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </div>
