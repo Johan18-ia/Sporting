@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# archivos locales del frontend
+/.env
+/src/config/api.js
