@@ -100,6 +100,30 @@ router.post(
     scheduleController.create
 );
 
+/**
+ * @swagger
+ * /api/schedules:
+ *   put:
+ *     tags: [Schedules]
+ *     summary: Actualizar un horario
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             allOf:
+ *               - $ref: '#/components/schemas/Schedule'
+ *               - required: [id]
+ *     responses:
+ *       200:
+ *         description: Horario actualizado
+ *       401:
+ *         description: Token ausente o inválido
+ *       403:
+ *         description: Rol no autorizado
+ */
 router.put(
     '/',
     verifyToken,

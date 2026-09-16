@@ -86,6 +86,42 @@ router.post(
     tournamentController.create
 );
 
+/**
+ * @swagger
+ * /api/tournaments/{id}/enroll:
+ *   post:
+ *     tags: [Tournaments]
+ *     summary: Inscribir un estudiante en un torneo
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del torneo
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [studentId]
+ *             properties:
+ *               studentId:
+ *                 type: integer
+ *                 description: ID del perfil de estudiante
+ *     responses:
+ *       201:
+ *         description: Estudiante inscrito
+ *       401:
+ *         description: Token ausente o inválido
+ *       403:
+ *         description: Rol no autorizado
+ *       409:
+ *         description: El estudiante ya está inscrito
+ */
 router.post(
     '/:id/enroll',
     verifyToken,
