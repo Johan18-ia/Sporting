@@ -11,7 +11,7 @@ const getBaseUrl = () => {
     if (manualUrl) return manualUrl.replace(/\/$/, '');
 
     if (Platform.OS === 'android') {
-        return 'http://10.1.202.161:3000/api';
+        return 'http://10.1.202.105:3000/api';
     }
 
     return 'http://localhost:3000/api';
