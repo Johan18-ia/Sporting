@@ -194,39 +194,6 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                     })}
                 />
             )}
-            {canManageUsers && (
-                <Tab.Screen
-                    name="Students"
-                    component={StudentsScreen}
-                    options={({ navigation }) => ({
-                    title: 'Estudiantes',
-                    tabBarShowLabel: false,
-                    tabBarLabel: '',
-                    tabBarLabelStyle: { display: 'none' },
-                    tabBarButton: ({ accessibilityLabel, accessibilityState, testID }) => (
-                        <TouchableOpacity
-                            onPress={quickActionsOpen ? () => closeQuickActions() : openQuickActions}
-                            accessibilityLabel={accessibilityLabel}
-                            accessibilityState={accessibilityState}
-                            testID={testID}
-                            style={styles.addTabButton}
-                        >
-                            <Ionicons name="add" size={30} color={MyColors.white} />
-                        </TouchableOpacity>
-                    ),
-                    headerLeft: () => (
-                        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={{ marginLeft: 10 }}>
-                            <Ionicons name="arrow-back" size={24} color="#fff" />
-                        </TouchableOpacity>
-                    ),
-                    })}
-                    listeners={{
-                        tabPress: (event) => {
-                            event.preventDefault();
-                        },
-                    }}
-                />
-            )}
             {isStudent && (
                 <Tab.Screen
                     name="Schedules"
@@ -268,6 +235,16 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                 })}
             />
             </Tab.Navigator>
+
+            {canManageUsers && (
+                <TouchableOpacity
+                    accessibilityLabel="Abrir acciones rápidas"
+                    onPress={quickActionsOpen ? () => closeQuickActions() : openQuickActions}
+                    style={styles.floatingAddButton}
+                >
+                    <Ionicons name="add" size={30} color={MyColors.white} />
+                </TouchableOpacity>
+            )}
 
             {quickActionsVisible && (
                 <View style={styles.quickActionsOverlay}>
@@ -318,17 +295,20 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
 };
 
 const styles = {
-    addTabButton: {
+    floatingAddButton: {
+        position: 'absolute' as const,
+        right: 28,
+        bottom: 72,
         width: 58,
         height: 58,
         borderRadius: 29,
         alignItems: 'center' as const,
         justifyContent: 'center' as const,
         backgroundColor: MyColors.primary,
-        marginTop: -18,
         borderWidth: 3,
         borderColor: MyColors.white,
         elevation: 4,
+        zIndex: 5,
     },
     quickActionsOverlay: {
         position: 'absolute' as const,

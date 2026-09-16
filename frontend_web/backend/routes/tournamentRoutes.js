@@ -129,6 +129,13 @@ router.post(
     tournamentController.enroll
 );
 
+router.delete(
+    '/:id',
+    verifyToken,
+    authorizeRoles(['admin', 'seller']),
+    tournamentController.remove
+);
+
 // ====================================================
 // GENERAR EQUIPOS ALEATORIOS
 // ====================================================

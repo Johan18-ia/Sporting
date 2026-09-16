@@ -52,6 +52,24 @@ module.exports = {
             return res.status(201).json({ success: true, message: 'Estudiante inscrito', data });
         });
     },
+
+    remove(req, res) {
+        Tournament.delete(req.params.id, (err, data) => {
+            if (err) {
+                return res.status(501).json({
+                    success: false,
+                    message: 'No se pudo eliminar el torneo',
+                    error: err
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: 'Torneo eliminado correctamente',
+                data
+            });
+        });
+    },
     // ============================================
     // GENERAR EQUIPOS AL AZAR
     // ============================================
