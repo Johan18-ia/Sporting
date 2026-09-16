@@ -3,7 +3,8 @@
    ============================================ */
 
 .sch-page {
-  max-width: 960px;
+  width: 100%;
+  max-width: none;
 }
 
 .sch-form-card {

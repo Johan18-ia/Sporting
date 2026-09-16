@@ -1,737 +1,413 @@
 // src/views/dashboard/StudentsView.jsx
-// ====================================================
-// VISTA: GESTIÓN DE ESTUDIANTES
-// ====================================================
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import AlertMessage from '../common/AlertMessage'
 import CategoryModel from '../../models/CategoryModel'
 import useAuth from '../../hooks/useAuth'
 import StudentModel from '../../models/StudentModel'
+import PageHeader from '../ui/PageHeader'
+import Button from '../ui/Button'
+import '../../styles/Students.css'
+
+const emptyForm = {
+  name: '',
+  lastname: '',
+  document: '',
+  category_id: '',
+  birth_date: '',
+  phone: '',
+  address: '',
+  emergency_contact: '',
+  emergency_phone: ''
+}
+
+const formatBirth = (value) => {
+  if (!value) return null
+  const d = String(value).slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null
+  const [y, m, day] = d.split('-')
+  return `${day}/${m}/${y}`
+}
+
+const initials = (name, lastname) => {
+  const a = (name || '').trim().charAt(0)
+  const b = (lastname || '').trim().charAt(0)
+  return ((a + b) || '?').toUpperCase()
+}
 
 const StudentsView = () => {
-    const { currentUser } = useAuth()
-    const [students, setStudents] = useState([])
-    const [categories, setCategories] = useState([])
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
-    const [message, setMessage] = useState(null)
-    const [showForm, setShowForm] = useState(false)
-    const [filterCategory, setFilterCategory] = useState('')
-    const [editingStudent, setEditingStudent] = useState(null)
-    const [formData, setFormData] = useState({
-        name: '',
-        lastname: '',
-        document: '',
-        category_id: '',
-        birth_date: '',
-        phone: '',
-        address: '',
-        emergency_contact: '',
-        emergency_phone: ''
-    })
+  const { currentUser } = useAuth()
+  const [students, setStudents] = useState([])
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [message, setMessage] = useState(null)
+  const [showForm, setShowForm] = useState(false)
+  const [filterCategory, setFilterCategory] = useState('')
+  const [search, setSearch] = useState('')
+  const [editingStudent, setEditingStudent] = useState(null)
+  const [formData, setFormData] = useState({ ...emptyForm })
 
-    // ============================================
-    // PERMISOS
-    // ============================================
-    const canEdit = () => {
-        return currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
+  const canEdit = () =>
+    currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
+  const canDelete = () => currentUser && currentUser.role === 'admin'
+  const canCreate = () =>
+    currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
+
+  const loadData = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const studentsResult = await StudentModel.getAllStudents()
+      if (studentsResult.success) setStudents(studentsResult.data)
+      else setError(studentsResult.error)
+
+      const categoriesResult = await CategoryModel.getAllCategories()
+      if (categoriesResult.success) setCategories(categoriesResult.data)
+    } catch {
+      setError('Error al cargar los datos')
     }
+    setLoading(false)
+  }
 
-    const canDelete = () => {
-        return currentUser && currentUser.role === 'admin'
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    if (error) setError('')
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!formData.name || !formData.lastname || !formData.document || !formData.category_id) {
+      setMessage({ type: 'error', text: 'Complete todos los campos obligatorios' })
+      setTimeout(() => setMessage(null), 3000)
+      return
     }
+    setLoading(true)
+    try {
+      const studentData = {
+        name: formData.name,
+        lastname: formData.lastname,
+        document: formData.document,
+        category_id: parseInt(formData.category_id, 10),
+        birth_date: formData.birth_date || null,
+        phone: formData.phone || '',
+        address: formData.address || '',
+        emergency_contact: formData.emergency_contact || '',
+        emergency_phone: formData.emergency_phone || ''
+      }
+      const result = editingStudent
+        ? await StudentModel.updateStudent(editingStudent.id, studentData)
+        : await StudentModel.createStudent(studentData)
 
-    const canCreate = () => {
-        return currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
-    }
-
-    // ============================================
-    // CARGAR DATOS
-    // ============================================
-    const loadData = async () => {
-        setLoading(true)
-        setError(null)
-
-        try {
-            // Cargar estudiantes
-            const studentsResult = await StudentModel.getAllStudents()
-            if (studentsResult.success) {
-                setStudents(studentsResult.data)
-            } else {
-                setError(studentsResult.error)
-            }
-
-            // Cargar categorías
-            const categoriesResult = await CategoryModel.getAllCategories()
-            if (categoriesResult.success) {
-                setCategories(categoriesResult.data)
-            }
-        } catch (err) {
-            setError('Error al cargar los datos')
-        }
-
-        setLoading(false)
-    }
-
-    useEffect(() => {
-        loadData()
-    }, [])
-
-    // ============================================
-    // MANEJADORES DEL FORMULARIO
-    // ============================================
-    const handleChange = (e) => {
-        const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: value }))
-        if (error) setError('')
-    }
-
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-
-        // Validaciones
-        if (!formData.name || !formData.lastname || !formData.document || !formData.category_id) {
-            setMessage({ type: 'error', text: 'Complete todos los campos obligatorios' })
-            setTimeout(() => setMessage(null), 3000)
-            return
-        }
-
-        setLoading(true)
-
-        try {
-            const studentData = {
-                name: formData.name,
-                lastname: formData.lastname,
-                document: formData.document,
-                category_id: parseInt(formData.category_id),
-                birth_date: formData.birth_date || null,
-                phone: formData.phone || '',
-                address: formData.address || '',
-                emergency_contact: formData.emergency_contact || '',
-                emergency_phone: formData.emergency_phone || ''
-            }
-
-            let result
-            if (editingStudent) {
-                // Actualizar estudiante existente
-                result = await StudentModel.updateStudent(editingStudent.id, studentData)
-            } else {
-                // Crear nuevo estudiante
-                result = await StudentModel.createStudent(studentData)
-            }
-
-            if (result.success) {
-                setMessage({
-                    type: 'success',
-                    text: editingStudent ? 'Estudiante actualizado exitosamente' : 'Estudiante registrado exitosamente'
-                })
-                setShowForm(false)
-                setEditingStudent(null)
-                setFormData({
-                    name: '',
-                    lastname: '',
-                    document: '',
-                    category_id: '',
-                    birth_date: '',
-                    phone: '',
-                    address: '',
-                    emergency_contact: '',
-                    emergency_phone: ''
-                })
-                loadData()
-            } else {
-                setMessage({ type: 'error', text: result.error })
-            }
-        } catch (err) {
-            setMessage({ type: 'error', text: 'Error al guardar el estudiante' })
-        }
-
-        setLoading(false)
-        setTimeout(() => setMessage(null), 3000)
-    }
-
-    // ============================================
-    // ELIMINAR ESTUDIANTE
-    // ============================================
-    const handleDelete = async (id, name) => {
-        if (!canDelete()) {
-            setMessage({ type: 'error', text: 'No tiene permisos para eliminar estudiantes' })
-            setTimeout(() => setMessage(null), 3000)
-            return
-        }
-
-        if (window.confirm(`¿Eliminar al estudiante "${name}"?`)) {
-            setLoading(true)
-            const result = await StudentModel.deleteStudent(id)
-            if (result.success) {
-                setMessage({ type: 'success', text: 'Estudiante eliminado exitosamente' })
-                loadData()
-            } else {
-                setMessage({ type: 'error', text: result.error })
-            }
-            setLoading(false)
-            setTimeout(() => setMessage(null), 3000)
-        }
-    }
-
-    // ============================================
-    // EDITAR ESTUDIANTE
-    // ============================================
-    const handleEdit = (student) => {
-        if (!canEdit()) {
-            setMessage({ type: 'error', text: 'No tiene permisos para editar estudiantes' })
-            setTimeout(() => setMessage(null), 3000)
-            return
-        }
-
-        setEditingStudent(student)
-        setFormData({
-            name: student.name || '',
-            lastname: student.lastname || '',
-            document: student.document || '',
-            category_id: student.category_id || '',
-            birth_date: student.birth_date || '',
-            phone: student.phone || '',
-            address: student.address || '',
-            emergency_contact: student.emergency_contact || '',
-            emergency_phone: student.emergency_phone || ''
+      if (result.success) {
+        setMessage({
+          type: 'success',
+          text: editingStudent
+            ? 'Estudiante actualizado exitosamente'
+            : 'Estudiante registrado exitosamente'
         })
-        setShowForm(true)
+        setShowForm(false)
+        setEditingStudent(null)
+        setFormData({ ...emptyForm })
+        loadData()
+      } else {
+        setMessage({ type: 'error', text: result.error })
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Error al guardar el estudiante' })
     }
+    setLoading(false)
+    setTimeout(() => setMessage(null), 3000)
+  }
 
-    // ============================================
-    // FILTRAR ESTUDIANTES
-    // ============================================
-    const filteredStudents = filterCategory
-        ? students.filter(s => s.category_id === parseInt(filterCategory))
-        : students
-
-    // ============================================
-    // OBTENER NOMBRE DE CATEGORÍA
-    // ============================================
-    const getCategoryName = (categoryId) => {
-        const cat = categories.find(c => c.id === categoryId)
-        return cat ? `${cat.category_year || cat.name_year}` : 'Sin categoría'
+  const handleDelete = async (id, name) => {
+    if (!canDelete()) {
+      setMessage({ type: 'error', text: 'No tiene permisos para eliminar estudiantes' })
+      setTimeout(() => setMessage(null), 3000)
+      return
     }
-
-    // ============================================
-    // ESTILOS
-    // ============================================
-    const containerStyles = {
-        padding: '20px',
-        maxWidth: '1200px',
-        margin: '0 auto'
+    if (window.confirm(`¿Eliminar al estudiante "${name}"?`)) {
+      setLoading(true)
+      const result = await StudentModel.deleteStudent(id)
+      if (result.success) {
+        setMessage({ type: 'success', text: 'Estudiante eliminado exitosamente' })
+        loadData()
+      } else {
+        setMessage({ type: 'error', text: result.error })
+      }
+      setLoading(false)
+      setTimeout(() => setMessage(null), 3000)
     }
+  }
 
-    const headerStyles = {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '20px',
-        flexWrap: 'wrap',
-        gap: '15px'
+  const handleEdit = (student) => {
+    if (!canEdit()) return
+    setEditingStudent(student)
+    setFormData({
+      name: student.name || '',
+      lastname: student.lastname || '',
+      document: student.document || '',
+      category_id: student.category_id || '',
+      birth_date: student.birth_date ? String(student.birth_date).slice(0, 10) : '',
+      phone: student.phone || '',
+      address: student.address || '',
+      emergency_contact: student.emergency_contact || '',
+      emergency_phone: student.emergency_phone || ''
+    })
+    setShowForm(true)
+  }
+
+  const openCreate = () => {
+    setEditingStudent(null)
+    setFormData({ ...emptyForm })
+    setShowForm(true)
+  }
+
+  const getCategoryName = (categoryId) => {
+    const cat = categories.find((c) => c.id === categoryId || c.id === Number(categoryId))
+    return cat ? `${cat.category_year || cat.name_year}` : 'Sin categoría'
+  }
+
+  const filteredStudents = useMemo(() => {
+    let list = students
+    if (filterCategory) {
+      list = list.filter((s) => String(s.category_id) === String(filterCategory))
     }
-
-    const filterStyles = {
-        display: 'flex',
-        gap: '10px',
-        alignItems: 'center',
-        marginBottom: '20px',
-        flexWrap: 'wrap'
+    if (search.trim()) {
+      const q = search.trim().toLowerCase()
+      list = list.filter((s) => {
+        const full = `${s.name || ''} ${s.lastname || ''}`.toLowerCase()
+        return (
+          full.includes(q) ||
+          String(s.document || '').toLowerCase().includes(q) ||
+          String(s.phone || '').toLowerCase().includes(q)
+        )
+      })
     }
+    return list
+  }, [students, filterCategory, search])
 
-    const selectStyles = {
-        padding: '8px 15px',
-        border: '2px solid #e1e5e9',
-        borderRadius: '8px',
-        fontSize: '14px',
-        background: 'white'
-    }
+  return (
+    <div className="stu-page">
+      <PageHeader
+        title="Estudiantes"
+        description="Gestión de alumnos por categoría"
+        actions={
+          canCreate() ? (
+            <Button
+              onClick={() => {
+                if (showForm) {
+                  setShowForm(false)
+                  setEditingStudent(null)
+                  setFormData({ ...emptyForm })
+                } else openCreate()
+              }}
+            >
+              {showForm ? '✕ Cancelar' : '+ Nuevo Estudiante'}
+            </Button>
+          ) : null
+        }
+      />
 
-    const tableStyles = {
-        width: '100%',
-        borderCollapse: 'collapse',
-        background: 'white',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
-    }
+      {message && (
+        <AlertMessage type={message.type} message={message.text} onClose={() => setMessage(null)} />
+      )}
 
-    const thStyles = {
-        background: '#8B0000',
-        color: 'white',
-        padding: '12px 15px',
-        textAlign: 'left',
-        fontWeight: 600
-    }
-
-    const tdStyles = {
-        padding: '12px 15px',
-        borderBottom: '1px solid #e1e5e9'
-    }
-
-    // ============================================
-    // RENDERIZADO
-    // ============================================
-    const totalStudents = students.length
-    const byCategory = categories.length
-
-    return (
-        <div style={containerStyles}>
-            <div className="view-toolbar">
-                <div>
-                    <h2 style={{ color: '#333', margin: 0 }}>Gestión de Estudiantes</h2>
-                </div>
-                {canCreate() && (
-                    <button
-                        onClick={() => {
-                            setEditingStudent(null)
-                            setFormData({
-                                name: '',
-                                lastname: '',
-                                document: '',
-                                category_id: '',
-                                birth_date: '',
-                                phone: '',
-                                address: '',
-                                emergency_contact: '',
-                                emergency_phone: ''
-                            })
-                            setShowForm(!showForm)
-                        }}
-                        className="btn-sporting-primary"
-                    >
-                        {showForm ? '✕ Cancelar' : '+ Nuevo Estudiante'}
-                    </button>
-                )}
-            </div>
-
-            <div className="panel-summary-grid">
-                <div className="panel-summary-card">
-                    <div className="panel-summary-icon">E</div>
-                    <div className="panel-summary-meta">
-                        <span className="panel-summary-value">{totalStudents}</span>
-                        <span className="panel-summary-label">Estudiantes</span>
-                    </div>
-                </div>
-                <div className="panel-summary-card">
-                    <div className="panel-summary-icon">C</div>
-                    <div className="panel-summary-meta">
-                        <span className="panel-summary-value">{byCategory}</span>
-                        <span className="panel-summary-label">Categorías</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* ============================================
-            MENSAJES
-            ============================================ */}
-            {message && (
-                <AlertMessage
-                    type={message.type}
-                    message={message.text}
-                    onClose={() => setMessage(null)}
-                />
-            )}
-
-            {/* ============================================
-            FORMULARIO
-            ============================================ */}
-            {showForm && (
-                <form onSubmit={handleSubmit} style={{
-                    background: '#f8f9fa',
-                    padding: '20px',
-                    borderRadius: '12px',
-                    marginBottom: '20px',
-                    animation: 'fadeInUp 0.3s ease'
-                }}>
-                    <h3 style={{ marginBottom: '15px', color: '#333' }}>
-                        {editingStudent ? 'Editar Estudiante' : 'Registrar Estudiante'}
-                    </h3>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                        {/* Nombre */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>
-                                Nombres *
-                            </label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                placeholder="Nombre del estudiante"
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    border: '2px solid #e1e5e9',
-                                    borderRadius: '8px',
-                                    fontSize: '14px'
-                                }}
-                            />
-                        </div>
-
-                        {/* Apellido */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>
-                                Apellidos *
-                            </label>
-                            <input
-                                type="text"
-                                name="lastname"
-                                value={formData.lastname}
-                                onChange={handleChange}
-                                placeholder="Apellido del estudiante"
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    border: '2px solid #e1e5e9',
-                                    borderRadius: '8px',
-                                    fontSize: '14px'
-                                }}
-                            />
-                        </div>
-
-                        {/* Documento */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>
-                                Documento *
-                            </label>
-                            <input
-                                type="text"
-                                name="document"
-                                value={formData.document}
-                                onChange={handleChange}
-                                placeholder="Número de identificación"
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    border: '2px solid #e1e5e9',
-                                    borderRadius: '8px',
-                                    fontSize: '14px'
-                                }}
-                            />
-                        </div>
-
-                        {/* Categoría */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>
-                                Categoría *
-                            </label>
-                            <select
-                                name="category_id"
-                                value={formData.category_id}
-                                onChange={handleChange}
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    border: '2px solid #e1e5e9',
-                                    borderRadius: '8px',
-                                    fontSize: '14px',
-                                    background: 'white'
-                                }}
-                            >
-                                <option value="">Seleccionar categoría</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>
-                                        {cat.category_year || cat.name_year} - {cat.description || ''}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Fecha de Nacimiento */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>
-                                Fecha de Nacimiento
-                            </label>
-                            <input
-                                type="date"
-                                name="birth_date"
-                                value={formData.birth_date}
-                                onChange={handleChange}
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    border: '2px solid #e1e5e9',
-                                    borderRadius: '8px',
-                                    fontSize: '14px'
-                                }}
-                            />
-                        </div>
-
-                        {/* Teléfono */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>
-                                Teléfono
-                            </label>
-                            <input
-                                type="tel"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                placeholder="Número de contacto"
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    border: '2px solid #e1e5e9',
-                                    borderRadius: '8px',
-                                    fontSize: '14px'
-                                }}
-                            />
-                        </div>
-
-                        {/* Dirección */}
-                        <div style={{ gridColumn: '1 / -1' }}>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>
-                                Dirección
-                            </label>
-                            <input
-                                type="text"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleChange}
-                                placeholder="Dirección de residencia"
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    border: '2px solid #e1e5e9',
-                                    borderRadius: '8px',
-                                    fontSize: '14px'
-                                }}
-                            />
-                        </div>
-
-                        {/* Contacto de Emergencia */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>
-                                Contacto de Emergencia
-                            </label>
-                            <input
-                                type="text"
-                                name="emergency_contact"
-                                value={formData.emergency_contact}
-                                onChange={handleChange}
-                                placeholder="Nombre del contacto"
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    border: '2px solid #e1e5e9',
-                                    borderRadius: '8px',
-                                    fontSize: '14px'
-                                }}
-                            />
-                        </div>
-
-                        {/* Teléfono de Emergencia */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 500 }}>
-                                Teléfono de Emergencia
-                            </label>
-                            <input
-                                type="tel"
-                                name="emergency_phone"
-                                value={formData.emergency_phone}
-                                onChange={handleChange}
-                                placeholder="Teléfono de emergencia"
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    border: '2px solid #e1e5e9',
-                                    borderRadius: '8px',
-                                    fontSize: '14px'
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Botones */}
-                    <div style={{
-                        display: 'flex',
-                        gap: '10px',
-                        marginTop: '20px',
-                        justifyContent: 'flex-end'
-                    }}>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            style={{
-                                background: '#8B0000',
-                                color: 'white',
-                                border: 'none',
-                                padding: '10px 30px',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontWeight: 600,
-                                opacity: loading ? 0.6 : 1
-                            }}
-                        >
-                            {loading ? 'Guardando...' : (editingStudent ? 'Actualizar' : 'Guardar')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setShowForm(false)
-                                setEditingStudent(null)
-                            }}
-                            style={{
-                                background: '#e5e7eb',
-                                color: '#333',
-                                border: 'none',
-                                padding: '10px 30px',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontWeight: 600
-                            }}
-                        >
-                            Cancelar
-                        </button>
-                    </div>
-                </form>
-            )}
-
-            {/* ============================================
-            FILTROS
-            ============================================ */}
-            <div className="view-filter">
-                <label style={{ fontWeight: 500 }}>Filtrar por categoría:</label>
-                <select
-                    className="control-select"
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
-                >
-                    <option value="">Todas las categorías</option>
-                    {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>
-                            {cat.category_year || cat.name_year}
-                        </option>
-                    ))}
-                </select>
-                <span style={{ color: '#666', fontSize: '14px' }}>
-                    {filteredStudents.length} estudiante(s)
-                </span>
-            </div>
-
-            {/* ============================================
-            TABLA DE ESTUDIANTES
-            ============================================ */}
-            {loading && <p style={{ textAlign: 'center', color: '#666' }}>Cargando estudiantes...</p>}
-
-            {error && !loading && (
-                <div style={{
-                    background: '#fee2e2',
-                    color: '#dc2626',
-                    padding: '15px',
-                    borderRadius: '8px',
-                    marginBottom: '20px'
-                }}>
-                    Error: {error}
-                </div>
-            )}
-
-            {!loading && !error && (
-                <table style={tableStyles}>
-                    <thead>
-                        <tr>
-                            <th style={thStyles}>ID</th>
-                            <th style={thStyles}>Nombre Completo</th>
-                            <th style={thStyles}>Documento</th>
-                            <th style={thStyles}>Categoría</th>
-                            <th style={thStyles}>Contacto</th>
-                            <th style={thStyles}>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredStudents.length === 0 ? (
-                            <tr>
-                                <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
-                                    No hay estudiantes registrados
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredStudents.map((s) => (
-                                <tr key={s.id}>
-                                    <td style={tdStyles}>#{s.id}</td>
-                                    <td style={tdStyles}>
-                                        <strong>{s.name} {s.lastname}</strong>
-                                        <div style={{ fontSize: '11px', color: '#888' }}>
-                                            {s.birth_date ? `${s.birth_date}` : ''}
-                                        </div>
-                                    </td>
-                                    <td style={tdStyles}>{s.document}</td>
-                                    <td style={tdStyles}>
-                                        <span style={{
-                                            background: '#8B0000',
-                                            color: 'white',
-                                            padding: '2px 10px',
-                                            borderRadius: '12px',
-                                            fontSize: '12px',
-                                            fontWeight: 600
-                                        }}>
-                                            {getCategoryName(s.category_id)}
-                                        </span>
-                                    </td>
-                                    <td style={tdStyles}>
-                                        <div style={{ fontSize: '13px' }}>
-                                            {s.phone ? `${s.phone}` : ''}
-                                            {s.emergency_contact && (
-                                                <div style={{ fontSize: '11px', color: '#666' }}>
-                                                     {s.emergency_contact}
-                                                    {s.emergency_phone ? ` (${s.emergency_phone})` : ''}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td style={tdStyles}>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
-                                                onClick={() => handleEdit(s)}
-                                                disabled={!canEdit()}
-                                                style={{
-                                                    background: '#f59e0b',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    padding: '5px 12px',
-                                                    borderRadius: '6px',
-                                                    cursor: canEdit() ? 'pointer' : 'not-allowed',
-                                                    fontSize: '13px',
-                                                    opacity: canEdit() ? 1 : 0.5
-                                                }}
-                                                title={canEdit() ? 'Editar' : 'Sin permisos'}
-                                            >
-                                                Editar
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(s.id, s.name)}
-                                                disabled={!canDelete()}
-                                                style={{
-                                                    background: '#dc3545',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    padding: '5px 12px',
-                                                    borderRadius: '6px',
-                                                    cursor: canDelete() ? 'pointer' : 'not-allowed',
-                                                    fontSize: '13px',
-                                                    opacity: canDelete() ? 1 : 0.5
-                                                }}
-                                                title={canDelete() ? 'Eliminar' : 'Sin permisos'}
-                                            >
-                                                Eliminar
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            )}
+      <div className="stu-stats">
+        <div className="stu-stat">
+          <div className="stu-stat-icon stu-stat-icon--e">E</div>
+          <div>
+            <span className="stu-stat-value">{students.length}</span>
+            <span className="stu-stat-label">Estudiantes</span>
+          </div>
         </div>
-    )
+        <div className="stu-stat">
+          <div className="stu-stat-icon stu-stat-icon--c">C</div>
+          <div>
+            <span className="stu-stat-value">{categories.length}</span>
+            <span className="stu-stat-label">Categorías</span>
+          </div>
+        </div>
+        <div className="stu-stat">
+          <div className="stu-stat-icon stu-stat-icon--f">F</div>
+          <div>
+            <span className="stu-stat-value">{filteredStudents.length}</span>
+            <span className="stu-stat-label">En vista</span>
+          </div>
+        </div>
+      </div>
+
+      {showForm && (
+        <div className="stu-form-card">
+          <h3 className="stu-form-title">
+            {editingStudent ? 'Editar estudiante' : 'Nuevo estudiante'}
+          </h3>
+          <form onSubmit={handleSubmit}>
+            <div className="stu-form-grid">
+              <div className="ui-field">
+                <label>Nombre *</label>
+                <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+              </div>
+              <div className="ui-field">
+                <label>Apellido *</label>
+                <input type="text" name="lastname" value={formData.lastname} onChange={handleChange} required />
+              </div>
+              <div className="ui-field">
+                <label>Documento *</label>
+                <input type="text" name="document" value={formData.document} onChange={handleChange} required />
+              </div>
+              <div className="ui-field">
+                <label>Categoría *</label>
+                <select name="category_id" value={formData.category_id} onChange={handleChange} required>
+                  <option value="">Seleccionar...</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.category_year || c.name_year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="ui-field">
+                <label>Fecha de nacimiento</label>
+                <input type="date" name="birth_date" value={formData.birth_date} onChange={handleChange} />
+              </div>
+              <div className="ui-field">
+                <label>Teléfono</label>
+                <input type="text" name="phone" value={formData.phone} onChange={handleChange} />
+              </div>
+              <div className="ui-field" style={{ gridColumn: '1 / -1' }}>
+                <label>Dirección</label>
+                <input type="text" name="address" value={formData.address} onChange={handleChange} />
+              </div>
+              <div className="ui-field">
+                <label>Contacto de emergencia</label>
+                <input type="text" name="emergency_contact" value={formData.emergency_contact} onChange={handleChange} />
+              </div>
+              <div className="ui-field">
+                <label>Tel. emergencia</label>
+                <input type="text" name="emergency_phone" value={formData.emergency_phone} onChange={handleChange} />
+              </div>
+            </div>
+            <div className="stu-form-actions">
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Guardando...' : editingStudent ? 'Actualizar' : 'Registrar estudiante'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="stu-toolbar">
+        <div className="stu-search-wrap">
+          <input
+            type="search"
+            className="stu-search"
+            placeholder="Buscar por nombre, documento o teléfono..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="stu-chips">
+          <button
+            type="button"
+            className={`stu-chip ${!filterCategory ? 'is-active' : ''}`}
+            onClick={() => setFilterCategory('')}
+          >
+            Todas
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`stu-chip ${String(filterCategory) === String(c.id) ? 'is-active' : ''}`}
+              onClick={() => setFilterCategory(String(c.id))}
+            >
+              {c.category_year || c.name_year}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading && students.length === 0 && <p className="stu-status">Cargando estudiantes...</p>}
+      {error && <p className="stu-status stu-status-error">{error}</p>}
+
+      {!loading && filteredStudents.length === 0 ? (
+        <div className="stu-empty">
+          <div className="stu-empty-icon">👤</div>
+          <p className="stu-empty-title">Sin estudiantes</p>
+          <p className="stu-empty-text">
+            {search || filterCategory
+              ? 'No hay resultados con esos filtros.'
+              : 'Registra el primer estudiante con el botón de arriba.'}
+          </p>
+        </div>
+      ) : (
+        <div className="stu-grid">
+          {filteredStudents.map((s) => {
+            const year = getCategoryName(s.category_id)
+            const birth = formatBirth(s.birth_date)
+            return (
+              <article key={s.id} className="stu-card">
+                <div className="stu-card-top">
+                  <div className="stu-avatar">{initials(s.name, s.lastname)}</div>
+                  <div className="stu-card-head">
+                    <h3 className="stu-card-name">
+                      {s.name} {s.lastname}
+                    </h3>
+                    <span className="stu-card-year">{year}</span>
+                  </div>
+                </div>
+                <div className="stu-card-rows">
+                  <div className="stu-row">
+                    <span className="stu-row-label">Documento</span>
+                    <span className="stu-row-value">{s.document || '—'}</span>
+                  </div>
+                  {birth && (
+                    <div className="stu-row">
+                      <span className="stu-row-label">Nacimiento</span>
+                      <span className="stu-row-value">{birth}</span>
+                    </div>
+                  )}
+                  <div className="stu-row">
+                    <span className="stu-row-label">Contacto</span>
+                    <span className="stu-row-value">{s.phone || '—'}</span>
+                  </div>
+                  {s.address && (
+                    <div className="stu-row">
+                      <span className="stu-row-label">Dirección</span>
+                      <span className="stu-row-value">{s.address}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="stu-card-actions">
+                  <button
+                    type="button"
+                    className="stu-btn stu-btn-edit"
+                    onClick={() => handleEdit(s)}
+                    disabled={!canEdit()}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    className="stu-btn stu-btn-del"
+                    onClick={() => handleDelete(s.id, `${s.name} ${s.lastname}`)}
+                    disabled={!canDelete()}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default StudentsView

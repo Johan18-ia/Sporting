@@ -13,6 +13,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
+
 // Importación de screens
 import { BlurView } from 'expo-blur';
 import { WelcomeScreen } from '../presentation/views/welcome/WelcomeScreen';
@@ -32,6 +33,7 @@ import { CatalogScreen } from '../presentation/views/catalog/CatalogScreen';
 import { StudentsScreen } from '../presentation/views/students/StudentsScreen';
 import { StudentFormScreen } from '../presentation/views/students/StudentFormScreen';
 import { TournamentsScreen } from '../presentation/views/tournaments/TournamentsScreen';
+import { TeamsScreen } from '../presentation/views/teams/TeamsScreen';
 import { ReportsScreen } from '../presentation/views/reports/ReportsScreen';
 import { ProfileScreen } from '../presentation/views/profile/ProfileScreen';
 import { ProfileDetailScreen } from '../presentation/views/profile/ProfileDetailScreen';
@@ -532,9 +534,9 @@ export const AppNavigator = () => {
                             options={{ title: 'Horarios' }}
                         />
                         <Stack.Screen
-                            name="Tournaments"
-                            component={TournamentsScreen}
-                            options={{ title: 'Torneos' }}
+                            name="Teams"
+                            component={TeamsScreen}
+                            options={{ headerShown: false }}
                         />
                         <Stack.Screen
                             name="Reports"
