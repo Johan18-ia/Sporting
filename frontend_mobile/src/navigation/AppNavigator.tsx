@@ -238,23 +238,12 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                     })}
                 />
             )}
-            {isRegularUser && (
+            {(canManageUsers || isRegularUser || isStudent) && (
                 <Tab.Screen
                     name="Tournaments"
                     component={TournamentsScreen}
                     options={({ navigation }) => ({
-                        title: 'Torneos',
-                        tabBarLabel: 'Torneos',
-                        ...backToHomeOptions(navigation),
-                    })}
-                />
-            )}
-            {isStudent && (
-                <Tab.Screen
-                    name="Tournaments"
-                    component={TournamentsScreen}
-                    options={({ navigation }) => ({
-                        title: 'Mis Torneos',
+                        title: isStudent ? 'Mis Torneos' : 'Torneos',
                         tabBarLabel: 'Torneos',
                         ...backToHomeOptions(navigation),
                     })}
