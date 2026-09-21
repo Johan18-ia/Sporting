@@ -1,7 +1,4 @@
-// Encargado: Categorías
-// Descripción: CRUD de categorías (año de nacimiento) — UI alineada al resto
 // Archivo: src/presentation/views/categories/CategoriesScreen.tsx
-// ============================================
 import React, { useState, useEffect } from 'react';
 import {
     View,
