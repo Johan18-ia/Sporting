@@ -1,7 +1,5 @@
-// Encargado: Categorías
-// Descripción: CRUD de categorías (año de nacimiento) — UI alineada al resto
+// CRUD de categorías (año de nacimiento) — UI alineada al resto
 // Archivo: src/presentation/views/categories/CategoriesScreen.tsx
-// ============================================
 import React, { useState, useEffect } from 'react';
 import {
     View,
@@ -26,7 +24,7 @@ interface Category {
     description: string;
     created_at?: string;
 }
-
+//Genera una lista de años desde 2005 hasta el año actual.
 const CURRENT_YEAR = new Date().getFullYear();
 const MIN_YEAR = 2005;
 const YEAR_OPTIONS = Array.from(
@@ -67,7 +65,7 @@ export const CategoriesScreen = () => {
         setRefreshing(true);
         loadCategories();
     };
-
+    // Evitar años duplicados
     const usedYears = categories
         .filter((c) => !(isEditing && c.id === editingId))
         .map((c) => c.category_year);
@@ -77,7 +75,7 @@ export const CategoriesScreen = () => {
             Alert.alert('Error', 'Selecciona el año de la categoría');
             return;
         }
-
+       //Editar categoría
         try {
             if (isEditing && editingId) {
                 await ApiDelivery.put('/categories', {
@@ -95,7 +93,7 @@ export const CategoriesScreen = () => {
             Alert.alert('Error', 'No se pudo guardar la categoría');
         }
     };
-
+      //Eliminar categoría 
     const handleDelete = (id: number, name: string) => {
         Alert.alert('Eliminar Categoría', `¿Estás seguro de eliminar "${name}"?`, [
             { text: 'Cancelar', style: 'cancel' },
@@ -295,7 +293,7 @@ export const CategoriesScreen = () => {
         </View>
     );
 };
-
+//estilos 
 const styles = StyleSheet.create({
     container: {
         flex: 1,

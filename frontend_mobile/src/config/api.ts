@@ -1,11 +1,7 @@
-// Encargado: Configuración API
-// Descripción: Endpoints y configuración base para llamadas al backend
-// Archivo: src/config/api.ts
-// ============================================
-
+// Endpoints y configuración base para llamadas al backend
 // src/config/api.ts
-import { Platform } from 'react-native';
 
+import { Platform } from 'react-native';
 const getBaseUrl = () => {
     const manualUrl = process.env.EXPO_PUBLIC_API_URL;
     if (manualUrl) return manualUrl.replace(/\/$/, '');
@@ -16,7 +12,7 @@ const getBaseUrl = () => {
 
     return 'http://localhost:3000/api';
 };
-
+// Endpoints
 export const API_CONFIG = {
     BASE_URL: getBaseUrl(),
     TIMEOUT: 10000,

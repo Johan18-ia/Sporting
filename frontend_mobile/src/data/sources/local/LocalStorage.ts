@@ -1,7 +1,3 @@
-// Encargado: Almacenamiento Local
-// Descripción: Wrapper de AsyncStorage con logging para depuración
-// Archivo: src/data/sources/local/LocalStorage.ts
-// ============================================
 // frontend_mobile/src/data/sources/local/LocalStorage.ts
 
 import AsyncStorage from '@react-native-async-storage/async-storage';

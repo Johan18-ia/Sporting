@@ -1,10 +1,5 @@
-// Encargado: Hook - useAuth
-// Descripción: Manejo de autenticación, login/logout y estado del usuario
-// Archivo: src/hooks/useAuth.ts
-// ============================================
-
+// Manejo de autenticación, login/logout y estado del usuario
 // frontend_mobile/src/hooks/useAuth.ts
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, UserLogin, UserRegister } from '../domain/entities/User';
 import { GetUserLocalUseCase } from '../domain/useCases/userLocal/GetUserLocal';
@@ -39,13 +34,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { getItem, save } = LocalStorage();
 
     useEffect(() => {
-        checkAuth();
+        checkAuth(); // se ejecuta UNA sola vez al abrir la app
     }, []);
 
     const checkAuth = async () => {
         setLoading(true);
+        // Busca el token guardado
         try {
             const storedToken = await getItem('auth_token');
+            // Busca los datos del usuario
             const userData = await GetUserLocalUseCase();
             const token = storedToken || userData?.session_token || null;
 
@@ -54,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('  Usuario:', userData ? 'Existe' : 'No existe');
 
             if (token && userData) {
+                // Sí hay sesión marca como autenticado
                 let hydratedUser = userData;
                 if (userData.role === 'user') {
                     try {
@@ -80,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log('Sesion activa para:', hydratedUser.name);
             } else {
                 setUser(null);
+                // No hay sesión
                 setIsAuthenticated(false);
                 console.log('No hay sesion activa');
             }

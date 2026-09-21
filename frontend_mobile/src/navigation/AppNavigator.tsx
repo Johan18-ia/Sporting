@@ -1,10 +1,4 @@
-// Encargado: Navegación de la aplicación móvil
-// Descripción: Registra los stacks y tabs principales, incluyendo la autenticación, perfil y gestión de usuarios.
 // Archivo: src/navigation/AppNavigator.tsx
-// ============================================
-// NOTAS: Mantener la consistencia con RootStackParamList para tipado.
-// Se integran pantallas nuevas como Login, Register, ProfileDetail, Settings, UserForm y Users.
-// ============================================
 import React, { useRef, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Animated, Easing, Text } from 'react-native';
@@ -12,7 +6,6 @@ import { NavigationContainer, RouteProp, useNavigation } from '@react-navigation
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-
 
 // Importación de screens
 import { BlurView } from 'expo-blur';
@@ -38,7 +31,6 @@ import { ReportsScreen } from '../presentation/views/reports/ReportsScreen';
 import { ProfileScreen } from '../presentation/views/profile/ProfileScreen';
 import { ProfileDetailScreen } from '../presentation/views/profile/ProfileDetailScreen';
 import { SettingsScreen } from '../presentation/views/profile/SettingsScreen';
-
 import { RootStackParamList } from './RootStackParamList';
 import { useAuth } from '../hooks/useAuth';
 import { MyColors } from '../presentation/theme/AppTheme';
@@ -316,7 +308,7 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
         </View>
     );
 };
-
+// estilos
 const styles = {
     addTabButton: {
         width: 58,
@@ -424,14 +416,14 @@ const styles = {
     },
 };
 
-// ============================================
-// MAIN NAVIGATOR
-// ============================================
+
+// Revisa si está autentificado
+
 export const AppNavigator = () => {
     const { isAuthenticated, loading } = useAuth();
 
     if (loading) {
-        return null; // O un LoadingSpinner
+        return null; 
     }
 
     return (
@@ -449,9 +441,9 @@ export const AppNavigator = () => {
                 }}
             >
                 {!isAuthenticated ? (
-                    // ============================================
-                    // AUTH STACK (con Home como pantalla publica inicial)
-                    // ============================================
+                    // Decide que vista mostrar
+
+                    //vistas de no registrados 
                     <>
                         <Stack.Screen
                             name="Welcome"
@@ -488,9 +480,8 @@ export const AppNavigator = () => {
                         />
                     </>
                 ) : (
-                    // ============================================
-                    // MAIN STACK
-                    // ============================================
+                 
+                    // Vistas de registrados
                     <>
                         <Stack.Screen
                             name="MainTabs"
