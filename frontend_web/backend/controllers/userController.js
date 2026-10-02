@@ -9,6 +9,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 // Archivo de configuración donde está la clave secreta
 const keys = require("../config/keys");
+const db = require("../config/config");
+const Student = require("../models/student");
 
 // Exportación de métodos del controlador
 module.exports = {
@@ -77,12 +79,13 @@ module.exports = {
                     phone: myUser.phone,
                     image: myUser.image,
                     role: myUser.role,
+                    user_type: myUser.user_type || 'none',
                     is_active: isActive,
                     studentProfile: myUser.student_profile_id ? {
                         id: myUser.student_profile_id,
                         user_id: myUser.id,
                         category_id: myUser.student_category_id,
-                        category_year: myUser.student_category_year,
+                        category_name: myUser.student_category_name,
                         status: myUser.student_status
                     } : null,
                     isStudent: Boolean(myUser.student_profile_id),
@@ -171,6 +174,8 @@ module.exports = {
         // Obtiene datos del usuario desde el body
         const user = req.body;
         const currentUserRole = req.user?.role;
+        const userType = ['student', 'parent', 'none'].includes(user.user_type) ? user.user_type : 'none';
+        user.user_type = userType;
 
         // ============================================
         // VALIDACIONES DE CAMPOS OBLIGATORIOS
@@ -233,9 +238,7 @@ module.exports = {
         // CREAR EL USUARIO
         // ============================================
         User.create(user, (err, data) => {
-            // Validación de error
             if (err) {
-                // Verificar si el error es por email duplicado
                 if (err.code === 'ER_DUP_ENTRY') {
                     return res.status(409).json({
                         success: false,
@@ -250,11 +253,82 @@ module.exports = {
                 });
             }
 
-            // Respuesta exitosa
+            const createdUserId = data?.id;
+
+            if (userType === 'student') {
+                const studentData = {
+                    user_id: createdUserId,
+                    document: user.document || null,
+                    birth_date: user.birth_date || null,
+                    address: user.address || null,
+                    category_id: user.category_id || null,
+                    emergency_contact_name: user.emergency_contact_name || null,
+                    emergency_contact_phone: user.emergency_contact_phone || null,
+                    parent_id: user.parent_id || null,
+                    status: user.status || 'active'
+                };
+
+                db.query(
+                    `INSERT INTO student_profiles (user_id, document, birth_date, address, category_id, emergency_contact_name, emergency_contact_phone, parent_id, status, created_at, updated_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                    [
+                        studentData.user_id,
+                        studentData.document,
+                        studentData.birth_date,
+                        studentData.address,
+                        studentData.category_id,
+                        studentData.emergency_contact_name,
+                        studentData.emergency_contact_phone,
+                        studentData.parent_id,
+                        studentData.status
+                    ],
+                    (studentErr) => {
+                        if (studentErr) {
+                            return res.status(500).json({
+                                success: false,
+                                message: 'Usuario creado pero no se pudo crear el perfil de estudiante',
+                                error: studentErr
+                            });
+                        }
+
+                        return res.status(201).json({
+                            success: true,
+                            message: 'Usuario y perfil de estudiante creados correctamente',
+                            data: { ...data, user_type: userType }
+                        });
+                    }
+                );
+                return;
+            }
+
+            if (userType === 'parent') {
+                db.query(
+                    `INSERT INTO parent_profiles (user_id, document, address, occupation, created_at, updated_at)
+                     VALUES (?, ?, ?, ?, NOW(), NOW())`,
+                    [createdUserId, user.document || null, user.address || null, user.occupation || null],
+                    (parentErr) => {
+                        if (parentErr) {
+                            return res.status(500).json({
+                                success: false,
+                                message: 'Usuario creado pero no se pudo crear el perfil de padre',
+                                error: parentErr
+                            });
+                        }
+
+                        return res.status(201).json({
+                            success: true,
+                            message: 'Usuario y perfil de padre creados correctamente',
+                            data: { ...data, user_type: userType }
+                        });
+                    }
+                );
+                return;
+            }
+
             return res.status(201).json({
                 success: true,
                 message: "Usuario creado correctamente",
-                data: data,
+                data: { ...data, user_type: userType },
             });
         });
     },

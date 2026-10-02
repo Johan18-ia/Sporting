@@ -23,6 +23,7 @@ import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { useAuth } from '../../../hooks/useAuth';
 import { MyColors } from '../../theme/AppTheme';
 import { Ionicons } from '@expo/vector-icons';
+import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 
 type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
 
@@ -37,10 +38,32 @@ export const RegisterScreen = () => {
         password: '',
         confirmPassword: '',
         phone: '',
+        document: '',
+        birth_date: '',
+        address: '',
+        occupation: '',
+        emergency_contact_name: '',
+        emergency_contact_phone: '',
+        user_type: 'student',
+        category_id: '',
     });
+    const [categories, setCategories] = useState<any[]>([]);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const response = await ApiDelivery.get('/categories');
+                const list = Array.isArray(response?.data) ? response.data : response?.data?.data || [];
+                setCategories(list);
+            } catch (err) {
+                console.warn('No se pudieron cargar categorías para registro:', err);
+            }
+        };
+        loadCategories();
+    }, []);
 
     const handleChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -55,9 +78,41 @@ export const RegisterScreen = () => {
         const password = formData.password || '';
         const confirmPassword = formData.confirmPassword || '';
         const phone = (formData.phone || '').trim();
+        const document = (formData.document || '').trim();
+        const birthDate = (formData.birth_date || '').trim();
+        const address = (formData.address || '').trim();
+        const occupation = (formData.occupation || '').trim();
+        const emergencyName = (formData.emergency_contact_name || '').trim();
+        const emergencyPhone = (formData.emergency_contact_phone || '').trim();
+        const userType = formData.user_type === 'parent' ? 'parent' : 'student';
 
         if (!name || !email || !password) {
             setError('Por favor complete todos los campos obligatorios');
+            return;
+        }
+
+        if (!document) {
+            setError(userType === 'student' ? 'El documento del estudiante es obligatorio' : 'El documento del padre es obligatorio');
+            return;
+        }
+
+        if (userType === 'student' && !birthDate) {
+            setError('La fecha de nacimiento del estudiante es obligatoria');
+            return;
+        }
+
+        if (userType === 'student' && !formData.category_id) {
+            setError('Debe seleccionar una categoría para el estudiante');
+            return;
+        }
+
+        if (!address) {
+            setError('La dirección es obligatoria');
+            return;
+        }
+
+        if (userType === 'student' && (!emergencyName || !emergencyPhone)) {
+            setError('Debe completar el contacto y teléfono de emergencia');
             return;
         }
 
@@ -83,8 +138,17 @@ export const RegisterScreen = () => {
             lastname,
             email,
             password,
+            confirmPassword,
             phone,
-            role: 'user'
+            document,
+            birth_date: birthDate || null,
+            address,
+            occupation: occupation || null,
+            emergency_contact_name: emergencyName || null,
+            emergency_contact_phone: emergencyPhone || null,
+            category_id: userType === 'student' && formData.category_id ? Number(formData.category_id) : null,
+            role: 'user',
+            user_type: userType
         };
 
         const result = await register(payload as any);
@@ -135,6 +199,24 @@ export const RegisterScreen = () => {
                 )}
 
                 <View style={styles.form}>
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Tipo de usuario *</Text>
+                        <View style={styles.radioRow}>
+                            <TouchableOpacity
+                                style={[styles.radioOption, formData.user_type === 'student' && styles.radioOptionSelected]}
+                                onPress={() => handleChange('user_type', 'student')}
+                            >
+                                <Text style={[styles.radioText, formData.user_type === 'student' && styles.radioTextSelected]}>Estudiante</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.radioOption, formData.user_type === 'parent' && styles.radioOptionSelected]}
+                                onPress={() => handleChange('user_type', 'parent')}
+                            >
+                                <Text style={[styles.radioText, formData.user_type === 'parent' && styles.radioTextSelected]}>Padre</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
                     <View style={styles.row}>
                         <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                             <Text style={styles.label}>Nombres *</Text>
@@ -155,6 +237,71 @@ export const RegisterScreen = () => {
                             />
                         </View>
                     </View>
+
+                    {formData.user_type === 'student' ? (
+                        <View style={styles.row}>
+                            <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                                <Text style={styles.label}>Documento *</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Número de identificación"
+                                    value={formData.document}
+                                    onChangeText={(value) => handleChange('document', value)}
+                                    keyboardType="number-pad"
+                                />
+                            </View>
+                            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                                <Text style={styles.label}>Fecha de nacimiento *</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="YYYY-MM-DD"
+                                    value={formData.birth_date}
+                                    onChangeText={(value) => handleChange('birth_date', value)}
+                                />
+                            </View>
+                        </View>
+                    ) : (
+                        <View style={styles.row}>
+                            <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                                <Text style={styles.label}>Documento del padre *</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Número de identificación"
+                                    value={formData.document}
+                                    onChangeText={(value) => handleChange('document', value)}
+                                    keyboardType="number-pad"
+                                />
+                            </View>
+                            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                                <Text style={styles.label}>Ocupación</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Ej: Empresario"
+                                    value={formData.occupation}
+                                    onChangeText={(value) => handleChange('occupation', value)}
+                                />
+                            </View>
+                        </View>
+                    )}
+
+                    {formData.user_type === 'student' && (
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Categoría *</Text>
+                            <View style={styles.pickerWrap}>
+                                {categories.map((category) => (
+                                    <TouchableOpacity
+                                        key={category.id}
+                                        style={[styles.optionButton, formData.category_id === String(category.id) && styles.optionButtonSelected]}
+                                        onPress={() => handleChange('category_id', String(category.id))}
+                                    >
+                                        <Text style={[styles.optionButtonText, formData.category_id === String(category.id) && styles.optionButtonTextSelected]}>
+                                            {category.category_year || category.name || category.description || `Categoría ${category.id}`}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    )}
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Correo Electrónico *</Text>
@@ -179,6 +326,40 @@ export const RegisterScreen = () => {
                             keyboardType="phone-pad"
                         />
                     </View>
+
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Dirección *</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Dirección principal"
+                            value={formData.address}
+                            onChangeText={(value) => handleChange('address', value)}
+                        />
+                    </View>
+
+                    {formData.user_type === 'student' && (
+                        <View style={styles.row}>
+                            <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                                <Text style={styles.label}>Contacto de emergencia *</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Nombre"
+                                    value={formData.emergency_contact_name}
+                                    onChangeText={(value) => handleChange('emergency_contact_name', value)}
+                                />
+                            </View>
+                            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                                <Text style={styles.label}>Tel. emergencia *</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Número"
+                                    value={formData.emergency_contact_phone}
+                                    onChangeText={(value) => handleChange('emergency_contact_phone', value)}
+                                    keyboardType="phone-pad"
+                                />
+                            </View>
+                        </View>
+                    )}
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Contraseña *</Text>
@@ -312,6 +493,32 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
+    radioRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginTop: 8,
+    },
+    radioOption: {
+        flex: 1,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#d9d9d9',
+        backgroundColor: '#f8f9fa',
+        alignItems: 'center',
+    },
+    radioOptionSelected: {
+        borderColor: MyColors.primary,
+        backgroundColor: '#fff2f2',
+    },
+    radioText: {
+        color: '#444',
+        fontWeight: '600',
+    },
+    radioTextSelected: {
+        color: MyColors.primary,
+    },
     inputGroup: {
         marginBottom: 14,
     },
@@ -329,6 +536,28 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         fontSize: 15,
         backgroundColor: '#f8f9fa',
+    },
+    pickerWrap: {
+        gap: 8,
+    },
+    optionButton: {
+        borderWidth: 1,
+        borderColor: '#d9d9d9',
+        borderRadius: 8,
+        backgroundColor: '#f8f9fa',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+    },
+    optionButtonSelected: {
+        borderColor: MyColors.primary,
+        backgroundColor: '#fff2f2',
+    },
+    optionButtonText: {
+        color: '#333',
+        fontWeight: '600',
+    },
+    optionButtonTextSelected: {
+        color: MyColors.primary,
     },
     passwordContainer: {
         flexDirection: 'row',

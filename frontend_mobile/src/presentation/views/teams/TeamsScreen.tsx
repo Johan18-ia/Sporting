@@ -15,20 +15,30 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
+import { useAuth } from '../../../hooks/useAuth';
 
-const STORAGE_KEY = 'sporting_teams_local';
 const MIN_MEMBERS = 4;
 
 interface Team {
   id: number;
   name: string;
-  description: string;
-  studentIds: number[];
-  created_at?: string;
+  description?: string;
+  members?: TeamMember[];
+  category_id?: number | null;
+  coach_id?: number | null;
+}
+
+interface TeamMember {
+  id?: number;
+  student_id?: number;
+  name?: string;
+  lastname?: string;
+  email?: string;
+  phone?: string;
+  document?: string;
 }
 
 interface Student {
@@ -38,21 +48,16 @@ interface Student {
   document?: string;
 }
 
-const readLocalTeams = async (): Promise<Team[]> => {
-  try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
-const writeLocalTeams = async (teams: Team[]) => {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(teams));
+const normalizeArray = (payload: any): any[] => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.data)) return payload.data.data;
+  return [];
 };
 
 export const TeamsScreen = () => {
   const navigation = useNavigation();
+  const { user } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,19 +73,37 @@ export const TeamsScreen = () => {
 
   const loadData = useCallback(async () => {
     try {
-      const teamsData = await readLocalTeams();
-      let studentsData: Student[] = [];
-      try {
-        const studentsRes = await ApiDelivery.get('/students');
-        const raw = studentsRes.data?.data ?? studentsRes.data;
-        studentsData = Array.isArray(raw) ? raw : [];
-      } catch {
-        studentsData = [];
-      }
-      setTeams(teamsData);
-      setStudents(studentsData);
-    } catch {
-      Alert.alert('Error', 'No se pudieron cargar los estudiantes');
+      const [teamsRes, studentsRes] = await Promise.all([
+        ApiDelivery.get('/teams').catch(() => ({ data: { data: [] } })),
+        ApiDelivery.get('/students').catch(() => ({ data: { data: [] } }))
+      ]);
+
+      const teamList = normalizeArray(teamsRes.data);
+      const studentList = normalizeArray(studentsRes.data);
+
+      const memberMap: Record<number, TeamMember[]> = {};
+      await Promise.all(
+        teamList.map(async (team: any) => {
+          try {
+            const membersRes = await ApiDelivery.get(`/teams/${team.id}/members`);
+            memberMap[team.id] = normalizeArray(membersRes.data);
+          } catch {
+            memberMap[team.id] = [];
+          }
+        })
+      );
+
+      setTeams(
+        teamList.map((team: any) => ({
+          ...team,
+          description: team.description || '',
+          members: memberMap[team.id] || []
+        }))
+      );
+      setStudents(studentList);
+    } catch (error) {
+      console.error('Error cargando equipos:', error);
+      Alert.alert('Error', 'No se pudieron cargar los equipos desde el backend');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -119,6 +142,24 @@ export const TeamsScreen = () => {
     setModalVisible(false);
   };
 
+  const syncMembers = async (teamId: number, nextMemberIds: number[]) => {
+    const currentMembers = teams.find((team) => team.id === teamId)?.members || [];
+    const currentMemberIds = currentMembers
+      .map((member) => Number(member.student_id ?? member.id))
+      .filter((value) => !Number.isNaN(value));
+
+    const toAdd = nextMemberIds.filter((id) => !currentMemberIds.includes(id));
+    const toRemove = currentMemberIds.filter((id) => !nextMemberIds.includes(id));
+
+    for (const studentId of toAdd) {
+      await ApiDelivery.post(`/teams/${teamId}/members`, { student_id: studentId });
+    }
+
+    for (const studentId of toRemove) {
+      await ApiDelivery.delete(`/teams/${teamId}/members/${studentId}`);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       Alert.alert('Error', 'El nombre del equipo es requerido');
@@ -127,42 +168,39 @@ export const TeamsScreen = () => {
     if (formData.studentIds.length < MIN_MEMBERS) {
       Alert.alert(
         'Integrantes insuficientes',
-        `Selecciona al menos ${MIN_MEMBERS} (llevas ${formData.studentIds.length}).`
+        `Selecciona al menos ${MIN_MEMBERS} estudiantes (llevas ${formData.studentIds.length}).`
       );
       return;
     }
+
     try {
-      const current = await readLocalTeams();
+      const payload = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        category_id: null,
+        coach_id: user?.id ?? null,
+        is_active: 1
+      };
+
       if (editingTeam) {
-        const next = current.map((t) =>
-          t.id === editingTeam.id
-            ? {
-                ...t,
-                name: formData.name.trim(),
-                description: formData.description.trim(),
-                studentIds: formData.studentIds
-              }
-            : t
-        );
-        await writeLocalTeams(next);
-        setTeams(next);
+        await ApiDelivery.put(`/teams/${editingTeam.id}`, payload);
+        await syncMembers(editingTeam.id, formData.studentIds);
         Alert.alert('Éxito', 'Equipo actualizado');
       } else {
-        const newTeam: Team = {
-          id: Date.now(),
-          name: formData.name.trim(),
-          description: formData.description.trim(),
-          studentIds: formData.studentIds,
-          created_at: new Date().toISOString()
-        };
-        const next = [newTeam, ...current];
-        await writeLocalTeams(next);
-        setTeams(next);
+        const createdResponse = await ApiDelivery.post('/teams', payload);
+        const createdTeam = createdResponse.data?.data || createdResponse.data || {};
+        const createdId = createdTeam.id;
+        if (createdId) {
+          await syncMembers(createdId, formData.studentIds);
+        }
         Alert.alert('Éxito', 'Equipo creado');
       }
+
       resetForm();
-    } catch {
-      Alert.alert('Error', 'No se pudo guardar el equipo');
+      await loadData();
+    } catch (error: any) {
+      console.error('Error guardando equipo:', error);
+      Alert.alert('Error', error?.response?.data?.message || 'No se pudo guardar el equipo');
     }
   };
 
@@ -173,10 +211,14 @@ export const TeamsScreen = () => {
         text: 'Eliminar',
         style: 'destructive',
         onPress: async () => {
-          const next = (await readLocalTeams()).filter((t) => t.id !== id);
-          await writeLocalTeams(next);
-          setTeams(next);
-          Alert.alert('Éxito', 'Equipo eliminado');
+          try {
+            await ApiDelivery.delete(`/teams/${id}`);
+            await loadData();
+            Alert.alert('Éxito', 'Equipo eliminado');
+          } catch (error: any) {
+            console.error('Error eliminando equipo:', error);
+            Alert.alert('Error', error?.response?.data?.message || 'No se pudo eliminar');
+          }
         }
       }
     ]);
@@ -187,13 +229,12 @@ export const TeamsScreen = () => {
     setFormData({
       name: team.name,
       description: team.description || '',
-      studentIds: team.studentIds || []
+      studentIds: (team.members || []).map((member) => Number(member.student_id ?? member.id)).filter((id) => !Number.isNaN(id))
     });
     setModalVisible(true);
   };
 
-  const getTeamStudents = (team: Team) =>
-    students.filter((s) => team.studentIds?.includes(s.id));
+  const getTeamStudents = (team: Team) => team.members || [];
 
   if (loading) {
     return (
@@ -264,9 +305,7 @@ export const TeamsScreen = () => {
                       "{item.description}"
                     </Text>
                   )}
-                  <Text style={styles.memberCountText}>
-                    {item.studentIds?.length || 0} integrantes
-                  </Text>
+                  <Text style={styles.memberCountText}>{members.length} integrantes</Text>
                 </View>
                 <TouchableOpacity onPress={() => startEdit(item)} style={styles.actionBtn}>
                   <Ionicons name="create-outline" size={20} color="#A52A2A" />
@@ -280,10 +319,10 @@ export const TeamsScreen = () => {
               </View>
               {members.length > 0 && (
                 <View style={styles.membersWrap}>
-                  {members.map((s) => (
-                    <View key={s.id} style={styles.memberChip}>
+                  {members.map((member, index) => (
+                    <View key={`${member.student_id ?? member.id ?? index}`} style={styles.memberChip}>
                       <Text style={styles.memberChipText}>
-                        {s.name} {s.lastname}
+                        {member.name || ''} {member.lastname || ''}
                       </Text>
                     </View>
                   ))}
@@ -347,9 +386,7 @@ export const TeamsScreen = () => {
               />
 
               {students.length === 0 ? (
-                <Text style={styles.hint}>
-                  No hay estudiantes. Regístralos primero.
-                </Text>
+                <Text style={styles.hint}>No hay estudiantes. Regístralos primero.</Text>
               ) : (
                 filteredStudents.map((s) => {
                   const selected = formData.studentIds.includes(s.id);
@@ -366,9 +403,7 @@ export const TeamsScreen = () => {
                         <Text style={styles.studentName}>
                           {s.name} {s.lastname}
                         </Text>
-                        {!!s.document && (
-                          <Text style={styles.studentDoc}>{s.document}</Text>
-                        )}
+                        {!!s.document && <Text style={styles.studentDoc}>{s.document}</Text>}
                       </View>
                     </TouchableOpacity>
                   );

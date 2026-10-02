@@ -4,7 +4,7 @@ const swaggerJsdoc = require('swagger-jsdoc');
 // ============================================
 // VARIABLES DE ENTORNO PARA FLEXIBILIDAD
 // ============================================
-const HOST = process.env.HOST || '10.1.202.105';
+const HOST = process.env.HOST || 'localhost';
 const PORT = process.env.PORT || 3000;
 
 const options = {
@@ -146,12 +146,35 @@ const options = {
             id: {
               type: 'integer'
             },
-            category_year: {
-              type: 'integer'
+            name: {
+              type: 'string'
             },
             description: {
               type: 'string'
+            },
+            min_age: {
+              type: 'integer'
+            },
+            max_age: {
+              type: 'integer'
+            },
+            is_active: {
+              type: 'integer',
+              enum: [0, 1]
             }
+          }
+        },
+        Team: {
+          type: 'object',
+          required: ['name'],
+          properties: {
+            id: { type: 'integer' },
+            name: { type: 'string' },
+            category_id: { type: 'integer' },
+            coach_id: { type: 'integer' },
+            logo: { type: 'string' },
+            description: { type: 'string' },
+            is_active: { type: 'integer', enum: [0, 1] }
           }
         },
         Product: {
@@ -219,12 +242,16 @@ const options = {
             description: {
               type: 'string'
             },
-            id_category: {
+            category_id: {
               type: 'integer'
             },
-            tournament_date: {
+            start_date: {
               type: 'string',
-              format: 'date-time'
+              format: 'date'
+            },
+            end_date: {
+              type: 'string',
+              format: 'date'
             },
             location: {
               type: 'string'
@@ -233,11 +260,8 @@ const options = {
               type: 'integer'
             },
             status: {
-              type: 'string'
-            },
-            students: {
-              type: 'array',
-              items: {}
+              type: 'string',
+              enum: ['draft', 'open', 'in_progress', 'finished', 'cancelled']
             }
           }
         },
@@ -270,8 +294,12 @@ const options = {
             emergency_contact_phone: {
               type: 'string'
             },
+            parent_id: {
+              type: 'integer'
+            },
             status: {
-              type: 'string'
+              type: 'string',
+              enum: ['active', 'inactive', 'retired']
             }
           }
         },

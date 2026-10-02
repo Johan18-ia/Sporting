@@ -1,7 +1,4 @@
 // src/views/auth/RegisterView.jsx
-// ====================================================
-// VISTA: REGISTRO DE USUARIOS (SOLO ADMIN/SELLER)
-// ====================================================
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
@@ -9,87 +6,58 @@ import AlertMessage from '../common/AlertMessage'
 import CategoryModel from '../../models/CategoryModel'
 import '../../styles/Register.css'
 
+const initialForm = {
+    name: '',
+    lastname: '',
+    document: '',
+    birth_date: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phone: '',
+    role: 'user',
+    user_type: 'student',
+    category_id: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    address: '',
+    occupation: '',
+    image: '',
+    is_active: 1
+}
+
 const RegisterView = () => {
-    const { currentUser, isAuthenticated } = useAuth()
+    const { currentUser, isAuthenticated, register } = useAuth()
     const navigate = useNavigate()
-
-    // ============================================
-    // ESTADOS
-    // ============================================
-    const [formData, setFormData] = useState({
-        name: '',
-        lastname: '',
-        document: '',
-        birth_date: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phone: '',
-        role: 'user',
-        category_id: '',
-        emergency_contact: '',
-        emergency_phone: '',
-        address: '',
-        image: '',
-        is_active: 1
-    })
-
+    const [formData, setFormData] = useState(initialForm)
     const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
 
-    // ============================================
-    // CARGAR CATEGORÍAS
-    // ============================================
     useEffect(() => {
         const loadCategories = async () => {
             const result = await CategoryModel.getAllCategories()
-            if (result.success) {
-                setCategories(result.data)
-            }
+            if (result.success) setCategories(result.data)
         }
         loadCategories()
     }, [])
 
-    // ============================================
-    // VERIFICAR PERMISOS (SOLO ADMIN/SELLER)
-    // ============================================
     useEffect(() => {
-        if (!isAuthenticated) {
-            // Si no está autenticado, redirigir al login
-            navigate('/login')
-            return
+        if (isAuthenticated && currentUser) {
+            navigate('/dashboard')
         }
+    }, [isAuthenticated, currentUser, navigate])
 
-        // Si está autenticado pero no es admin ni seller
-        if (currentUser && !['admin', 'seller'].includes(currentUser.role)) {
-            setError('No tienes permisos para registrar usuarios. Contacta al administrador.')
-            setTimeout(() => {
-                navigate('/dashboard')
-            }, 3000)
-        }
-    }, [currentUser, isAuthenticated, navigate])
-
-    // ============================================
-    // MANEJAR CAMBIOS EN FORMULARIO
-    // ============================================
     const handleChange = (e) => {
         const { name, value } = e.target
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }))
+        setFormData(prev => ({ ...prev, [name]: value }))
         if (error) setError('')
     }
 
-    // ============================================
-    // MANEJAR ENVÍO DEL FORMULARIO
-    // ============================================
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        // Validar campos obligatorios
         if (!formData.name || !formData.email || !formData.password) {
             setError('Nombre, email y contraseña son obligatorios')
             return
@@ -115,8 +83,7 @@ const RegisterView = () => {
         setError('')
 
         try {
-            // Preparar datos para enviar
-            const userData = {
+            const payload = {
                 name: formData.name,
                 lastname: formData.lastname || '',
                 document: formData.document || null,
@@ -125,52 +92,32 @@ const RegisterView = () => {
                 password: formData.password,
                 phone: formData.phone || '',
                 role: formData.role || 'user',
-                category_id: formData.category_id ? parseInt(formData.category_id) : null,
-                emergency_contact: formData.emergency_contact || null,
-                emergency_phone: formData.emergency_phone || null,
+                user_type: formData.user_type || 'student',
+                category_id: formData.category_id ? Number(formData.category_id) : null,
+                emergency_contact_name: formData.emergency_contact_name || null,
+                emergency_contact_phone: formData.emergency_contact_phone || null,
                 address: formData.address || null,
+                occupation: formData.occupation || null,
                 image: formData.image || '',
-                is_active: formData.is_active
+                is_active: Number(formData.is_active)
             }
 
-            // Llamar al controlador para crear usuario
-            const { register } = useAuth()
-            const result = await register(userData)
+            const result = await register(payload)
 
             if (result.success) {
                 setSuccess('Usuario creado exitosamente')
-                setFormData({
-                    name: '',
-                    lastname: '',
-                    document: '',
-                    birth_date: '',
-                    email: '',
-                    password: '',
-                    confirmPassword: '',
-                    phone: '',
-                    role: 'user',
-                    category_id: '',
-                    emergency_contact: '',
-                    emergency_phone: '',
-                    address: '',
-                    image: '',
-                    is_active: 1
-                })
-
-                setTimeout(() => {
-                    navigate('/dashboard/users')
-                }, 2000)
+                setFormData(initialForm)
+                setTimeout(() => navigate('/login'), 1500)
+            } else {
+                setError(result.error || 'No se pudo crear el usuario')
             }
         } catch (err) {
-            setError(err.error || 'Error al crear el usuario')
+            setError(err?.error || err?.message || 'Error al crear el usuario')
         } finally {
             setLoading(false)
         }
     }
 
-    // ============================================
-    // RENDERIZADO
-    // ============================================
     return (
         <div className="register-container">
             <div className="register-card sporting-register-card">
@@ -179,35 +126,40 @@ const RegisterView = () => {
                 </div>
 
                 <div className="register-header sporting-header">
-                    <h1>Registrar Usuario</h1>
-                    <p>Completa los datos para crear un nuevo usuario</p>
-                    {currentUser && (
-                        <p style={{ fontSize: '0.85rem', color: '#666' }}>
-                            Registrando como <strong>{currentUser.role}</strong>
-                        </p>
-                    )}
+                    <h1>Crear Cuenta</h1>
+                    <p>Registra tu perfil como estudiante o padre de familia</p>
                 </div>
 
-                {error && (
-                    <AlertMessage
-                        type="error"
-                        message={error}
-                        onClose={() => setError('')}
-                    />
-                )}
-
-                {success && (
-                    <AlertMessage
-                        type="success"
-                        message={success}
-                        onClose={() => setSuccess('')}
-                    />
-                )}
+                {error && <AlertMessage type="error" message={error} onClose={() => setError('')} />}
+                {success && <AlertMessage type="success" message={success} onClose={() => setSuccess('')} />}
 
                 <form onSubmit={handleSubmit} className="register-form">
-                    {/* ============================================
-                    DATOS PERSONALES
-                    ============================================ */}
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                        <label>Tipo de usuario</label>
+                        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <input
+                                    type="radio"
+                                    name="user_type"
+                                    value="student"
+                                    checked={formData.user_type === 'student'}
+                                    onChange={handleChange}
+                                />
+                                Estudiante
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <input
+                                    type="radio"
+                                    name="user_type"
+                                    value="parent"
+                                    checked={formData.user_type === 'parent'}
+                                    onChange={handleChange}
+                                />
+                                Padre
+                            </label>
+                        </div>
+                    </div>
+
                     <div className="form-row">
                         <div className="form-group">
                             <label htmlFor="name">Nombre *</label>
@@ -238,39 +190,152 @@ const RegisterView = () => {
                         </div>
                     </div>
 
-                    <div className="form-row">
+                    {formData.user_type === 'student' && (
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="document">Documento</label>
+                                <input
+                                    type="text"
+                                    id="document"
+                                    name="document"
+                                    value={formData.document}
+                                    onChange={handleChange}
+                                    placeholder="Número de identificación"
+                                    disabled={loading}
+                                    className="sporting-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="birth_date">Fecha de nacimiento</label>
+                                <input
+                                    type="date"
+                                    id="birth_date"
+                                    name="birth_date"
+                                    value={formData.birth_date}
+                                    onChange={handleChange}
+                                    disabled={loading}
+                                    className="sporting-input"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.user_type === 'parent' && (
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="document">Documento del padre</label>
+                                <input
+                                    type="text"
+                                    id="document"
+                                    name="document"
+                                    value={formData.document}
+                                    onChange={handleChange}
+                                    placeholder="Número de identificación"
+                                    disabled={loading}
+                                    className="sporting-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="occupation">Ocupación</label>
+                                <input
+                                    type="text"
+                                    id="occupation"
+                                    name="occupation"
+                                    value={formData.occupation}
+                                    onChange={handleChange}
+                                    placeholder="Ej: Empresario"
+                                    disabled={loading}
+                                    className="sporting-input"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.user_type === 'student' && (
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="category_id">Categoría</label>
+                                <select
+                                    id="category_id"
+                                    name="category_id"
+                                    value={formData.category_id}
+                                    onChange={handleChange}
+                                    disabled={loading}
+                                    className="sporting-input"
+                                >
+                                    <option value="">Seleccione una categoría</option>
+                                    {categories.map(category => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.category_year || category.name_year || category.name || category.description}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="address">Dirección</label>
+                                <input
+                                    type="text"
+                                    id="address"
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleChange}
+                                    placeholder="Dirección principal"
+                                    disabled={loading}
+                                    className="sporting-input"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.user_type === 'student' && (
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="emergency_contact_name">Contacto de emergencia</label>
+                                <input
+                                    type="text"
+                                    id="emergency_contact_name"
+                                    name="emergency_contact_name"
+                                    value={formData.emergency_contact_name}
+                                    onChange={handleChange}
+                                    placeholder="Nombre del responsable"
+                                    disabled={loading}
+                                    className="sporting-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="emergency_contact_phone">Teléfono de emergencia</label>
+                                <input
+                                    type="tel"
+                                    id="emergency_contact_phone"
+                                    name="emergency_contact_phone"
+                                    value={formData.emergency_contact_phone}
+                                    onChange={handleChange}
+                                    placeholder="Número de emergencia"
+                                    disabled={loading}
+                                    className="sporting-input"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.user_type === 'parent' && (
                         <div className="form-group">
-                            <label htmlFor="document">Documento</label>
+                            <label htmlFor="address">Dirección</label>
                             <input
                                 type="text"
-                                id="document"
-                                name="document"
-                                value={formData.document}
+                                id="address"
+                                name="address"
+                                value={formData.address}
                                 onChange={handleChange}
-                                placeholder="Número de identificación"
+                                placeholder="Dirección principal"
                                 disabled={loading}
                                 className="sporting-input"
                             />
                         </div>
-                        <div className="form-group">
-                            <label htmlFor="birth_date">Fecha de Nacimiento</label>
-                            <input
-                                type="date"
-                                id="birth_date"
-                                name="birth_date"
-                                value={formData.birth_date}
-                                onChange={handleChange}
-                                disabled={loading}
-                                className="sporting-input"
-                            />
-                        </div>
-                    </div>
+                    )}
 
-                    {/* ============================================
-                    DATOS DE ACCESO
-                    ============================================ */}
                     <div className="form-group">
-                        <label htmlFor="email">Correo Electrónico *</label>
+                        <label htmlFor="email">Correo electrónico *</label>
                         <input
                             type="email"
                             id="email"
@@ -300,7 +365,7 @@ const RegisterView = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="confirmPassword">Confirmar Contraseña *</label>
+                            <label htmlFor="confirmPassword">Confirmar contraseña *</label>
                             <input
                                 type="password"
                                 id="confirmPassword"
@@ -329,9 +394,6 @@ const RegisterView = () => {
                         />
                     </div>
 
-                    {/* ============================================
-                    ROL Y CATEGORÍA
-                    ============================================ */}
                     <div className="form-row">
                         <div className="form-group">
                             <label htmlFor="role">Rol</label>
@@ -345,105 +407,29 @@ const RegisterView = () => {
                             >
                                 <option value="user">Usuario</option>
                                 <option value="seller">Vendedor</option>
-                                {currentUser?.role === 'admin' && (
-                                    <option value="admin">Administrador</option>
-                                )}
-                            </select>
-                            {currentUser?.role === 'seller' && (
-                                <small className="form-hint">Solo puedes crear usuarios o vendedores</small>
-                            )}
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="category_id">Categoría (Año)</label>
-                            <select
-                                id="category_id"
-                                name="category_id"
-                                value={formData.category_id}
-                                onChange={handleChange}
-                                disabled={loading}
-                                className="sporting-input"
-                            >
-                                <option value="">Sin categoría</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>
-                                        {cat.category_year || cat.name_year} - {cat.description || ''}
-                                    </option>
-                                ))}
+                                {currentUser?.role === 'admin' && <option value="admin">Administrador</option>}
                             </select>
                         </div>
-                    </div>
-
-                    {/* ============================================
-                    INFORMACIÓN DE EMERGENCIA
-                    ============================================ */}
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="emergency_contact">Contacto de Emergencia</label>
-                            <input
-                                type="text"
-                                id="emergency_contact"
-                                name="emergency_contact"
-                                value={formData.emergency_contact}
-                                onChange={handleChange}
-                                placeholder="Nombre del contacto"
-                                disabled={loading}
-                                className="sporting-input"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="emergency_phone">Teléfono de Emergencia</label>
-                            <input
-                                type="tel"
-                                id="emergency_phone"
-                                name="emergency_phone"
-                                value={formData.emergency_phone}
-                                onChange={handleChange}
-                                placeholder="Número de emergencia"
-                                disabled={loading}
-                                className="sporting-input"
-                            />
-                        </div>
+                        {currentUser?.role === 'admin' && (
+                            <div className="form-group">
+                                <label htmlFor="is_active">Estado</label>
+                                <select
+                                    id="is_active"
+                                    name="is_active"
+                                    value={formData.is_active}
+                                    onChange={handleChange}
+                                    disabled={loading}
+                                    className="sporting-input"
+                                >
+                                    <option value={1}>Activo</option>
+                                    <option value={0}>Inactivo</option>
+                                </select>
+                            </div>
+                        )}
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="address">Dirección</label>
-                        <input
-                            type="text"
-                            id="address"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            placeholder="Dirección de residencia"
-                            disabled={loading}
-                            className="sporting-input"
-                        />
-                    </div>
-
-                    {/* ============================================
-                    ESTADO DEL USUARIO (SOLO ADMIN)
-                    ============================================ */}
-                    {currentUser?.role === 'admin' && (
-                        <div className="form-group">
-                            <label htmlFor="is_active">Estado del Usuario</label>
-                            <select
-                                id="is_active"
-                                name="is_active"
-                                value={formData.is_active}
-                                onChange={handleChange}
-                                disabled={loading}
-                                className="sporting-input"
-                            >
-                                <option value={1}>Activo</option>
-                                <option value={0}>Inactivo</option>
-                            </select>
-                        </div>
-                    )}
-
-                    {/* ============================================
-                    IMAGEN
-                    ============================================ */}
-                    <div className="form-group">
-                        <label htmlFor="image">URL de Imagen</label>
+                        <label htmlFor="image">URL de imagen</label>
                         <input
                             type="text"
                             id="image"
@@ -456,25 +442,15 @@ const RegisterView = () => {
                         />
                     </div>
 
-                    {/* ============================================
-                    BOTÓN DE ENVÍO
-                    ============================================ */}
-                    <button
-                        type="submit"
-                        className="register-button sporting-register-btn"
-                        disabled={loading}
-                    >
+                    <button type="submit" className="register-button sporting-register-btn" disabled={loading}>
                         {loading ? 'Creando usuario...' : 'Crear Usuario'}
                     </button>
                 </form>
 
-                {/* ============================================
-                FOOTER
-                ============================================ */}
                 <div className="register-footer sporting-footer">
                     <p>
-                        <Link to="/dashboard" className="sporting-link">
-                            ← Volver al Dashboard
+                        <Link to="/login" className="sporting-link">
+                            ← Ya tengo cuenta
                         </Link>
                     </p>
                     <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '10px' }}>

@@ -11,7 +11,7 @@ const User = {};
 // ====================================================
 User.findAll = (result) => {
     const sql = `
-        SELECT id, email, name, lastname, phone, image, role, is_active, created_at, updated_at
+        SELECT id, email, name, lastname, phone, image, role, user_type, is_active, created_at, updated_at
         FROM users ORDER BY id DESC
     `;
     db.query(sql, (err, users) => {
@@ -28,7 +28,7 @@ User.findAll = (result) => {
 // ====================================================
 User.findById = (id, result) => {
     const sql = `
-        SELECT id, email, name, lastname, phone, image, role, is_active, password, created_at, updated_at
+        SELECT id, email, name, lastname, phone, image, role, user_type, is_active, password, created_at, updated_at
         FROM users WHERE id = ?
     `;
     db.query(sql, [id], (err, user) => {
@@ -45,11 +45,11 @@ User.findById = (id, result) => {
 // ====================================================
 User.findByEmail = (email, result) => {
     const sql = `
-        SELECT u.id, u.email, u.name, u.lastname, u.phone, u.image, u.role, u.is_active, u.password,
+        SELECT u.id, u.email, u.name, u.lastname, u.phone, u.image, u.role, u.user_type, u.is_active, u.password,
                sp.id AS student_profile_id,
                sp.category_id AS student_category_id,
                sp.status AS student_status,
-               c.category_year AS student_category_year
+               c.name AS student_category_name
         FROM users u
         LEFT JOIN student_profiles sp ON sp.user_id = u.id
         LEFT JOIN categories c ON c.id = sp.category_id
@@ -71,10 +71,12 @@ User.create = async (user, result) => {
     const hash = await bcrypt.hash(user.password, 10);
     const validRoles = ['admin', 'seller', 'user'];
     const role = validRoles.includes(user.role) ? user.role : 'user';
+    const validUserTypes = ['student', 'parent', 'none'];
+    const userType = validUserTypes.includes(user.user_type) ? user.user_type : 'none';
 
     const sql = `
-        INSERT INTO users(name, lastname, email, password, phone, image, role, is_active, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        INSERT INTO users(name, lastname, email, password, phone, image, role, user_type, is_active, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `;
     db.query(sql, [
         user.name,
@@ -84,6 +86,7 @@ User.create = async (user, result) => {
         user.phone || '',
         user.image || '',
         role,
+        userType,
         user.is_active ?? 1
     ], (err, res) => {
         if (err) {
@@ -129,6 +132,10 @@ User.update = async (user, result) => {
     if (user.role) {
         fields.push("role = ?");
         values.push(user.role);
+    }
+    if (user.user_type) {
+        fields.push("user_type = ?");
+        values.push(user.user_type);
     }
     if (Object.prototype.hasOwnProperty.call(user, 'is_active')) {
         fields.push("is_active = ?");

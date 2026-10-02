@@ -5,6 +5,9 @@ import LoginView from './views/auth/LoginView'
 import RegisterView from './views/auth/RegisterView'
 import DashboardView from './views/dashboard/DashboardView'
 import CatalogoView from './views/public/CatalogoView'
+import TournamentsView from './views/tournaments/TournamentsView'
+import TeamsView from './views/teams/TeamsView'
+import SchedulesView from './views/schedules/SchedulesView'
 import Navbar from './views/common/Navbar'
 import Footer from './views/common/Footer'
 import LoadingSpinner from './views/common/LoadingSpinner'
@@ -41,6 +44,9 @@ function App() {
                 <Route path={ROUTES.CATALOGO} element={<CatalogoView />} />
                 <Route path={ROUTES.LOGIN} element={<LoginView />} />
                 <Route path={ROUTES.REGISTER} element={<RegisterView />} />
+                <Route path={ROUTES.TOURNAMENTS} element={<TournamentsView />} />
+                <Route path={ROUTES.TEAMS} element={<TeamsView />} />
+                <Route path={ROUTES.SCHEDULES} element={<SchedulesView />} />
 
                 <Route
                     path={`${ROUTES.DASHBOARD}/*`}

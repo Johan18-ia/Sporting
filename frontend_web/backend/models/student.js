@@ -39,6 +39,55 @@ Student.getAll = (result) => {
     db.query(sql, (err, rows) => result(err, err ? null : rows));
 };
 
+Student.findProfileByUserId = (userId, result) => {
+    db.query('SELECT * FROM student_profiles WHERE user_id = ? LIMIT 1', [userId], (err, rows) => {
+        result(err, err ? null : rows[0]);
+    });
+};
+
+Student.createProfile = (profile, result) => {
+    const sql = `
+        INSERT INTO student_profiles (user_id, document, birth_date, address, category_id, emergency_contact_name, emergency_contact_phone, parent_id, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+    `;
+    db.query(sql, [
+        profile.user_id,
+        profile.document || null,
+        profile.birth_date || null,
+        profile.address || null,
+        profile.category_id || null,
+        profile.emergency_contact_name || null,
+        profile.emergency_contact_phone || null,
+        profile.parent_id || null,
+        profile.status || 'active'
+    ], (err, res) => {
+        if (err) return result(err, null);
+        result(null, { id: res.insertId, ...profile });
+    });
+};
+
+Student.updateProfile = (profile, result) => {
+    const sql = `
+        UPDATE student_profiles
+        SET document = ?, birth_date = ?, address = ?, category_id = ?, emergency_contact_name = ?, emergency_contact_phone = ?, parent_id = ?, status = ?, updated_at = NOW()
+        WHERE user_id = ?
+    `;
+    db.query(sql, [
+        profile.document || null,
+        profile.birth_date || null,
+        profile.address || null,
+        profile.category_id || null,
+        profile.emergency_contact_name || null,
+        profile.emergency_contact_phone || null,
+        profile.parent_id || null,
+        profile.status || 'active',
+        profile.user_id
+    ], (err, res) => {
+        if (err) return result(err, null);
+        result(null, { user_id: profile.user_id, ...profile, affectedRows: res.affectedRows });
+    });
+};
+
 Student.findById = (id, result) => {
     const sql = `
         SELECT ${selectFields}

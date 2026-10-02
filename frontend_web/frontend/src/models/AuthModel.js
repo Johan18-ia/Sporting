@@ -68,6 +68,7 @@ class AuthModel {
         name: userDataFromApi.name || userDataFromApi.email.split('@')[0],
         lastname: userDataFromApi.lastname || '',
         role: userDataFromApi.role || 'user',
+        user_type: userDataFromApi.user_type || 'none',
         phone: userDataFromApi.phone || '',
         image: userDataFromApi.image || ''
       }
@@ -106,7 +107,15 @@ class AuthModel {
         password: userData.password,
         phone: userData.phone || '',
         image: userData.image || '',
-        role: userData.role || 'user'
+        role: userData.role || 'user',
+        user_type: userData.user_type || 'student',
+        document: userData.document || null,
+        birth_date: userData.birth_date || null,
+        category_id: userData.category_id || null,
+        address: userData.address || null,
+        emergency_contact_name: userData.emergency_contact_name || null,
+        emergency_contact_phone: userData.emergency_contact_phone || null,
+        occupation: userData.occupation || null
       }
       
       const response = await httpService.post(

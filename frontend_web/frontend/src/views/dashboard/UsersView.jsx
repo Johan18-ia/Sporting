@@ -16,6 +16,12 @@ const ROLE_META = {
   customer: { label: 'Cliente', color: '#6B2D2D' }
 }
 
+const USER_TYPE_META = {
+  student: { label: 'Estudiante', color: '#B22222' },
+  parent: { label: 'Padre', color: '#6B2D2D' },
+  none: { label: 'Ninguno', color: '#777' }
+}
+
 const initials = (user) => {
   const a = (user?.name || '').trim().charAt(0)
   const b = (user?.lastname || '').trim().charAt(0)
@@ -33,6 +39,7 @@ const UsersView = () => {
   const [message, setMessage] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('')
+  const [filterType, setFilterType] = useState('')
 
   const canEdit = () =>
     currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
@@ -54,10 +61,12 @@ const UsersView = () => {
 
   const roleLabel = (role) => ROLE_META[role]?.label || role || 'Usuario'
   const roleColor = (role) => ROLE_META[role]?.color || '#8B0000'
+  const userTypeLabel = (type) => USER_TYPE_META[type]?.label || 'Ninguno'
 
   const filteredUsers = useMemo(() => {
     let list = users || []
     if (filterRole) list = list.filter((u) => u.role === filterRole)
+    if (filterType) list = list.filter((u) => (u.user_type || 'none') === filterType)
     if (searchTerm.trim()) {
       const q = searchTerm.trim().toLowerCase()
       list = list.filter(
@@ -71,7 +80,7 @@ const UsersView = () => {
       )
     }
     return list
-  }, [users, searchTerm, filterRole])
+  }, [users, searchTerm, filterRole, filterType])
 
   const stats = useMemo(() => {
     const all = users || []
@@ -248,6 +257,25 @@ const UsersView = () => {
             </button>
           ))}
         </div>
+        <div className="usr-chips" style={{ marginTop: '8px' }}>
+          <button
+            type="button"
+            className={`usr-chip ${!filterType ? 'is-active' : ''}`}
+            onClick={() => setFilterType('')}
+          >
+            Todos los tipos
+          </button>
+          {Object.entries(USER_TYPE_META).map(([key, meta]) => (
+            <button
+              key={key}
+              type="button"
+              className={`usr-chip ${filterType === key ? 'is-active' : ''}`}
+              onClick={() => setFilterType(key)}
+            >
+              {meta.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {filteredUsers.length === 0 ? (
@@ -307,6 +335,14 @@ const UsersView = () => {
                       <span className="usr-row-value">{user.document}</span>
                     </div>
                   )}
+                  <div className="usr-row">
+                    <span className="usr-row-label">Tipo</span>
+                    <span className="usr-row-value">{userTypeLabel(user.user_type || 'none')}</span>
+                  </div>
+                  <div className="usr-row">
+                    <span className="usr-row-label">Estado</span>
+                    <span className="usr-row-value">{isActive ? 'Activo' : 'Inactivo'}</span>
+                  </div>
                   <div className="usr-row">
                     <span className="usr-row-label">ID</span>
                     <span className="usr-row-value">#{user.id}</span>

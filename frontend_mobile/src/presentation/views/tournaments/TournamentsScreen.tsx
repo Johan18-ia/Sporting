@@ -15,12 +15,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 
-const TEAMS_STORAGE_KEY = 'sporting_teams_local';
 const MIN_TEAMS = 10;
 
 interface Tournament {
@@ -31,7 +29,7 @@ interface Tournament {
   status?: string;
   max_teams?: number;
   description?: string;
-  teamIds?: number[];
+  students?: any[];
 }
 
 interface Category {
@@ -40,18 +38,24 @@ interface Category {
   name?: string;
 }
 
-interface LocalTeam {
+interface TeamOption {
   id: number;
   name: string;
   description?: string;
-  studentIds?: number[];
 }
+
+const normalizeArray = (payload: any): any[] => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.data)) return payload.data.data;
+  return [];
+};
 
 export const TournamentsScreen = () => {
   const navigation = useNavigation();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [teams, setTeams] = useState<LocalTeam[]>([]);
+  const [teams, setTeams] = useState<TeamOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -69,20 +73,18 @@ export const TournamentsScreen = () => {
         ApiDelivery.get('/categories')
       ]);
 
-      const tRaw = tournamentsRes.data?.data ?? tournamentsRes.data;
-      const cRaw = categoriesRes.data?.data ?? categoriesRes.data;
-      setTournaments(Array.isArray(tRaw) ? tRaw : []);
-      setCategories(Array.isArray(cRaw) ? cRaw : []);
+      setTournaments(normalizeArray(tournamentsRes.data));
+      setCategories(normalizeArray(categoriesRes.data));
 
       try {
-        const raw = await AsyncStorage.getItem(TEAMS_STORAGE_KEY);
-        const localTeams = raw ? JSON.parse(raw) : [];
-        setTeams(Array.isArray(localTeams) ? localTeams : []);
+        const teamsRes = await ApiDelivery.get('/teams');
+        setTeams(normalizeArray(teamsRes.data));
       } catch {
         setTeams([]);
       }
-    } catch {
-      Alert.alert('Error', 'No se pudieron cargar los datos');
+    } catch (error) {
+      console.error('Error cargando torneos:', error);
+      Alert.alert('Error', 'No se pudieron cargar los datos del backend');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -124,21 +126,21 @@ export const TournamentsScreen = () => {
     }
 
     try {
-      const selectedCategory = categories.find(
-        (c) => String(c.id) === formData.category
-      );
       await ApiDelivery.post('/tournaments/create', {
         name: formData.name.trim(),
-        id_category: selectedCategory?.id,
+        description: formData.slogan || '',
+        id_category: Number(formData.category),
+        tournament_date: new Date().toISOString().slice(0, 10),
+        location: 'Academia Sporting',
         max_teams: formData.teamIds.length,
-        teamIds: formData.teamIds,
-        description: formData.slogan || ''
+        status: 'Pendiente'
       });
       resetForm();
-      loadData();
+      await loadData();
       Alert.alert('Éxito', 'Torneo creado correctamente');
-    } catch {
-      Alert.alert('Error', 'No se pudo crear el torneo');
+    } catch (error: any) {
+      console.error('Error creando torneo:', error);
+      Alert.alert('Error', error?.response?.data?.message || 'No se pudo crear el torneo');
     }
   };
 
@@ -151,16 +153,18 @@ export const TournamentsScreen = () => {
         onPress: async () => {
           try {
             await ApiDelivery.delete(`/tournaments/${id}`);
-            loadData();
+            await loadData();
             Alert.alert('Éxito', 'Torneo eliminado');
-          } catch {
-            Alert.alert('Error', 'No se pudo eliminar');
+          } catch (error: any) {
+            console.error('Error eliminando torneo:', error);
+            Alert.alert('Error', error?.response?.data?.message || 'No se pudo eliminar');
           }
         }
       }
     ]);
   };
-    if (loading) {
+
+  if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={MyColors.primary} />
@@ -239,7 +243,8 @@ export const TournamentsScreen = () => {
           </View>
         )}
       />
-            <Modal visible={modalVisible} animationType="slide" transparent>
+
+      <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
@@ -269,13 +274,9 @@ export const TournamentsScreen = () => {
                     <TouchableOpacity
                       key={cat.id}
                       style={[styles.chip, selected && styles.chipOn]}
-                      onPress={() =>
-                        setFormData((p) => ({ ...p, category: id }))
-                      }
+                      onPress={() => setFormData((p) => ({ ...p, category: id }))}
                     >
-                      <Text
-                        style={[styles.chipText, selected && styles.chipTextOn]}
-                      >
+                      <Text style={[styles.chipText, selected && styles.chipTextOn]}>
                         {label}
                       </Text>
                     </TouchableOpacity>
@@ -289,9 +290,7 @@ export const TournamentsScreen = () => {
                 placeholder="Ej: Pasión y entrega"
                 placeholderTextColor="#aaa"
                 value={formData.slogan}
-                onChangeText={(t) =>
-                  setFormData((p) => ({ ...p, slogan: t }))
-                }
+                onChangeText={(t) => setFormData((p) => ({ ...p, slogan: t }))}
               />
 
               <View style={styles.selectHeader}>
@@ -320,18 +319,13 @@ export const TournamentsScreen = () => {
                       onPress={() => toggleTeam(team.id)}
                     >
                       <View style={[styles.check, selected && styles.checkOn]}>
-                        {selected && (
-                          <Ionicons name="checkmark" size={14} color="#fff" />
-                        )}
+                        {selected && <Ionicons name="checkmark" size={14} color="#fff" />}
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.teamName}>{team.name}</Text>
                         {!!team.description && (
                           <Text style={styles.teamDesc}>{team.description}</Text>
                         )}
-                        <Text style={styles.teamMeta}>
-                          {(team.studentIds || []).length} integrantes
-                        </Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -353,7 +347,9 @@ export const TournamentsScreen = () => {
       </Modal>
     </SafeAreaView>
   );
-};const styles = StyleSheet.create({
+};
+
+const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f4f4' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 10, color: '#8a7a7a' },
@@ -515,7 +511,6 @@ export const TournamentsScreen = () => {
   },
   teamName: { fontSize: 14, fontWeight: '700', color: '#1a1a1a' },
   teamDesc: { fontSize: 12, color: '#9a8585', marginTop: 2 },
-  teamMeta: { fontSize: 11, color: '#8a7a7a', marginTop: 2 },
   hint: { fontSize: 13, color: '#9a8585', marginTop: 8 },
   submitBtn: {
     marginTop: 16,
