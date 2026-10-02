@@ -58,6 +58,13 @@ module.exports = {
     createStudent(req, res) {
         const student = req.body;
 
+        if (req.user?.role === 'user' && Number(student.user_id) !== Number(req.user.id)) {
+            return res.status(403).json({
+                success: false,
+                message: 'Solo puedes registrarte como estudiante con tu propio usuario'
+            });
+        }
+
         if (!student.user_id || !student.document) {
             return res.status(400).json({
                 success: false,

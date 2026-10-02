@@ -17,6 +17,14 @@ export interface User {
     role?: 'admin' | 'seller' | 'user';
     image?: string;
     category_id?: number;
+    isStudent?: boolean;
+    studentProfile?: {
+        id: number;
+        user_id: number;
+        category_id?: number;
+        category_year?: string;
+        status?: string;
+    } | null;
     is_active?: number;
     session_token?: string;
     created_at?: string;

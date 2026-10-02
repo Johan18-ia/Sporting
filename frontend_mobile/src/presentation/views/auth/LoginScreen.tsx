@@ -56,13 +56,13 @@ export const LoginScreen = () => {
             return;
         } else {
                 const err = (result.error || '').toLowerCase();
+                let message = 'Contraseña o correo incorrecto';
                 if (err.includes('desactiv') || err.includes('inactivo')) {
-                    setLocalError('Usuario desactivado. Contacte al administrador');
+                    message = 'Usuario desactivado. Contacte al administrador';
                 } else if (err.includes('token expired') || err.includes('token')) {
-                    setLocalError('Sesión expirada. Por favor inicie sesión de nuevo');
-                } else {
-                    setLocalError('Contraseña o correo incorrecto');
+                    message = 'Sesión expirada. Por favor inicie sesión de nuevo';
                 }
+                setLocalError(message);
         }
     };
 

@@ -1,653 +1,530 @@
-// Encargado: Torneos
-// Descripción: Gestión de torneos, inscripción de estudiantes y control de estado
-// Archivo: src/presentation/views/tournaments/TournamentsScreen.tsx
-// ============================================
 // src/presentation/views/tournaments/TournamentsScreen.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    FlatList,
-    TouchableOpacity,
-    RefreshControl,
-    ActivityIndicator,
-    Alert,
-    Modal,
-    ScrollView,
-    TextInput
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  TextInput
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 
+const TEAMS_STORAGE_KEY = 'sporting_teams_local';
+const MIN_TEAMS = 10;
+
 interface Tournament {
-    id: number;
-    name: string;
-    category: string;
-    status: string;
-    students: any[];
-    max_teams?: number;
-    created_at?: string;
+  id: number;
+  name: string;
+  category?: string;
+  category_year?: string;
+  status?: string;
+  max_teams?: number;
+  description?: string;
+  teamIds?: number[];
 }
 
-interface Student {
-    id: number;
-    name: string;
-    lastname: string;
-    document: string;
+interface Category {
+  id: number;
+  category_year?: string;
+  name?: string;
+}
+
+interface LocalTeam {
+  id: number;
+  name: string;
+  description?: string;
+  studentIds?: number[];
 }
 
 export const TournamentsScreen = () => {
-    const [tournaments, setTournaments] = useState<Tournament[]>([]);
-    const [students, setStudents] = useState<Student[]>([]);
-    const [categories, setCategories] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [enrollModalVisible, setEnrollModalVisible] = useState(false);
-    const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
-    const [selectedStudent, setSelectedStudent] = useState('');
-    
-    const [formData, setFormData] = useState({
-        name: '',
-        category: '',
-        max_teams: ''
+  const navigation = useNavigation();
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [teams, setTeams] = useState<LocalTeam[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    slogan: '',
+    teamIds: [] as number[]
+  });
+
+  const loadData = useCallback(async () => {
+    try {
+      const [tournamentsRes, categoriesRes] = await Promise.all([
+        ApiDelivery.get('/tournaments'),
+        ApiDelivery.get('/categories')
+      ]);
+
+      const tRaw = tournamentsRes.data?.data ?? tournamentsRes.data;
+      const cRaw = categoriesRes.data?.data ?? categoriesRes.data;
+      setTournaments(Array.isArray(tRaw) ? tRaw : []);
+      setCategories(Array.isArray(cRaw) ? cRaw : []);
+
+      try {
+        const raw = await AsyncStorage.getItem(TEAMS_STORAGE_KEY);
+        const localTeams = raw ? JSON.parse(raw) : [];
+        setTeams(Array.isArray(localTeams) ? localTeams : []);
+      } catch {
+        setTeams([]);
+      }
+    } catch {
+      Alert.alert('Error', 'No se pudieron cargar los datos');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const resetForm = () => {
+    setFormData({ name: '', category: '', slogan: '', teamIds: [] });
+    setModalVisible(false);
+  };
+
+  const toggleTeam = (teamId: number) => {
+    setFormData((prev) => {
+      const selected = prev.teamIds.includes(teamId);
+      return {
+        ...prev,
+        teamIds: selected
+          ? prev.teamIds.filter((id) => id !== teamId)
+          : [...prev.teamIds, teamId]
+      };
     });
+  };
 
-    const loadData = async () => {
-        try {
-            const [tournamentsRes, studentsRes, categoriesRes] = await Promise.all([
-                ApiDelivery.get('/tournaments'),
-                ApiDelivery.get('/students'),
-                ApiDelivery.get('/categories')
-            ]);
-
-            setTournaments(tournamentsRes.data?.data || []);
-            setStudents(studentsRes.data?.data || []);
-            setCategories(categoriesRes.data?.data || []);
-        } catch (error) {
-            Alert.alert('Error', 'No se pudieron cargar los datos');
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-};
-
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const onRefresh = () => {
-        setRefreshing(true);
-        loadData();
-    };
-
-    const handleSubmit = async () => {
-        if (!formData.name || !formData.category) {
-            Alert.alert('Error', 'Nombre y categoría son requeridos');
-            return;
-        }
-
-        try {
-            const selectedCategory = categories.find((category) => String(category.id) === formData.category);
-            await ApiDelivery.post('/tournaments/create', {
-                name: formData.name,
-                id_category: selectedCategory?.id,
-                max_teams: parseInt(formData.max_teams) || 4
-            });
-            resetForm();
-            loadData();
-            Alert.alert('Éxito', 'Torneo creado correctamente');
-        } catch (error) {
-            Alert.alert('Error', 'No se pudo crear el torneo');
-        }
-    };
-
-    const handleEnrollStudent = async () => {
-        if (!selectedTournament || !selectedStudent) {
-            Alert.alert('Error', 'Selecciona un torneo y un estudiante');
-            return;
-        }
-
-        try {
-            const student = students.find(s => s.id === parseInt(selectedStudent));
-            await ApiDelivery.post(`/tournaments/${selectedTournament.id}/enroll`, {
-                studentId: parseInt(selectedStudent),
-                studentName: `${student?.name} ${student?.lastname}`,
-                studentDocument: student?.document
-            });
-            setEnrollModalVisible(false);
-            setSelectedStudent('');
-            loadData();
-            Alert.alert('Éxito', 'Estudiante inscrito en el torneo');
-        } catch (error) {
-            Alert.alert('Error', 'No se pudo inscribir al estudiante');
-        }
-    };
-
-    const handleDelete = (id: number, name: string) => {
-        Alert.alert(
-            'Eliminar Torneo',
-            `¿Estás seguro de eliminar "${name}"?`,
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Eliminar',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await ApiDelivery.delete(`/tournaments/${id}`);
-                            loadData();
-                            Alert.alert('Éxito', 'Torneo eliminado');
-                        } catch (error) {
-                            Alert.alert('Error', 'No se pudo eliminar el torneo');
-                        }
-                    }
-                }
-            ]
-        );
-    };
-
-    const resetForm = () => {
-        setFormData({ name: '', category: '', max_teams: '' });
-        setModalVisible(false);
-    };
-
-    const getStatusColor = (status: string) => {
-        const colors: Record<string, string> = {
-            'Activo': '#28a745',
-            'Inscripciones': '#f59e0b',
-            'En Progreso': '#2196F3',
-            'Finalizado': '#6c757d'
-        };
-        return colors[status] || '#6c757d';
-    };
-
-    const renderTournamentItem = ({ item }: { item: Tournament }) => (
-        <View style={styles.tournamentCard}>
-            <View style={styles.tournamentHeader}>
-                <View style={styles.tournamentTitle}>
-                    <Text style={styles.tournamentName}>{item.name}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status || 'Activo') }]}>
-                        <Text style={styles.statusText}>{item.status || 'Activo'}</Text>
-                    </View>
-                </View>
-                <View style={styles.tournamentActions}>
-                    <TouchableOpacity
-                        style={styles.enrollButton}
-                        onPress={() => {
-                            setSelectedTournament(item);
-                            setEnrollModalVisible(true);
-                        }}
-                    >
-                        <Ionicons name="person-add" size={18} color="#fff" />
-                        <Text style={styles.enrollButtonText}>Inscribir</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDelete(item.id, item.name)} style={styles.actionButton}>
-                        <Ionicons name="trash-outline" size={20} color="#dc3545" />
-                    </TouchableOpacity>
-                </View>
-            </View>
-            
-            <View style={styles.tournamentInfo}>
-                <Text style={styles.tournamentCategory}>
-                    <Ionicons name="pricetag-outline" size={14} color="#666" />
-                    {' '}Categoría: {item.category || 'N/A'}
-                </Text>
-                <Text style={styles.tournamentStudents}>
-                    <Ionicons name="people-outline" size={14} color="#666" />
-                    {' '}{item.students?.length || 0} estudiantes inscritos
-                </Text>
-            </View>
-
-            {item.students && item.students.length > 0 && (
-                <View style={styles.studentsList}>
-                    <Text style={styles.studentsTitle}>Estudiantes inscritos:</Text>
-                    <View style={styles.studentsChips}>
-                        {item.students.map((s, index) => (
-                            <View key={index} style={styles.studentChip}>
-                                <Text style={styles.studentChipText}>
-                                    {s.name || `Estudiante ${index + 1}`}
-                                </Text>
-                            </View>
-                        ))}
-                    </View>
-                </View>
-            )}
-        </View>
-    );
-
-    if (loading) {
-        return (
-            <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" color={MyColors.primary} />
-                <Text style={styles.loadingText}>Cargando torneos...</Text>
-            </View>
-        );
+  const handleSubmit = async () => {
+    if (!formData.name.trim() || !formData.category) {
+      Alert.alert('Error', 'Nombre y categoría son requeridos');
+      return;
+    }
+    if (formData.teamIds.length < MIN_TEAMS) {
+      Alert.alert(
+        'Equipos insuficientes',
+        `Selecciona al menos ${MIN_TEAMS} equipos (llevas ${formData.teamIds.length}).`
+      );
+      return;
     }
 
+    try {
+      const selectedCategory = categories.find(
+        (c) => String(c.id) === formData.category
+      );
+      await ApiDelivery.post('/tournaments/create', {
+        name: formData.name.trim(),
+        id_category: selectedCategory?.id,
+        max_teams: formData.teamIds.length,
+        teamIds: formData.teamIds,
+        description: formData.slogan || ''
+      });
+      resetForm();
+      loadData();
+      Alert.alert('Éxito', 'Torneo creado correctamente');
+    } catch {
+      Alert.alert('Error', 'No se pudo crear el torneo');
+    }
+  };
+
+  const handleDelete = (id: number, name: string) => {
+    Alert.alert('Eliminar torneo', `¿Eliminar "${name}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Eliminar',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await ApiDelivery.delete(`/tournaments/${id}`);
+            loadData();
+            Alert.alert('Éxito', 'Torneo eliminado');
+          } catch {
+            Alert.alert('Error', 'No se pudo eliminar');
+          }
+        }
+      }
+    ]);
+  };
+    if (loading) {
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Torneos ({tournaments.length})</Text>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => {
-                        resetForm();
-                        setModalVisible(true);
-                    }}
-                >
-                    <Ionicons name="add" size={24} color="#fff" />
-                </TouchableOpacity>
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={MyColors.primary} />
+        <Text style={styles.loadingText}>Cargando torneos...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={22} color="#1a1a1a" />
+        </TouchableOpacity>
+        <View style={styles.headerText}>
+          <Text style={styles.headerTitle}>Torneos</Text>
+          <Text style={styles.headerSub}>{tournaments.length} torneo(s)</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => setModalVisible(true)}
+        >
+          <Ionicons name="add" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={tournaments}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              loadData();
+            }}
+            colors={[MyColors.primary]}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Ionicons name="trophy-outline" size={40} color="#c4b0b0" />
+            <Text style={styles.emptyTitle}>Sin torneos</Text>
+            <Text style={styles.emptyText}>
+              Crea un torneo con al menos {MIN_TEAMS} equipos.
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <View style={styles.cardTop}>
+              <View style={styles.iconWrap}>
+                <Ionicons name="trophy" size={22} color={MyColors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardTitle}>{item.name}</Text>
+                <Text style={styles.cardMeta}>
+                  {item.category_year || item.category || 'Sin categoría'}
+                  {item.max_teams ? ` · ${item.max_teams} equipos` : ''}
+                </Text>
+                {!!item.description && (
+                  <Text style={styles.cardSlogan} numberOfLines={2}>
+                    "{item.description}"
+                  </Text>
+                )}
+                <Text style={styles.status}>{item.status || 'Activo'}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => handleDelete(item.id, item.name)}
+                style={styles.actionBtn}
+              >
+                <Ionicons name="trash-outline" size={20} color="#c82333" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      />
+            <Modal visible={modalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Nuevo torneo</Text>
+              <TouchableOpacity onPress={resetForm}>
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
             </View>
 
-            <FlatList
-                data={tournaments}
-                renderItem={renderTournamentItem}
-                keyExtractor={(item) => item.id.toString()}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[MyColors.primary]} />
+            <ScrollView keyboardShouldPersistTaps="handled">
+              <Text style={styles.label}>Nombre *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre del torneo"
+                placeholderTextColor="#aaa"
+                value={formData.name}
+                onChangeText={(t) => setFormData((p) => ({ ...p, name: t }))}
+              />
+
+              <Text style={styles.label}>Categoría *</Text>
+              <View style={styles.chips}>
+                {categories.map((cat) => {
+                  const id = String(cat.id);
+                  const selected = formData.category === id;
+                  const label = cat.category_year || cat.name || id;
+                  return (
+                    <TouchableOpacity
+                      key={cat.id}
+                      style={[styles.chip, selected && styles.chipOn]}
+                      onPress={() =>
+                        setFormData((p) => ({ ...p, category: id }))
+                      }
+                    >
+                      <Text
+                        style={[styles.chipText, selected && styles.chipTextOn]}
+                      >
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={styles.label}>Eslogan (opcional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ej: Pasión y entrega"
+                placeholderTextColor="#aaa"
+                value={formData.slogan}
+                onChangeText={(t) =>
+                  setFormData((p) => ({ ...p, slogan: t }))
                 }
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="trophy-outline" size={60} color="#ccc" />
-                        <Text style={styles.emptyText}>No hay torneos registrados</Text>
-                    </View>
-                }
-            />
+              />
 
-            {/* Modal para crear torneo */}
-            <Modal
-                visible={modalVisible}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={resetForm}
+              <View style={styles.selectHeader}>
+                <Text style={styles.label}>Equipos * (mín. {MIN_TEAMS})</Text>
+                <Text
+                  style={[
+                    styles.selectedCount,
+                    formData.teamIds.length >= MIN_TEAMS && { color: '#0ea371' }
+                  ]}
+                >
+                  {formData.teamIds.length} seleccionados
+                </Text>
+              </View>
+
+              {teams.length === 0 ? (
+                <Text style={styles.hint}>
+                  No hay equipos. Créalos primero en la sección Equipos.
+                </Text>
+              ) : (
+                teams.map((team) => {
+                  const selected = formData.teamIds.includes(team.id);
+                  return (
+                    <TouchableOpacity
+                      key={team.id}
+                      style={[styles.teamRow, selected && styles.teamRowOn]}
+                      onPress={() => toggleTeam(team.id)}
+                    >
+                      <View style={[styles.check, selected && styles.checkOn]}>
+                        {selected && (
+                          <Ionicons name="checkmark" size={14} color="#fff" />
+                        )}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.teamName}>{team.name}</Text>
+                        {!!team.description && (
+                          <Text style={styles.teamDesc}>{team.description}</Text>
+                        )}
+                        <Text style={styles.teamMeta}>
+                          {(team.studentIds || []).length} integrantes
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })
+              )}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={[
+                styles.submitBtn,
+                formData.teamIds.length < MIN_TEAMS && { opacity: 0.5 }
+              ]}
+              onPress={handleSubmit}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Nuevo Torneo</Text>
-                            <TouchableOpacity onPress={resetForm}>
-                                <Ionicons name="close" size={24} color="#333" />
-                            </TouchableOpacity>
-                        </View>
-
-                        <ScrollView>
-                            <View style={styles.modalBody}>
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Nombre del Torneo *</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Ej: Copa Sporting 2026"
-                                        value={formData.name}
-                                        onChangeText={(text) => setFormData({ ...formData, name: text })}
-                                    />
-                                </View>
-
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Categoría *</Text>
-                                    <View style={styles.categoryGrid}>
-                                        {categories.map((cat) => (
-                                            <TouchableOpacity
-                                                key={cat.id}
-                                                style={[
-                                                    styles.categoryOption,
-                                                    formData.category === String(cat.id) && styles.categoryOptionSelected
-                                                ]}
-                                                onPress={() => setFormData({ ...formData, category: String(cat.id) })}
-                                            >
-                                                <Text style={[
-                                                    styles.categoryOptionText,
-                                                    formData.category === String(cat.id) && styles.categoryOptionTextSelected
-                                                ]}>
-                                                    {cat.category_year}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </View>
-                                </View>
-
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Número de Equipos</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="4"
-                                        value={formData.max_teams}
-                                        onChangeText={(text) => setFormData({ ...formData, max_teams: text })}
-                                        keyboardType="numeric"
-                                    />
-                                </View>
-
-                                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                                    <Text style={styles.submitButtonText}>Crear Torneo</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </ScrollView>
-                    </View>
-                </View>
-            </Modal>
-
-            {/* Modal para inscribir estudiante */}
-            <Modal
-                visible={enrollModalVisible}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={() => {
-                    setEnrollModalVisible(false);
-                    setSelectedStudent('');
-                }}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>
-                                Inscribir Estudiante
-                                {selectedTournament && ` - ${selectedTournament.name}`}
-                            </Text>
-                            <TouchableOpacity onPress={() => {
-                                setEnrollModalVisible(false);
-                                setSelectedStudent('');
-                            }}>
-                                <Ionicons name="close" size={24} color="#333" />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.modalBody}>
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Seleccionar Estudiante *</Text>
-                                <ScrollView style={styles.studentList}>
-                                    {students.map((student) => (
-                                        <TouchableOpacity
-                                            key={student.id}
-                                            style={[
-                                                styles.studentOption,
-                                                selectedStudent === String(student.id) && styles.studentOptionSelected
-                                            ]}
-                                            onPress={() => setSelectedStudent(String(student.id))}
-                                        >
-                                            <Text style={[
-                                                styles.studentOptionText,
-                                                selectedStudent === String(student.id) && styles.studentOptionTextSelected
-                                            ]}>
-                                                {student.name} {student.lastname} - {student.document}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                    {students.length === 0 && (
-                                        <Text style={styles.noStudentsText}>No hay estudiantes registrados</Text>
-                                    )}
-                                </ScrollView>
-                            </View>
-
-                            <TouchableOpacity style={styles.submitButton} onPress={handleEnrollStudent}>
-                                <Text style={styles.submitButtonText}>Inscribir Estudiante</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+              <Text style={styles.submitBtnText}>Crear torneo</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-    );
-};
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    centerContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    },
-    loadingText: {
-        marginTop: 12,
-        fontSize: 16,
-        color: '#666',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    addButton: {
-        backgroundColor: MyColors.primary,
-        width: 40,
-        height: 40,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    listContent: {
-        padding: 12,
-    },
-    tournamentCard: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    tournamentHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    tournamentTitle: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 8,
-    },
-    tournamentName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    statusBadge: {
-        paddingHorizontal: 10,
-        paddingVertical: 2,
-        borderRadius: 12,
-    },
-    statusText: {
-        fontSize: 11,
-        color: '#fff',
-        fontWeight: '600',
-    },
-    tournamentActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    enrollButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#2196F3',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 6,
-        gap: 4,
-    },
-    enrollButtonText: {
-        fontSize: 12,
-        color: '#fff',
-        fontWeight: '600',
-    },
-    actionButton: {
-        padding: 4,
-    },
-    tournamentInfo: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-        marginBottom: 10,
-    },
-    tournamentCategory: {
-        fontSize: 13,
-        color: '#666',
-    },
-    tournamentStudents: {
-        fontSize: 13,
-        color: '#666',
-    },
-    studentsList: {
-        borderTopWidth: 1,
-        borderTopColor: '#eee',
-        paddingTop: 10,
-    },
-    studentsTitle: {
-        fontSize: 12,
-        color: '#666',
-        marginBottom: 8,
-        fontWeight: '500',
-    },
-    studentsChips: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 6,
-    },
-    studentChip: {
-        backgroundColor: '#e3f2fd',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    studentChipText: {
-        fontSize: 12,
-        color: '#0d47a1',
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        paddingVertical: 40,
-    },
-    emptyText: {
-        fontSize: 16,
-        color: '#999',
-        marginTop: 12,
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-end',
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        maxHeight: '80%',
-        paddingBottom: 30,
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    modalBody: {
-        padding: 16,
-    },
-    inputGroup: {
-        marginBottom: 16,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 4,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        fontSize: 15,
-        backgroundColor: '#f8f9fa',
-    },
-    categoryGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-    },
-    categoryOption: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    categoryOptionSelected: {
-        backgroundColor: MyColors.primary,
-        borderColor: MyColors.primary,
-    },
-    categoryOptionText: {
-        fontSize: 13,
-        color: '#666',
-    },
-    categoryOptionTextSelected: {
-        color: '#fff',
-        fontWeight: '600',
-    },
-    submitButton: {
-        backgroundColor: MyColors.primary,
-        borderRadius: 8,
-        paddingVertical: 14,
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    submitButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    studentList: {
-        maxHeight: 250,
-    },
-    studentOption: {
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    studentOptionSelected: {
-        backgroundColor: MyColors.primary + '20',
-    },
-    studentOptionText: {
-        fontSize: 14,
-        color: '#333',
-    },
-    studentOptionTextSelected: {
-        color: MyColors.primary,
-        fontWeight: '600',
-    },
-    noStudentsText: {
-        textAlign: 'center',
-        color: '#999',
-        paddingVertical: 20,
-    },
+      </Modal>
+    </SafeAreaView>
+  );
+};const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f7f4f4' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 10, color: '#8a7a7a' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139,0,0,0.06)',
+    gap: 8
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#f5f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  headerText: { flex: 1, minWidth: 0 },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: '#1a1a1a' },
+  headerSub: { fontSize: 12, color: '#9a8585', marginTop: 2 },
+  addBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: MyColors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  list: { padding: 16, paddingBottom: 40 },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(139,0,0,0.06)'
+  },
+  cardTop: { flexDirection: 'row', alignItems: 'flex-start' },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(139,0,0,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12
+  },
+  cardTitle: { fontSize: 16, fontWeight: '800', color: '#1a1a1a' },
+  cardMeta: { fontSize: 13, color: '#8a7a7a', marginTop: 2 },
+  cardSlogan: {
+    fontSize: 12,
+    color: '#9a8585',
+    fontStyle: 'italic',
+    marginTop: 4
+  },
+  status: { fontSize: 12, fontWeight: '700', color: '#0ea371', marginTop: 6 },
+  actionBtn: { padding: 6 },
+  empty: { alignItems: 'center', paddingTop: 60 },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginTop: 12
+  },
+  emptyText: {
+    fontSize: 13,
+    color: '#9a8585',
+    marginTop: 6,
+    textAlign: 'center'
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end'
+  },
+  modalCard: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '92%',
+    padding: 20
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16
+  },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: '#1a1a1a' },
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#3a2a2a',
+    marginBottom: 6,
+    marginTop: 12
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: 'rgba(139,0,0,0.12)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#1a1a1a',
+    backgroundColor: '#faf8f8'
+  },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f5f0f0',
+    borderWidth: 1,
+    borderColor: 'rgba(139,0,0,0.1)'
+  },
+  chipOn: {
+    backgroundColor: MyColors.primary,
+    borderColor: MyColors.primary
+  },
+  chipText: { fontSize: 13, fontWeight: '600', color: '#6b5555' },
+  chipTextOn: { color: '#fff' },
+  selectHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4
+  },
+  selectedCount: { fontSize: 12, fontWeight: '700', color: '#c82333' },
+  teamRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginTop: 8,
+    backgroundColor: '#faf8f8',
+    gap: 10
+  },
+  teamRowOn: { backgroundColor: 'rgba(139,0,0,0.08)' },
+  check: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#c4b0b0',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  checkOn: {
+    backgroundColor: MyColors.primary,
+    borderColor: MyColors.primary
+  },
+  teamName: { fontSize: 14, fontWeight: '700', color: '#1a1a1a' },
+  teamDesc: { fontSize: 12, color: '#9a8585', marginTop: 2 },
+  teamMeta: { fontSize: 11, color: '#8a7a7a', marginTop: 2 },
+  hint: { fontSize: 13, color: '#9a8585', marginTop: 8 },
+  submitBtn: {
+    marginTop: 16,
+    backgroundColor: MyColors.primary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center'
+  },
+  submitBtnText: { color: '#fff', fontWeight: '800', fontSize: 15 }
 });
+
+export default TournamentsScreen;

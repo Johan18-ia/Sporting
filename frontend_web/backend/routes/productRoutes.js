@@ -28,8 +28,6 @@ const {
  *   get:
  *     tags: [Products]
  *     summary: Obtener todos los productos
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de productos obtenida exitosamente
@@ -54,8 +52,6 @@ router.get(
  *   get:
  *     tags: [Products]
  *     summary: Obtener producto por ID
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id

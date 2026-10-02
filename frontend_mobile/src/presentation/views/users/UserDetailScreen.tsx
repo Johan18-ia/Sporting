@@ -125,7 +125,7 @@ export const UserDetailScreen = () => {
     const getRoleText = (role: string) => {
         switch (role) {
             case 'admin': return 'Administrador';
-            case 'seller': return 'Vendedor';
+            case 'seller': return 'Moderador';
             default: return 'Usuario';
         }
     };

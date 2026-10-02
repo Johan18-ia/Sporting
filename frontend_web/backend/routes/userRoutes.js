@@ -8,7 +8,7 @@ const router = express.Router();
 // Importa el controlador de usuarios
 const userController = require('../controllers/userController');
 // Importa los middlewares de autenticación y roles
-const { verifyToken, authorizeRoles } = require('../middlewares/authMiddleware');
+const { verifyToken, optionalVerifyToken, authorizeRoles } = require('../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -41,16 +41,14 @@ const { verifyToken, authorizeRoles } = require('../middlewares/authMiddleware')
 router.post('/login', userController.login);
 
 // ====================================================
-// CREAR USUARIO (SOLO ADMIN/SELLER)
+// REGISTRO DE USUARIO (PÚBLICO)
 // ====================================================
 /**
  * @swagger
  * /api/users/create:
  *   post:
  *     tags: [Users]
- *     summary: Crear usuario (solo admin/seller)
- *     security:
- *       - bearerAuth: []
+ *     summary: Registrar usuario
  *     requestBody:
  *       required: true
  *       content:
@@ -102,12 +100,7 @@ router.post('/login', userController.login);
  *       409:
  *         description: Email ya registrado
  */
-router.post(
-    '/create',
-    verifyToken,
-    authorizeRoles(['admin', 'seller']),
-    userController.register
-);
+router.post('/create', optionalVerifyToken, userController.register);
 
 // ====================================================
 // LISTAR TODOS LOS USUARIOS

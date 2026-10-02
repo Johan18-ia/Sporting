@@ -25,6 +25,7 @@ export const ProfileScreen = () => {
     const navigation = useNavigation<ProfileNavigationProp>();
     const { user, logout, loading } = useAuth();
     const canManageAdmin = user?.role === 'admin' || user?.role === 'seller';
+    const isStudent = user?.role === 'user' && (user?.isStudent === true || Boolean(user?.studentProfile));
     const [logoutLoading, setLogoutLoading] = useState(false);
 
     const handleLogout = () => {
@@ -62,7 +63,11 @@ export const ProfileScreen = () => {
     );
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+        >
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.avatarContainer}>
@@ -77,8 +82,9 @@ export const ProfileScreen = () => {
                 <Text style={styles.userEmail}>{user?.email}</Text>
                 <View style={styles.roleBadge}>
                     <Text style={styles.roleText}>
-                        {user?.role === 'admin' ? 'Administrador' :
-                         user?.role === 'seller' ? 'Vendedor' : 'Usuario'}
+                         {user?.role === 'admin' ? 'Administrador' :
+                         user?.role === 'seller' ? 'Moderador' :
+                         isStudent ? 'Estudiante' : 'Usuario'}
                     </Text>
                 </View>
             </View>
@@ -102,6 +108,14 @@ export const ProfileScreen = () => {
                     label="Notificaciones"
                     onPress={() => Alert.alert('Notificaciones', 'Esta funcionalidad estará disponible pronto.')}
                 />
+
+                {!canManageAdmin && user?.role === 'user' && !isStudent && (
+                    <MenuItem
+                        icon="school-outline"
+                        label="Registrarme como estudiante"
+                        onPress={() => navigation.navigate('StudentForm', { mode: 'create', selfRegister: true })}
+                    />
+                )}
 
                 {canManageAdmin && (
                     <>
@@ -156,6 +170,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+    },
+    scrollContent: {
+        paddingBottom: 110,
     },
     header: {
         backgroundColor: '#fff',

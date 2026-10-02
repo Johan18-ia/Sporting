@@ -1,0 +1,108 @@
+.usr-page { width: 100%; max-width: none; }
+.usr-status { padding: 40px; text-align: center; color: #8a7a7a; }
+.usr-denied { text-align: center; padding: 48px 20px; background: #fff; border-radius: 16px; }
+.usr-denied h3 { color: #8b0000; margin: 0 0 8px; }
+
+.usr-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.usr-stat {
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-align: center;
+  border: 1px solid rgba(139, 0, 0, 0.06);
+  box-shadow: 0 3px 12px rgba(139, 0, 0, 0.04);
+}
+.usr-stat-value { display: block; font-size: 22px; font-weight: 800; color: #8b0000; line-height: 1.1; }
+.usr-stat-label { font-size: 11px; color: #9a8585; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+
+.usr-toolbar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.usr-search {
+  width: 100%; max-width: 420px; padding: 11px 16px; border-radius: 12px;
+  border: 1px solid rgba(139, 0, 0, 0.12); font-size: 14px; background: #fff;
+  outline: none; box-sizing: border-box;
+}
+.usr-search:focus { border-color: #8b0000; }
+
+.usr-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.usr-chip {
+  padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(139, 0, 0, 0.12);
+  background: #fff; color: #6b5555; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.usr-chip:hover { border-color: rgba(139, 0, 0, 0.3); }
+.usr-chip.is-active { background: #8b0000; border-color: #8b0000; color: #fff; }
+
+.usr-empty {
+  text-align: center; padding: 48px 20px; background: #fff; border-radius: 16px;
+  border: 1px dashed rgba(139, 0, 0, 0.15);
+}
+.usr-empty-title { margin: 0 0 6px; font-size: 16px; font-weight: 700; color: #1a1a1a; }
+.usr-empty-text { margin: 0; font-size: 13px; color: #8a7a7a; }
+
+.usr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px; width: 100%;
+}
+
+.usr-card {
+  background: #fff; border-radius: 16px; padding: 18px;
+  border: 1px solid rgba(139, 0, 0, 0.06);
+  box-shadow: 0 4px 16px rgba(139, 0, 0, 0.05);
+  display: flex; flex-direction: column; gap: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.usr-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139, 0, 0, 0.1); }
+
+.usr-card-top { display: flex; align-items: flex-start; gap: 12px; }
+.usr-avatar {
+  width: 48px; height: 48px; border-radius: 14px; color: #fff;
+  font-weight: 800; font-size: 15px; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.usr-card-head { flex: 1; min-width: 0; }
+.usr-card-name {
+  margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #1a1a1a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.usr-role-badge {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+}
+
+.usr-status-pill {
+  flex-shrink: 0; border: none; border-radius: 20px; padding: 4px 10px;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+}
+.usr-status-pill.is-on { background: rgba(16, 185, 129, 0.15); color: #059669; }
+.usr-status-pill.is-off { background: rgba(139, 0, 0, 0.1); color: #8b0000; }
+.usr-status-pill:disabled { opacity: 0.6; cursor: default; }
+
+.usr-card-rows {
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 0;
+  border-top: 1px solid #f0eaea; border-bottom: 1px solid #f0eaea;
+}
+.usr-row { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+.usr-row-label { color: #9a8585; font-weight: 500; flex-shrink: 0; }
+.usr-row-value { color: #3a2a2a; font-weight: 600; text-align: right; word-break: break-all; }
+
+.usr-card-actions { display: flex; gap: 8px; }
+.usr-btn {
+  flex: 1; padding: 9px 8px; border-radius: 10px; border: none;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.usr-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.usr-btn-view { background: rgba(139, 0, 0, 0.06); color: #6b5555; }
+.usr-btn-view:hover { background: rgba(139, 0, 0, 0.12); }
+.usr-btn-edit { background: rgba(139, 0, 0, 0.08); color: #8b0000; }
+.usr-btn-edit:hover:not(:disabled) { background: rgba(139, 0, 0, 0.14); }
+.usr-btn-del { background: rgba(220, 53, 69, 0.08); color: #c82333; }
+.usr-btn-del:hover:not(:disabled) { background: rgba(220, 53, 69, 0.14); }
+
+@media (max-width: 640px) {
+  .usr-grid { grid-template-columns: 1fr; }
+}

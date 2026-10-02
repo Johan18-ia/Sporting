@@ -78,6 +78,15 @@ module.exports = {
                     image: myUser.image,
                     role: myUser.role,
                     is_active: isActive,
+                    studentProfile: myUser.student_profile_id ? {
+                        id: myUser.student_profile_id,
+                        user_id: myUser.id,
+                        category_id: myUser.student_category_id,
+                        category_year: myUser.student_category_year,
+                        status: myUser.student_status
+                    } : null,
+                    isStudent: Boolean(myUser.student_profile_id),
+                    category_id: myUser.student_category_id || null,
                     session_token: `JWT ${token}`,
                 };
 
@@ -156,34 +165,12 @@ module.exports = {
     },
 
     // ====================================================
-    // REGISTRAR USUARIO (SOLO ADMIN/SELLER)
+    // REGISTRAR USUARIO (PÚBLICO)
     // ====================================================
     register(req, res) {
         // Obtiene datos del usuario desde el body
         const user = req.body;
-
-        // ============================================
-        // VALIDACIONES DE PERMISOS
-        // ============================================
-        // Verificar que el usuario autenticado tenga permiso
-        // (el middleware ya verificó el rol, pero lo reforzamos)
         const currentUserRole = req.user?.role;
-
-        // Si no hay usuario autenticado, denegar
-        if (!currentUserRole) {
-            return res.status(403).json({
-                success: false,
-                message: "No autorizado para crear usuarios",
-            });
-        }
-
-        // Solo admin y seller pueden crear usuarios
-        if (!['admin', 'seller'].includes(currentUserRole)) {
-            return res.status(403).json({
-                success: false,
-                message: "Solo administradores y vendedores pueden crear usuarios",
-            });
-        }
 
         // ============================================
         // VALIDACIONES DE CAMPOS OBLIGATORIOS
@@ -216,23 +203,30 @@ module.exports = {
             });
         }
 
-        // ============================================
-        // VALIDACIÓN DE ROL (seguridad)
-        // ============================================
-        // Si el usuario intenta crear un admin, solo el admin puede hacerlo
-        if (user.role === 'admin' && currentUserRole !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: "Solo un administrador puede crear otro administrador",
-            });
-        }
+        // El registro público solo puede crear usuarios normales.
+        if (!currentUserRole) {
+            user.role = 'user';
+        } else {
+            if (!['admin', 'seller'].includes(currentUserRole)) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Solo administradores y vendedores pueden crear usuarios",
+                });
+            }
 
-        // Si el usuario intenta crear un seller, admin o seller pueden hacerlo
-        if (user.role === 'seller' && !['admin', 'seller'].includes(currentUserRole)) {
-            return res.status(403).json({
-                success: false,
-                message: "No tiene permisos para crear vendedores",
-            });
+            if (user.role === 'admin' && currentUserRole !== 'admin') {
+                return res.status(403).json({
+                    success: false,
+                    message: "Solo un administrador puede crear otro administrador",
+                });
+            }
+
+            if (user.role === 'seller' && !['admin', 'seller'].includes(currentUserRole)) {
+                return res.status(403).json({
+                    success: false,
+                    message: "No tiene permisos para crear vendedores",
+                });
+            }
         }
 
         // ============================================

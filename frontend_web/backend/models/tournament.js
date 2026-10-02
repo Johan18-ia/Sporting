@@ -89,5 +89,16 @@ Tournament.enroll = (tournamentId, studentId, result) => {
         else result(null, { id: res.insertId, tournament_id: tournamentId, student_id: studentId });
     });
 };
+
+Tournament.delete = (tournamentId, result) => {
+    db.query('DELETE FROM tournament_students WHERE tournament_id = ?', [tournamentId], (err) => {
+        if (err) return result(err, null);
+
+        db.query('DELETE FROM tournaments WHERE id = ?', [tournamentId], (deleteErr, res) => {
+            if (deleteErr) return result(deleteErr, null);
+            result(null, res);
+        });
+    });
+};
 // Exporta el modelo
 module.exports = Tournament;

@@ -1,19 +1,37 @@
-import { useState, useEffect } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import AuthModel from '../models/AuthModel'
 import storageService from '../services/storageService'
 
-const useAuth = () => {
+const AuthContext = createContext(undefined)
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(() => storageService.getUser())
   const [currentUser, setCurrentUser] = useState(() => storageService.getUser())
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(storageService.getToken()))
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
+  const syncAuthState = () => {
     const savedUser = storageService.getUser()
     const hasToken = Boolean(storageService.getToken())
+    setUser(savedUser)
     setCurrentUser(savedUser)
     setIsAuthenticated(hasToken)
+  }
+
+  useEffect(() => {
+    syncAuthState()
+    setLoading(false)
   }, [])
+
+  const checkAuth = async () => {
+    setLoading(true)
+    try {
+      syncAuthState()
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const login = async (credentials) => {
     setLoading(true)
@@ -23,11 +41,14 @@ const useAuth = () => {
       const result = await AuthModel.login(credentials)
 
       if (result.success) {
-        setCurrentUser(result.user)
+        const nextUser = result.user || storageService.getUser()
+        setUser(nextUser)
+        setCurrentUser(nextUser)
         setIsAuthenticated(true)
         return result
       }
 
+      setUser(null)
       setCurrentUser(null)
       setIsAuthenticated(false)
       throw { error: result.error || 'Credenciales incorrectas' }
@@ -65,6 +86,7 @@ const useAuth = () => {
 
     try {
       await AuthModel.logout()
+      setUser(null)
       setCurrentUser(null)
       setIsAuthenticated(false)
       return { success: true }
@@ -76,15 +98,29 @@ const useAuth = () => {
     }
   }
 
-  return {
+  const value = {
+    user,
     currentUser,
     isAuthenticated,
     loading,
     error,
     login,
     register,
-    logout
+    logout,
+    checkAuth
   }
+
+  return React.createElement(AuthContext.Provider, { value }, children)
+}
+
+const useAuth = () => {
+  const context = useContext(AuthContext)
+
+  if (!context) {
+    throw new Error('useAuth debe usarse dentro de AuthProvider')
+  }
+
+  return context
 }
 
 export default useAuth

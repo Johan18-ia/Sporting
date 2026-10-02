@@ -48,11 +48,11 @@ ApiDelivery.interceptors.request.use(
             console.warn('No hay token para esta peticion');
         }
         
-        console.log('Headers:', JSON.stringify(config.headers, null, 2));
+        console.log('Headers configurados para la petición');
         return config;
     },
     (error) => {
-        console.error('Error en interceptor de solicitud:', error);
+        console.error('Error en interceptor de solicitud:', error?.message || 'Error desconocido');
         return Promise.reject(error);
     }
 );
@@ -65,11 +65,17 @@ ApiDelivery.interceptors.response.use(
         return response;
     },
     async (error) => {
-        console.error('Error en respuesta:', error.config?.url);
-        console.error('Status:', error.response?.status);
-        console.error('Mensaje:', error.response?.data?.message || error.message);
-        
-        if (error.response?.status === 401) {
+        const isLoginRequest = error.config?.url?.includes('/users/login');
+        const errorMessage = String(error.response?.data?.message || error.message || 'Error desconocido');
+        if (isLoginRequest && error.response?.status === 401) {
+            console.log('Credenciales invalidas en login:', errorMessage);
+        } else {
+            console.error('Error en respuesta:', String(error.config?.url || 'URL desconocida'));
+            console.error('Status:', String(error.response?.status || 'Sin respuesta'));
+            console.error('Mensaje:', errorMessage);
+        }
+
+        if (error.response?.status === 401 && !isLoginRequest) {
             console.log('Token expirado o invalido, limpiando sesion');
             await AsyncStorage.removeItem('auth_token');
             await AsyncStorage.removeItem('user_data');

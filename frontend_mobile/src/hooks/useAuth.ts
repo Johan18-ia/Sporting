@@ -1,10 +1,5 @@
-// Encargado: Hook - useAuth
-// Descripción: Manejo de autenticación, login/logout y estado del usuario
-// Archivo: src/hooks/useAuth.ts
-// ============================================
-
+// Manejo de autenticación, login/logout y estado del usuario
 // frontend_mobile/src/hooks/useAuth.ts
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, UserLogin, UserRegister } from '../domain/entities/User';
 import { GetUserLocalUseCase } from '../domain/useCases/userLocal/GetUserLocal';
@@ -13,11 +8,13 @@ import { RemoveUserLocalUseCase } from '../domain/useCases/userLocal/RemoveUserL
 import { LoginAuthUseCase } from '../domain/useCases/auth/LoginAuth';
 import { RegisterAuthUseCase } from '../domain/useCases/auth/RegisterAuth';
 import { LocalStorage } from '../data/sources/local/LocalStorage';
+import { ApiDelivery } from '../data/sources/remote/api/ApiDelivery';
 
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     loading: boolean;
+    initialized: boolean;
     error: string | null;
     login: (credentials: UserLogin) => Promise<{ success: boolean; data?: User; error?: string }>;
     register: (userData: UserRegister) => Promise<{ success: boolean; data?: unknown; error?: string }>;
@@ -31,18 +28,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
+    const [initialized, setInitialized] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
     const { getItem, save } = LocalStorage();
 
     useEffect(() => {
-        checkAuth();
+        checkAuth(); // se ejecuta UNA sola vez al abrir la app
     }, []);
 
     const checkAuth = async () => {
         setLoading(true);
+        // Busca el token guardado
         try {
             const storedToken = await getItem('auth_token');
+            // Busca los datos del usuario
             const userData = await GetUserLocalUseCase();
             const token = storedToken || userData?.session_token || null;
 
@@ -51,11 +51,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('  Usuario:', userData ? 'Existe' : 'No existe');
 
             if (token && userData) {
-                setUser(userData);
+                // Sí hay sesión marca como autenticado
+                let hydratedUser = userData;
+                if (userData.role === 'user') {
+                    try {
+                        const response = await ApiDelivery.get('/students');
+                        const students = Array.isArray(response.data)
+                            ? response.data
+                            : response.data?.data || [];
+                        const studentProfile = students.find(
+                            (student: any) => Number(student.user_id) === Number(userData.id)
+                        ) || null;
+                        hydratedUser = {
+                            ...userData,
+                            isStudent: Boolean(studentProfile),
+                            studentProfile,
+                            category_id: studentProfile?.category_id ?? userData.category_id
+                        };
+                        await SaveUserLocalUseCase(hydratedUser);
+                    } catch (profileError) {
+                        console.warn('No se pudo verificar el perfil estudiantil:', profileError);
+                    }
+                }
+                setUser(hydratedUser);
                 setIsAuthenticated(true);
-                console.log('Sesion activa para:', userData.name);
+                console.log('Sesion activa para:', hydratedUser.name);
             } else {
                 setUser(null);
+                // No hay sesión
                 setIsAuthenticated(false);
                 console.log('No hay sesion activa');
             }
@@ -65,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setIsAuthenticated(false);
         } finally {
             setLoading(false);
+            setInitialized(true);
         }
     };
 
@@ -103,6 +127,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     role: payload?.role || 'user',
                     image: payload?.image || '',
                     category_id: payload?.category_id,
+                    isStudent: payload?.isStudent === true || Boolean(payload?.studentProfile),
+                    studentProfile: payload?.studentProfile || null,
                     session_token: token
                 };
                 await SaveUserLocalUseCase(userData);
@@ -177,6 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         isAuthenticated,
         loading,
+        initialized,
         error,
         login,
         register,

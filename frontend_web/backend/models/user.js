@@ -45,8 +45,15 @@ User.findById = (id, result) => {
 // ====================================================
 User.findByEmail = (email, result) => {
     const sql = `
-        SELECT id, email, name, lastname, phone, image, role, is_active, password
-        FROM users WHERE email = ?
+        SELECT u.id, u.email, u.name, u.lastname, u.phone, u.image, u.role, u.is_active, u.password,
+               sp.id AS student_profile_id,
+               sp.category_id AS student_category_id,
+               sp.status AS student_status,
+               c.category_year AS student_category_year
+        FROM users u
+        LEFT JOIN student_profiles sp ON sp.user_id = u.id
+        LEFT JOIN categories c ON c.id = sp.category_id
+        WHERE u.email = ?
     `;
     db.query(sql, [email], (err, user) => {
         if (err) {
