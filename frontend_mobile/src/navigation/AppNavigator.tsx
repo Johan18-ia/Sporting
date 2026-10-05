@@ -120,6 +120,9 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                             iconName = focused ? 'people' : 'people-outline';
                             break;
                         case 'Students':
+                            iconName = focused ? 'school' : 'school-outline';
+                            break;
+                        case 'Students':
                             iconName = 'add';
                             break;
                         case 'Schedules':
@@ -183,6 +186,17 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                                 <Ionicons name="arrow-back" size={24} color="#fff" />
                             </TouchableOpacity>
                         ),
+                    })}
+                />
+            )}
+            {canManageUsers && (
+                <Tab.Screen
+                    name="Students"
+                    component={StudentsScreen}
+                    options={({ navigation }) => ({
+                        title: 'Estudiantes',
+                        tabBarLabel: 'Estudiantes',
+                        ...backToHomeOptions(navigation),
                     })}
                 />
             )}
@@ -400,9 +414,9 @@ const styles = {
 // Revisa si está autentificado
 
 export const AppNavigator = () => {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, initialized } = useAuth();
 
-    if (loading) {
+    if (!initialized) {
         return null; 
     }
 
@@ -453,10 +467,7 @@ export const AppNavigator = () => {
                         <Stack.Screen
                             name="Register"
                             component={RegisterScreen}
-                            options={{
-                                headerShown: true,
-                                title: 'Registro de Usuario'
-                            }}
+                            options={{ headerShown: false }}
                         />
                     </>
                 ) : (

@@ -46,6 +46,7 @@ CREATE TABLE users (
     phone VARCHAR(20) NULL,
     image VARCHAR(255) NULL,
     role ENUM('admin', 'seller', 'user') NOT NULL DEFAULT 'user',
+    user_type ENUM('student', 'parent', 'none') NOT NULL DEFAULT 'none',
     is_active TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -74,16 +75,51 @@ INSERT INTO users (
     1
 );
 
-INSERT INTO users (name, lastname, email, password, phone, image, role, is_active) VALUES
+INSERT INTO users (name, lastname, email, password, phone, image, role, user_type, is_active) VALUES
 (
     'Ana', 'García', 'ana.garcia@email.com',
     '$2b$10$NR8eRuuAB12JoHe81ZYnG.i2/5k/D5TKrxc7Pk74W4rgzADdABM9G',
-    '3201112233', NULL, 'user', 1
+    '3201112233', NULL, 'user', 'student', 1
 ),
 (
     'Luis', 'Martínez', 'luis.martinez@email.com',
     '$2b$10$NR8eRuuAB12JoHe81ZYnG.i2/5k/D5TKrxc7Pk74W4rgzADdABM9G',
-    '3204445566', NULL, 'user', 1
+    '3204445566', NULL, 'user', 'student', 1
+),
+(
+    'Valentina', 'Pérez', 'valentina.perez@sporting.test',
+    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
+    '3105550101', NULL, 'user', 'student', 1
+),
+(
+    'Samuel', 'Torres', 'samuel.torres@sporting.test',
+    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
+    '3105550102', NULL, 'user', 'student', 1
+),
+(
+    'Isabella', 'Ramírez', 'isabella.ramirez@sporting.test',
+    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
+    '3105550103', NULL, 'user', 'student', 1
+),
+(
+    'Mateo', 'Herrera', 'mateo.herrera@sporting.test',
+    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
+    '3105550104', NULL, 'user', 'student', 1
+),
+(
+    'Sofia', 'Castro', 'sofia.castro@sporting.test',
+    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
+    '3105550105', NULL, 'user', 'student', 1
+),
+(
+    'Carlos', 'Pérez', 'carlos.perez@sporting.test',
+    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
+    '3105550201', NULL, 'user', 'parent', 1
+),
+(
+    'Mónica', 'Torres', 'monica.torres@sporting.test',
+    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
+    '3105550202', NULL, 'user', 'parent', 1
 );
 
 -- ============================================
@@ -198,6 +234,23 @@ INSERT INTO student_profiles (
 (2, '1234567890', 1, '2015-03-15', 'Calle 123 #45-67', 'María García', '3109998888', 'approved'),
 (3, '0987654321', 2, '2016-07-20', 'Carrera 89 #12-34', 'Ana Martínez', '3107776666', 'pending');
 
+INSERT INTO student_profiles (
+    user_id, document, category_id, birth_date, address,
+    emergency_contact_name, emergency_contact_phone, status
+)
+SELECT u.id, p.document, p.category_id, p.birth_date, p.address,
+       p.emergency_contact_name, p.emergency_contact_phone, p.profile_status
+FROM (
+    SELECT 'valentina.perez@sporting.test' AS email, 'TEST-20001' AS document, 1 AS category_id,
+           '2015-02-12' AS birth_date, 'Calle 10 #20-30' AS address, 'Carlos Pérez' AS emergency_contact_name,
+           '3105550201' AS emergency_contact_phone, 'approved' AS profile_status
+    UNION ALL SELECT 'samuel.torres@sporting.test', 'TEST-20002', 1, '2015-08-21', 'Carrera 12 #14-20', 'Mónica Torres', '3105550202', 'approved'
+    UNION ALL SELECT 'isabella.ramirez@sporting.test', 'TEST-20003', 2, '2016-04-08', 'Calle 22 #15-18', 'Laura Ramírez', '3105550203', 'pending'
+    UNION ALL SELECT 'mateo.herrera@sporting.test', 'TEST-20004', 2, '2016-11-03', 'Carrera 30 #8-16', 'Andrés Herrera', '3105550204', 'approved'
+    UNION ALL SELECT 'sofia.castro@sporting.test', 'TEST-20005', 3, '2017-06-17', 'Calle 45 #12-09', 'Daniela Castro', '3105550205', 'pending'
+) p
+INNER JOIN users u ON u.email = p.email;
+
 CREATE TABLE tournament_students (
     tournament_id INT NOT NULL,
     student_id INT NOT NULL,
@@ -207,6 +260,58 @@ CREATE TABLE tournament_students (
         FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
     CONSTRAINT fk_tournament_students_student
         FOREIGN KEY (student_id) REFERENCES student_profiles(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS teams (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    category_id INT NULL,
+    coach_id INT NULL,
+    logo VARCHAR(255) NULL,
+    description TEXT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_teams_category FOREIGN KEY (category_id) REFERENCES categories(id)
+        ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_teams_coach FOREIGN KEY (coach_id) REFERENCES users(id)
+        ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS team_members (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    team_id INT NOT NULL,
+    student_id INT NOT NULL,
+    jersey_number INT NULL,
+    position VARCHAR(50) NULL,
+    joined_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_team_members_team_student (team_id, student_id),
+    CONSTRAINT fk_team_members_team FOREIGN KEY (team_id) REFERENCES teams(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_team_members_student FOREIGN KEY (student_id) REFERENCES users(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS tournament_teams (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    tournament_id INT NOT NULL,
+    team_id INT NOT NULL,
+    group_name VARCHAR(100) NULL,
+    points INT NOT NULL DEFAULT 0,
+    matches_played INT NOT NULL DEFAULT 0,
+    matches_won INT NOT NULL DEFAULT 0,
+    matches_drawn INT NOT NULL DEFAULT 0,
+    matches_lost INT NOT NULL DEFAULT 0,
+    goals_for INT NOT NULL DEFAULT 0,
+    goals_against INT NOT NULL DEFAULT 0,
+    registered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_tournament_teams_tournament_team (tournament_id, team_id),
+    CONSTRAINT fk_tournament_teams_tournament FOREIGN KEY (tournament_id) REFERENCES tournaments(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_tournament_teams_team FOREIGN KEY (team_id) REFERENCES teams(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 -- ============================================

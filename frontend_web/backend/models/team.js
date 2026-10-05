@@ -4,7 +4,7 @@ const Team = {};
 
 Team.findAll = (callback) => {
     const sql = `
-        SELECT t.*, c.name AS category_name, u.name AS coach_name, u.lastname AS coach_lastname
+        SELECT t.*, c.category_year AS category_name, u.name AS coach_name, u.lastname AS coach_lastname
         FROM teams t
         LEFT JOIN categories c ON c.id = t.category_id
         LEFT JOIN users u ON u.id = t.coach_id
@@ -15,7 +15,7 @@ Team.findAll = (callback) => {
 
 Team.findById = (id, callback) => {
     const sql = `
-        SELECT t.*, c.name AS category_name, u.name AS coach_name, u.lastname AS coach_lastname
+        SELECT t.*, c.category_year AS category_name, u.name AS coach_name, u.lastname AS coach_lastname
         FROM teams t
         LEFT JOIN categories c ON c.id = t.category_id
         LEFT JOIN users u ON u.id = t.coach_id
@@ -28,7 +28,7 @@ Team.findMembers = (teamId, callback) => {
     const sql = `
         SELECT tm.id, tm.team_id, tm.student_id, tm.jersey_number, tm.position, tm.is_active,
                tm.joined_at, u.name, u.lastname, u.email, u.phone,
-               sp.document, sp.birth_date, sp.category_id, c.name AS category_name
+               sp.document, sp.birth_date, sp.category_id, c.category_year AS category_name
         FROM team_members tm
         INNER JOIN users u ON u.id = tm.student_id
         LEFT JOIN student_profiles sp ON sp.user_id = u.id

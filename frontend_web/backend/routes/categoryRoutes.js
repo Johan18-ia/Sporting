@@ -42,8 +42,6 @@ const {
  */
 router.get(
     '/',
-    verifyToken,
-    authorizeRoles(['admin', 'seller', 'user']),
     categoryController.getAllCategories
 );
 

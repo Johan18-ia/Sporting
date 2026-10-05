@@ -57,7 +57,9 @@ export const LoginScreen = () => {
         } else {
                 const err = (result.error || '').toLowerCase();
                 let message = 'Contraseña o correo incorrecto';
-                if (err.includes('desactiv') || err.includes('inactivo')) {
+                if (err.includes('email no existe') || err.includes('usuario no encontrado')) {
+                    message = 'Usuario no encontrado. Verifica el correo electrónico';
+                } else if (err.includes('desactiv') || err.includes('inactivo')) {
                     message = 'Usuario desactivado. Contacte al administrador';
                 } else if (err.includes('token expired') || err.includes('token')) {
                     message = 'Sesión expirada. Por favor inicie sesión de nuevo';
@@ -77,6 +79,14 @@ export const LoginScreen = () => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <ScrollView contentContainerStyle={styles.scrollContent}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <Ionicons name="arrow-back" size={24} color={MyColors.primary} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Iniciar Sesión</Text>
+                    <View style={styles.headerSpacer} />
+                </View>
+
                 <View style={styles.logoContainer}>
                     <Image
                         source={require('../../../../assets/logo.png')}
@@ -173,6 +183,27 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         paddingHorizontal: 24,
         paddingVertical: 40,
+    },
+    header: {
+        height: 56,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+    },
+    headerTitle: {
+        color: '#333',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    headerSpacer: {
+        width: 40,
     },
     logoContainer: {
         alignItems: 'center',

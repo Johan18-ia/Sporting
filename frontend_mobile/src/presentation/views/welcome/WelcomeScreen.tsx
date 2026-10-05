@@ -56,6 +56,18 @@ export const WelcomeScreen = () => {
                     <Text style={styles.subtitle}>Sporting</Text>
                 </View>
 
+                <View style={styles.logoArea}>
+                    {!logoFailed && (
+                        <Image
+                            source={require('../../../../assets/logo.png')}
+                            style={styles.logo}
+                            resizeMode="contain"
+                            onError={() => setLogoFailed(true)}
+                            accessibilityLabel="Logo de Sporting"
+                        />
+                    )}
+                </View>
+
                 {/* Botones inferiores */}
                 <View style={styles.actionsArea}>
                     <TouchableOpacity
@@ -91,6 +103,11 @@ const styles = StyleSheet.create({
     headerArea: {
         marginTop: '18%',
     },
+    logoArea: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     title: {
         color: '#fff',
         fontSize: 28,
@@ -107,9 +124,8 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
     },
     logo: {
-        width: 96,
-        height: 96,
-        marginTop: 24,
+        width: '110%',
+        height: 150,
     },
     actionsArea: {
         marginBottom: '6%',

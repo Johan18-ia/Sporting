@@ -49,7 +49,7 @@ User.findByEmail = (email, result) => {
                sp.id AS student_profile_id,
                sp.category_id AS student_category_id,
                sp.status AS student_status,
-               c.name AS student_category_name
+               c.category_year AS student_category_name
         FROM users u
         LEFT JOIN student_profiles sp ON sp.user_id = u.id
         LEFT JOIN categories c ON c.id = sp.category_id

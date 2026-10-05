@@ -244,7 +244,7 @@ export const RegisterScreen = () => {
                                 <Text style={styles.label}>Documento *</Text>
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Número de identificación"
+                                    placeholder="Documento"
                                     value={formData.document}
                                     onChangeText={(value) => handleChange('document', value)}
                                     keyboardType="number-pad"
@@ -266,7 +266,7 @@ export const RegisterScreen = () => {
                                 <Text style={styles.label}>Documento del padre *</Text>
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Número de identificación"
+                                    placeholder="Documento"
                                     value={formData.document}
                                     onChangeText={(value) => handleChange('document', value)}
                                     keyboardType="number-pad"
