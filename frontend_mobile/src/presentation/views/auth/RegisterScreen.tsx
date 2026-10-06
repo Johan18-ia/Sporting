@@ -3,7 +3,7 @@
 // Descripción: Pantalla para crear cuentas nuevas y validación inicial
 // Archivo: src/presentation/views/auth/RegisterScreen.tsx
 // ============================================
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -45,9 +45,10 @@ export const RegisterScreen = () => {
         emergency_contact_name: '',
         emergency_contact_phone: '',
         user_type: 'student',
-        category_id: '',
     });
     const [categories, setCategories] = useState<any[]>([]);
+    const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+    const [categoriesLoadError, setCategoriesLoadError] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
@@ -60,10 +61,31 @@ export const RegisterScreen = () => {
                 setCategories(list);
             } catch (err) {
                 console.warn('No se pudieron cargar categorías para registro:', err);
+                setCategoriesLoadError(true);
+            } finally {
+                setCategoriesLoaded(true);
             }
         };
         loadCategories();
     }, []);
+
+    // Deriva el año de nacimiento y busca la categoría que le corresponde.
+    const birthYear = useMemo(() => {
+        if (!formData.birth_date) return null;
+        const year = formData.birth_date.slice(0, 4);
+        return /^\d{4}$/.test(year) ? year : null;
+    }, [formData.birth_date]);
+
+    const autoCategory = useMemo(() => {
+        if (!birthYear || !categories.length) return null;
+        return categories.find(
+            category => String(category.category_year || category.name_year) === birthYear
+        ) || null;
+    }, [birthYear, categories]);
+
+    const autoCategoryId = autoCategory?.id == null ? '' : String(autoCategory.id);
+    const autoCategoryYear = autoCategory?.category_year || autoCategory?.name_year;
+    const autoCategoryLabel = autoCategory ? `Categoría ${autoCategoryYear}` : '';
 
     const handleChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -101,9 +123,15 @@ export const RegisterScreen = () => {
             return;
         }
 
-        if (userType === 'student' && !formData.category_id) {
-            setError('Debe seleccionar una categoría para el estudiante');
-            return;
+        if (userType === 'student') {
+            if (!categoriesLoaded || categoriesLoadError) {
+                setError('No se pudieron cargar las categorías. Inténtalo nuevamente.');
+                return;
+            }
+            if (!birthYear || !autoCategoryId) {
+                setError(`No existe una categoría para el año ${birthYear || 'indicado'}`);
+                return;
+            }
         }
 
         if (!address) {
@@ -146,7 +174,7 @@ export const RegisterScreen = () => {
             occupation: occupation || null,
             emergency_contact_name: emergencyName || null,
             emergency_contact_phone: emergencyPhone || null,
-            category_id: userType === 'student' && formData.category_id ? Number(formData.category_id) : null,
+            category_id: userType === 'student' && autoCategoryId ? Number(autoCategoryId) : null,
             role: 'user',
             user_type: userType
         };
@@ -286,20 +314,20 @@ export const RegisterScreen = () => {
 
                     {formData.user_type === 'student' && (
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Categoría *</Text>
-                            <View style={styles.pickerWrap}>
-                                {categories.map((category) => (
-                                    <TouchableOpacity
-                                        key={category.id}
-                                        style={[styles.optionButton, formData.category_id === String(category.id) && styles.optionButtonSelected]}
-                                        onPress={() => handleChange('category_id', String(category.id))}
-                                    >
-                                        <Text style={[styles.optionButtonText, formData.category_id === String(category.id) && styles.optionButtonTextSelected]}>
-                                            {category.category_year || category.name || category.description || `Categoría ${category.id}`}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
+                            <Text style={styles.label}>Categoría asignada</Text>
+                            <View style={styles.readonlyField}>
+                                <Text style={styles.readonlyFieldText}>
+                                    {autoCategoryLabel || 'Se asigna al ingresar la fecha de nacimiento'}
+                                </Text>
                             </View>
+                            {birthYear && categoriesLoaded && !categoriesLoadError && !autoCategoryId && (
+                                <Text style={styles.hintError}>
+                                    No existe una categoría para el año {birthYear}. Contacta al administrador.
+                                </Text>
+                            )}
+                            {categoriesLoadError && (
+                                <Text style={styles.hintError}>No se pudieron cargar las categorías.</Text>
+                            )}
                         </View>
                     )}
 
@@ -537,27 +565,22 @@ const styles = StyleSheet.create({
         fontSize: 15,
         backgroundColor: '#f8f9fa',
     },
-    pickerWrap: {
-        gap: 8,
-    },
-    optionButton: {
+    readonlyField: {
         borderWidth: 1,
-        borderColor: '#d9d9d9',
+        borderColor: '#ddd',
         borderRadius: 8,
-        backgroundColor: '#f8f9fa',
+        paddingHorizontal: 14,
         paddingVertical: 10,
-        paddingHorizontal: 12,
+        backgroundColor: '#f0f0f0',
     },
-    optionButtonSelected: {
-        borderColor: MyColors.primary,
-        backgroundColor: '#fff2f2',
+    readonlyFieldText: {
+        fontSize: 15,
+        color: '#555',
     },
-    optionButtonText: {
-        color: '#333',
-        fontWeight: '600',
-    },
-    optionButtonTextSelected: {
-        color: MyColors.primary,
+    hintError: {
+        color: '#dc3545',
+        fontSize: 12,
+        marginTop: 4,
     },
     passwordContainer: {
         flexDirection: 'row',

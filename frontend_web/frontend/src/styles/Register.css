@@ -133,6 +133,12 @@
   cursor: not-allowed;
 }
 
+.sporting-input-readonly {
+  background-color: #f0f0f0 !important;
+  color: #555 !important;
+  cursor: not-allowed;
+}
+
 .form-group input::placeholder {
   color: #999;
 }
@@ -155,6 +161,10 @@
   margin-top: 4px;
   color: #888;
   font-size: 0.75rem;
+}
+
+.form-hint-error {
+  color: #dc3545;
 }
 
 /* ===== BOTÓN ===== */

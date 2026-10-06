@@ -1,5 +1,5 @@
 // src/views/auth/RegisterView.jsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
@@ -17,7 +17,6 @@ const initialForm = {
     phone: '',
     role: 'user',
     user_type: 'student',
-    category_id: '',
     emergency_contact_name: '',
     emergency_contact_phone: '',
     address: '',
@@ -31,17 +30,47 @@ const RegisterView = () => {
     const navigate = useNavigate()
     const [formData, setFormData] = useState(initialForm)
     const [categories, setCategories] = useState([])
+    const [categoriesLoaded, setCategoriesLoaded] = useState(false)
+    const [categoriesLoadError, setCategoriesLoadError] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
 
     useEffect(() => {
         const loadCategories = async () => {
-            const result = await CategoryModel.getAllCategories()
-            if (result.success) setCategories(result.data)
+            try {
+                const result = await CategoryModel.getAllCategories()
+                if (result.success) {
+                    setCategories(result.data)
+                } else {
+                    setCategoriesLoadError(true)
+                }
+            } catch {
+                setCategoriesLoadError(true)
+            } finally {
+                setCategoriesLoaded(true)
+            }
         }
         loadCategories()
     }, [])
+
+    // Deriva el año de nacimiento y busca la categoría que le corresponde.
+    const birthYear = useMemo(() => {
+        if (!formData.birth_date) return null
+        const year = formData.birth_date.slice(0, 4)
+        return /^\d{4}$/.test(year) ? year : null
+    }, [formData.birth_date])
+
+    const autoCategory = useMemo(() => {
+        if (!birthYear || !categories.length) return null
+        return categories.find(
+            category => String(category.category_year || category.name_year) === birthYear
+        ) || null
+    }, [birthYear, categories])
+
+    const autoCategoryId = autoCategory?.id == null ? '' : String(autoCategory.id)
+    const autoCategoryYear = autoCategory?.category_year || autoCategory?.name_year
+    const autoCategoryLabel = autoCategory ? `Categoría ${autoCategoryYear}` : ''
 
     useEffect(() => {
         if (isAuthenticated && currentUser) {
@@ -73,6 +102,21 @@ const RegisterView = () => {
             return
         }
 
+        if (formData.user_type === 'student') {
+            if (!formData.birth_date) {
+                setError('La fecha de nacimiento es obligatoria')
+                return
+            }
+            if (!categoriesLoaded || categoriesLoadError) {
+                setError('No se pudieron cargar las categorías. Inténtalo nuevamente.')
+                return
+            }
+            if (!birthYear || !autoCategoryId) {
+                setError(`No existe una categoría para el año ${birthYear || 'indicado'}`)
+                return
+            }
+        }
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(formData.email)) {
             setError('Por favor ingrese un email válido')
@@ -93,7 +137,7 @@ const RegisterView = () => {
                 phone: formData.phone || '',
                 role: formData.role || 'user',
                 user_type: formData.user_type || 'student',
-                category_id: formData.category_id ? Number(formData.category_id) : null,
+                category_id: formData.user_type === 'student' && autoCategoryId ? Number(autoCategoryId) : null,
                 emergency_contact_name: formData.emergency_contact_name || null,
                 emergency_contact_phone: formData.emergency_contact_phone || null,
                 address: formData.address || null,
@@ -254,22 +298,31 @@ const RegisterView = () => {
                     {formData.user_type === 'student' && (
                         <div className="form-row">
                             <div className="form-group">
-                                <label htmlFor="category_id">Categoría</label>
-                                <select
+                                <label htmlFor="category_id">Categoría asignada</label>
+                                <input
+                                    type="text"
                                     id="category_id"
-                                    name="category_id"
-                                    value={formData.category_id}
-                                    onChange={handleChange}
-                                    disabled={loading}
-                                    className="sporting-input"
-                                >
-                                    <option value="">Seleccione una categoría</option>
-                                    {categories.map(category => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.category_year || category.name_year || category.name || category.description}
-                                        </option>
-                                    ))}
-                                </select>
+                                    value={autoCategoryLabel}
+                                    readOnly
+                                    disabled
+                                    className="sporting-input sporting-input-readonly"
+                                    placeholder="Se asigna al ingresar la fecha de nacimiento"
+                                />
+                                {!formData.birth_date && (
+                                    <small className="form-hint">
+                                        Ingresa la fecha de nacimiento para asignar la categoría
+                                    </small>
+                                )}
+                                {birthYear && categoriesLoaded && !categoriesLoadError && !autoCategoryId && (
+                                    <small className="form-hint form-hint-error">
+                                        No existe una categoría para el año {birthYear}. Contacta al administrador.
+                                    </small>
+                                )}
+                                {categoriesLoadError && (
+                                    <small className="form-hint form-hint-error">
+                                        No se pudieron cargar las categorías.
+                                    </small>
+                                )}
                             </div>
                             <div className="form-group">
                                 <label htmlFor="address">Dirección</label>

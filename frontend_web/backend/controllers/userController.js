@@ -171,15 +171,13 @@ module.exports = {
     // REGISTRAR USUARIO (PÚBLICO)
     // ====================================================
     register(req, res) {
-        // Obtiene datos del usuario desde el body
-        const user = req.body;
+        // Obtiene y normaliza el tipo de usuario solicitado.
+        const user = req.body || {};
         const currentUserRole = req.user?.role;
         const userType = ['student', 'parent', 'none'].includes(user.user_type) ? user.user_type : 'none';
         user.user_type = userType;
 
-        // ============================================
-        // VALIDACIONES DE CAMPOS OBLIGATORIOS
-        // ============================================
+        // Valida los datos obligatorios antes de abrir una transacción.
         if (!user.email) {
             return res.status(400).json({
                 success: false,
@@ -194,7 +192,7 @@ module.exports = {
             });
         }
 
-        if (user.password.length < 6) {
+        if (typeof user.password !== 'string' || user.password.length < 6) {
             return res.status(400).json({
                 success: false,
                 message: "La contraseña debe tener al menos 6 caracteres",
@@ -208,7 +206,21 @@ module.exports = {
             });
         }
 
-        // El registro público solo puede crear usuarios normales.
+        if (userType === 'student' && (!user.document || !user.birth_date || user.category_id == null || user.category_id === '')) {
+            return res.status(400).json({
+                success: false,
+                message: "Documento, fecha de nacimiento y categoría son obligatorios para el estudiante",
+            });
+        }
+
+        if (userType === 'parent' && !user.document) {
+            return res.status(400).json({
+                success: false,
+                message: "El documento es obligatorio para el padre",
+            });
+        }
+
+        // Conserva las restricciones de roles para el registro público y administrativo.
         if (!currentUserRole) {
             user.role = 'user';
         } else {
@@ -234,101 +246,155 @@ module.exports = {
             }
         }
 
-        // ============================================
-        // CREAR EL USUARIO
-        // ============================================
-        User.create(user, (err, data) => {
-            if (err) {
-                if (err.code === 'ER_DUP_ENTRY') {
-                    return res.status(409).json({
-                        success: false,
-                        message: "El email ya está registrado",
-                    });
-                }
+        const validRoles = ['admin', 'seller', 'user'];
+        const role = validRoles.includes(user.role) ? user.role : 'user';
 
-                return res.status(501).json({
+        // Abre una conexión dedicada para que usuario y perfil sean atómicos.
+        db.getConnection((err, connection) => {
+            if (err) {
+                return res.status(500).json({
                     success: false,
-                    message: "Error al crear al usuario",
-                    error: err,
+                    message: "Error al crear el usuario y su perfil",
                 });
             }
 
-            const createdUserId = data?.id;
+            connection.beginTransaction(async (transactionErr) => {
+                if (transactionErr) {
+                    connection.release();
+                    return res.status(500).json({
+                        success: false,
+                        message: "Error al crear el usuario y su perfil",
+                    });
+                }
 
-            if (userType === 'student') {
-                const studentData = {
-                    user_id: createdUserId,
-                    document: user.document || null,
-                    birth_date: user.birth_date || null,
-                    address: user.address || null,
-                    category_id: user.category_id || null,
-                    emergency_contact_name: user.emergency_contact_name || null,
-                    emergency_contact_phone: user.emergency_contact_phone || null,
-                    parent_id: user.parent_id || null,
-                    status: user.status || 'active'
-                };
+                try {
+                    const connectionPromise = connection.promise();
 
-                db.query(
-                    `INSERT INTO student_profiles (user_id, document, birth_date, address, category_id, emergency_contact_name, emergency_contact_phone, parent_id, status, created_at, updated_at)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-                    [
-                        studentData.user_id,
-                        studentData.document,
-                        studentData.birth_date,
-                        studentData.address,
-                        studentData.category_id,
-                        studentData.emergency_contact_name,
-                        studentData.emergency_contact_phone,
-                        studentData.parent_id,
-                        studentData.status
-                    ],
-                    (studentErr) => {
-                        if (studentErr) {
-                            return res.status(500).json({
+                    // Verifica que la categoría del estudiante corresponda a su año de nacimiento.
+                    if (userType === 'student') {
+                        const birthYear = String(user.birth_date).slice(0, 4);
+                        if (!/^\d{4}$/.test(birthYear)) {
+                            await connectionPromise.rollback();
+                            return res.status(400).json({
                                 success: false,
-                                message: 'Usuario creado pero no se pudo crear el perfil de estudiante',
-                                error: studentErr
+                                message: "La fecha de nacimiento debe tener el formato YYYY-MM-DD",
                             });
                         }
 
-                        return res.status(201).json({
-                            success: true,
-                            message: 'Usuario y perfil de estudiante creados correctamente',
-                            data: { ...data, user_type: userType }
-                        });
-                    }
-                );
-                return;
-            }
+                        const [categoryRows] = await connectionPromise.query(
+                            'SELECT category_year FROM categories WHERE id = ?',
+                            [user.category_id]
+                        );
 
-            if (userType === 'parent') {
-                db.query(
-                    `INSERT INTO parent_profiles (user_id, document, address, occupation, created_at, updated_at)
-                     VALUES (?, ?, ?, ?, NOW(), NOW())`,
-                    [createdUserId, user.document || null, user.address || null, user.occupation || null],
-                    (parentErr) => {
-                        if (parentErr) {
-                            return res.status(500).json({
+                        if (!categoryRows.length) {
+                            await connectionPromise.rollback();
+                            return res.status(400).json({
                                 success: false,
-                                message: 'Usuario creado pero no se pudo crear el perfil de padre',
-                                error: parentErr
+                                message: "La categoría seleccionada no existe",
                             });
                         }
 
-                        return res.status(201).json({
-                            success: true,
-                            message: 'Usuario y perfil de padre creados correctamente',
-                            data: { ...data, user_type: userType }
+                        if (String(categoryRows[0].category_year) !== birthYear) {
+                            await connectionPromise.rollback();
+                            return res.status(400).json({
+                                success: false,
+                                message: `La categoría seleccionada no coincide con el año de nacimiento (${birthYear})`,
+                            });
+                        }
+                    }
+
+                    const passwordHash = await bcrypt.hash(user.password, 10);
+                    const [userResult] = await connectionPromise.query(
+                        `INSERT INTO users (name, lastname, email, password, phone, image, role, user_type, is_active, created_at, updated_at)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                        [
+                            user.name,
+                            user.lastname || '',
+                            user.email,
+                            passwordHash,
+                            user.phone || '',
+                            user.image || '',
+                            role,
+                            userType,
+                            user.is_active ?? 1,
+                        ]
+                    );
+                    const createdUserId = userResult.insertId;
+
+                    if (userType === 'student') {
+                        await connectionPromise.query(
+                            `INSERT INTO student_profiles (user_id, document, birth_date, address, category_id, emergency_contact_name, emergency_contact_phone, parent_id, status, created_at, updated_at)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                            [
+                                createdUserId,
+                                user.document,
+                                user.birth_date,
+                                user.address || null,
+                                user.category_id,
+                                user.emergency_contact_name || null,
+                                user.emergency_contact_phone || null,
+                                user.parent_id || null,
+                                user.status || 'active',
+                            ]
+                        );
+                    } else if (userType === 'parent') {
+                        await connectionPromise.query(
+                            `INSERT INTO parent_profiles (user_id, document, address, occupation, created_at, updated_at)
+                             VALUES (?, ?, ?, ?, NOW(), NOW())`,
+                            [createdUserId, user.document, user.address || null, user.occupation || null]
+                        );
+                    }
+
+                    // Confirma ambas inserciones solo cuando todo el flujo termina correctamente.
+                    await connectionPromise.commit();
+
+                    return res.status(201).json({
+                        success: true,
+                        message: "Usuario y perfil creados correctamente",
+                        data: {
+                            id: createdUserId,
+                            name: user.name,
+                            lastname: user.lastname || '',
+                            email: user.email,
+                            role,
+                            user_type: userType,
+                        },
+                    });
+                } catch (error) {
+                    // Revierte usuario y perfil juntos si falla cualquier consulta o el commit.
+                    try {
+                        await connection.promise().rollback();
+                    } catch (rollbackError) {
+                        // Mantiene la respuesta asociada al error original.
+                    }
+
+                    // Identifica el campo duplicado para devolver un conflicto útil al cliente.
+                    if (error.code === 'ER_DUP_ENTRY') {
+                        const sqlMessage = error.sqlMessage || '';
+                        let message = "Conflicto de datos duplicados";
+
+                        if (sqlMessage.includes('users.email')) {
+                            message = "El email ya está registrado";
+                        } else if (sqlMessage.includes('student_profiles.document')) {
+                            message = "El documento del estudiante ya está registrado";
+                        } else if (sqlMessage.includes('parent_profiles.document')) {
+                            message = "El documento del padre ya está registrado";
+                        }
+
+                        return res.status(409).json({
+                            success: false,
+                            message,
                         });
                     }
-                );
-                return;
-            }
 
-            return res.status(201).json({
-                success: true,
-                message: "Usuario creado correctamente",
-                data: { ...data, user_type: userType },
+                    return res.status(500).json({
+                        success: false,
+                        message: "Error al crear el usuario y su perfil",
+                    });
+                } finally {
+                    // Libera la conexión tanto si se confirma como si se revierte la transacción.
+                    connection.release();
+                }
             });
         });
     },
