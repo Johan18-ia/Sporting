@@ -73,6 +73,9 @@ ApiDelivery.interceptors.response.use(
             console.error('Error en respuesta:', String(error.config?.url || 'URL desconocida'));
             console.error('Status:', String(error.response?.status || 'Sin respuesta'));
             console.error('Mensaje:', errorMessage);
+            if (error.response?.data !== undefined) {
+                console.error('Cuerpo completo de la respuesta:', error.response.data);
+            }
         }
 
         if (error.response?.status === 401 && !isLoginRequest) {

@@ -267,6 +267,8 @@ module.exports = {
                     });
                 }
 
+                let failedOperation = 'category_validation';
+
                 try {
                     const connectionPromise = connection.promise();
 
@@ -303,6 +305,7 @@ module.exports = {
                         }
                     }
 
+                    failedOperation = 'user_insert';
                     const passwordHash = await bcrypt.hash(user.password, 10);
                     const [userResult] = await connectionPromise.query(
                         `INSERT INTO users (name, lastname, email, password, phone, image, role, user_type, is_active, created_at, updated_at)
@@ -322,9 +325,13 @@ module.exports = {
                     const createdUserId = userResult.insertId;
 
                     if (userType === 'student') {
+                        failedOperation = 'student_profile';
+                        const profileStatus = ['pending', 'approved', 'rejected'].includes(user.status)
+                            ? user.status
+                            : 'pending';
                         await connectionPromise.query(
-                            `INSERT INTO student_profiles (user_id, document, birth_date, address, category_id, emergency_contact_name, emergency_contact_phone, parent_id, status, created_at, updated_at)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                            `INSERT INTO student_profiles (user_id, document, birth_date, address, category_id, emergency_contact_name, emergency_contact_phone, status, created_at, updated_at)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
                             [
                                 createdUserId,
                                 user.document,
@@ -333,11 +340,11 @@ module.exports = {
                                 user.category_id,
                                 user.emergency_contact_name || null,
                                 user.emergency_contact_phone || null,
-                                user.parent_id || null,
-                                user.status || 'active',
+                                profileStatus,
                             ]
                         );
                     } else if (userType === 'parent') {
+                        failedOperation = 'parent_profile';
                         await connectionPromise.query(
                             `INSERT INTO parent_profiles (user_id, document, address, occupation, created_at, updated_at)
                              VALUES (?, ?, ?, ?, NOW(), NOW())`,
@@ -365,25 +372,70 @@ module.exports = {
                     try {
                         await connection.promise().rollback();
                     } catch (rollbackError) {
-                        // Mantiene la respuesta asociada al error original.
+                        console.error('Error al revertir el registro:', rollbackError);
                     }
 
-                    // Identifica el campo duplicado para devolver un conflicto útil al cliente.
+                    // Registra el error original de MySQL con la etapa y los datos técnicos.
+                    const sqlMessage = error.sqlMessage || error.message || '';
+                    console.error(`Error al registrar usuario en ${failedOperation}:`, {
+                        code: error.code,
+                        errno: error.errno,
+                        sqlMessage: error.sqlMessage,
+                        sqlState: error.sqlState,
+                        sql: error.sql,
+                    });
+
+                    // Identifica el índice duplicado para responder con un conflicto concreto.
                     if (error.code === 'ER_DUP_ENTRY') {
-                        const sqlMessage = error.sqlMessage || '';
+                        const normalizedSqlMessage = sqlMessage.toLowerCase();
                         let message = "Conflicto de datos duplicados";
 
-                        if (sqlMessage.includes('users.email')) {
+                        if (failedOperation === 'user_insert' && normalizedSqlMessage.includes('email')) {
                             message = "El email ya está registrado";
-                        } else if (sqlMessage.includes('student_profiles.document')) {
+                        } else if (failedOperation === 'student_profile' && normalizedSqlMessage.includes('document')) {
                             message = "El documento del estudiante ya está registrado";
-                        } else if (sqlMessage.includes('parent_profiles.document')) {
+                        } else if (failedOperation === 'student_profile' && normalizedSqlMessage.includes('user_id')) {
+                            message = "Este usuario ya tiene un perfil de estudiante";
+                        } else if (failedOperation === 'parent_profile' && normalizedSqlMessage.includes('document')) {
                             message = "El documento del padre ya está registrado";
                         }
 
                         return res.status(409).json({
                             success: false,
                             message,
+                            error: sqlMessage,
+                        });
+                    }
+
+                    if (error.code === 'ER_NO_REFERENCED_ROW_2' && failedOperation === 'student_profile') {
+                        return res.status(400).json({
+                            success: false,
+                            message: "La categoría seleccionada no existe",
+                            error: sqlMessage,
+                        });
+                    }
+
+                    if (error.code === 'ER_BAD_NULL_ERROR') {
+                        return res.status(400).json({
+                            success: false,
+                            message: `Falta un campo obligatorio: ${sqlMessage}`,
+                            error: sqlMessage,
+                        });
+                    }
+
+                    if (failedOperation === 'student_profile') {
+                        return res.status(500).json({
+                            success: false,
+                            message: "Error al crear el perfil de estudiante",
+                            error: sqlMessage,
+                        });
+                    }
+
+                    if (failedOperation === 'parent_profile') {
+                        return res.status(500).json({
+                            success: false,
+                            message: "Error al crear el perfil del padre",
+                            error: sqlMessage,
                         });
                     }
 

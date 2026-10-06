@@ -15,7 +15,8 @@ import {
     KeyboardAvoidingView,
     Platform,
     ActivityIndicator,
-    Alert
+    Alert,
+    Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -26,6 +27,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 
 type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
+
+const formatDateForForm = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const parseFormDate = (value: string) => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    if (!match) return new Date();
+
+    const [, year, month, day] = match;
+    return new Date(Number(year), Number(month) - 1, Number(day));
+};
 
 export const RegisterScreen = () => {
     const navigation = useNavigation<RegisterScreenNavigationProp>();
@@ -51,6 +67,10 @@ export const RegisterScreen = () => {
     const [categoriesLoadError, setCategoriesLoadError] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [dateDraft, setDateDraft] = useState(new Date());
+    const [calendarMonth, setCalendarMonth] = useState(new Date());
+    const [showYearList, setShowYearList] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -87,9 +107,43 @@ export const RegisterScreen = () => {
     const autoCategoryYear = autoCategory?.category_year || autoCategory?.name_year;
     const autoCategoryLabel = autoCategory ? `Categoría ${autoCategoryYear}` : '';
 
+    const calendarDays = useMemo(() => {
+        const year = calendarMonth.getFullYear();
+        const month = calendarMonth.getMonth();
+        const leadingDays = (new Date(year, month, 1).getDay() + 6) % 7;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        return [
+            ...Array.from({ length: leadingDays }, () => null),
+            ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+        ];
+    }, [calendarMonth]);
+
+    const calendarYears = useMemo(() => {
+        const currentYear = new Date().getFullYear();
+        return Array.from({ length: currentYear - 1899 }, (_, index) => currentYear - index);
+    }, []);
+
+    const today = new Date();
+    const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const canShowNextMonth = calendarMonth < currentMonth;
+    const monthLabel = calendarMonth.toLocaleDateString('es-ES', { month: 'long' });
+
     const handleChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         if (error) setError('');
+    };
+
+    const openBirthDatePicker = () => {
+        const value = formData.birth_date ? parseFormDate(formData.birth_date) : new Date();
+        setDateDraft(value);
+        setCalendarMonth(new Date(value.getFullYear(), value.getMonth(), 1));
+        setShowYearList(false);
+        setShowDatePicker(true);
+    };
+
+    const confirmBirthDate = () => {
+        handleChange('birth_date', formatDateForForm(dateDraft));
+        setShowDatePicker(false);
     };
 
     const handleRegister = async () => {
@@ -178,6 +232,14 @@ export const RegisterScreen = () => {
             role: 'user',
             user_type: userType
         };
+
+        // Registra el contenido enviado sin exponer credenciales en la consola.
+        console.log('Payload de registro:', JSON.stringify({
+            ...payload,
+            password: '[REDACTED]',
+            confirmPassword: '[REDACTED]',
+        }, null, 2));
+        console.log('Tipo de category_id:', typeof payload.category_id);
 
         const result = await register(payload as any);
         if (result.success) {
@@ -280,12 +342,20 @@ export const RegisterScreen = () => {
                             </View>
                             <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                                 <Text style={styles.label}>Fecha de nacimiento *</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="YYYY-MM-DD"
-                                    value={formData.birth_date}
-                                    onChangeText={(value) => handleChange('birth_date', value)}
-                                />
+                                <TouchableOpacity
+                                    style={styles.dateInput}
+                                    onPress={openBirthDatePicker}
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Seleccionar fecha de nacimiento"
+                                >
+                                    <Text
+                                        numberOfLines={1}
+                                        style={formData.birth_date ? styles.dateInputText : styles.dateInputPlaceholder}
+                                    >
+                                        {formData.birth_date || 'Elegir fecha'}
+                                    </Text>
+                                    <Ionicons name="calendar-outline" size={20} color={MyColors.primary} style={styles.dateInputIcon} />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     ) : (
@@ -368,7 +438,7 @@ export const RegisterScreen = () => {
                     {formData.user_type === 'student' && (
                         <View style={styles.row}>
                             <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                                <Text style={styles.label}>Contacto de emergencia *</Text>
+                                <Text style={styles.label}>Contacto emergencia *</Text>
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Nombre"
@@ -455,6 +525,138 @@ export const RegisterScreen = () => {
                     </View>
                 </View>
             </ScrollView>
+
+            <Modal
+                visible={showDatePicker}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowDatePicker(false)}
+            >
+                <View style={styles.datePickerOverlay}>
+                    <View style={styles.datePickerModal}>
+                        <Text style={styles.datePickerTitle}>Fecha de nacimiento</Text>
+                        <View style={styles.calendarHeader}>
+                            <TouchableOpacity
+                                style={styles.calendarNavButton}
+                                onPress={() => setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                                accessibilityRole="button"
+                                accessibilityLabel="Mes anterior"
+                            >
+                                <Ionicons name="chevron-back" size={20} color={MyColors.primary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.calendarMonthButton}
+                                onPress={() => setShowYearList(prev => !prev)}
+                                accessibilityRole="button"
+                                accessibilityLabel="Seleccionar año"
+                            >
+                                <Text style={styles.calendarMonthText}>
+                                    {monthLabel} {calendarMonth.getFullYear()}
+                                </Text>
+                                <Ionicons name={showYearList ? 'chevron-up' : 'chevron-down'} size={16} color={MyColors.primary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.calendarNavButton, !canShowNextMonth && styles.calendarNavButtonDisabled]}
+                                disabled={!canShowNextMonth}
+                                onPress={() => setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                                accessibilityRole="button"
+                                accessibilityLabel="Mes siguiente"
+                            >
+                                <Ionicons name="chevron-forward" size={20} color={canShowNextMonth ? MyColors.primary : '#bbb'} />
+                            </TouchableOpacity>
+                        </View>
+
+                        {showYearList ? (
+                            <ScrollView style={styles.calendarYearList} contentContainerStyle={styles.calendarYearGrid}>
+                                {calendarYears.map(year => (
+                                    <TouchableOpacity
+                                        key={year}
+                                        style={[
+                                            styles.calendarYearButton,
+                                            year === calendarMonth.getFullYear() && styles.calendarYearButtonSelected,
+                                        ]}
+                                        onPress={() => {
+                                            const selectedMonth = calendarMonth.getMonth();
+                                            const nextMonth = new Date(year, selectedMonth, 1);
+                                            setCalendarMonth(nextMonth > currentMonth ? currentMonth : nextMonth);
+                                            setShowYearList(false);
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.calendarYearText,
+                                            year === calendarMonth.getFullYear() && styles.calendarYearTextSelected,
+                                        ]}>
+                                            {year}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        ) : (
+                            <>
+                                <View style={styles.calendarWeekdays}>
+                                    {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((weekday, index) => (
+                                        <Text key={`${weekday}-${index}`} style={styles.calendarWeekday}>
+                                            {weekday}
+                                        </Text>
+                                    ))}
+                                </View>
+                                <View style={styles.calendarGrid}>
+                                    {calendarDays.map((day, index) => {
+                                        if (day === null) {
+                                            return <View key={`empty-${index}`} style={styles.calendarDayCell} />;
+                                        }
+
+                                        const candidate = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), day);
+                                        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                        const isFuture = candidate > todayStart;
+                                        const isSelected = candidate.getFullYear() === dateDraft.getFullYear() &&
+                                            candidate.getMonth() === dateDraft.getMonth() &&
+                                            candidate.getDate() === dateDraft.getDate();
+
+                                        return (
+                                            <TouchableOpacity
+                                                key={`day-${day}`}
+                                                style={[
+                                                    styles.calendarDayCell,
+                                                    isSelected && styles.calendarDaySelected,
+                                                ]}
+                                                disabled={isFuture}
+                                                onPress={() => setDateDraft(candidate)}
+                                                accessibilityRole="button"
+                                                accessibilityLabel={`${day} de ${monthLabel} de ${calendarMonth.getFullYear()}`}
+                                                accessibilityState={{ selected: isSelected, disabled: isFuture }}
+                                            >
+                                                <Text style={[
+                                                    styles.calendarDayText,
+                                                    isSelected && styles.calendarDayTextSelected,
+                                                    isFuture && styles.calendarDayTextDisabled,
+                                                ]}>
+                                                    {day}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            </>
+                        )}
+
+                        <View style={styles.datePickerActions}>
+                            <TouchableOpacity
+                                style={styles.datePickerAction}
+                                onPress={() => setShowDatePicker(false)}
+                            >
+                                <Text style={styles.datePickerCancelText}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.datePickerAction, styles.datePickerConfirm]}
+                                onPress={confirmBirthDate}
+                            >
+                                <Text style={styles.datePickerConfirmText}>Confirmar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </KeyboardAvoidingView>
     );
 };
@@ -564,6 +766,167 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         fontSize: 15,
         backgroundColor: '#f8f9fa',
+    },
+    dateInput: {
+        height: 44,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        paddingLeft: 10,
+        paddingRight: 18,
+        backgroundColor: '#f8f9fa',
+    },
+    dateInputText: {
+        flex: 1,
+        fontSize: 15,
+        color: '#333',
+    },
+    dateInputPlaceholder: {
+        flex: 1,
+        fontSize: 14,
+        color: '#888',
+    },
+    dateInputIcon: {
+        marginLeft: 6,
+    },
+    datePickerOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    },
+    datePickerModal: {
+        width: '100%',
+        maxWidth: 380,
+        padding: 16,
+        borderRadius: 12,
+        backgroundColor: '#fff',
+    },
+    datePickerTitle: {
+        marginBottom: 8,
+        color: '#333',
+        fontSize: 16,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+    calendarHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    calendarNavButton: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 20,
+    },
+    calendarNavButtonDisabled: {
+        opacity: 0.5,
+    },
+    calendarMonthButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+    },
+    calendarMonthText: {
+        color: '#333',
+        fontSize: 15,
+        fontWeight: '700',
+        textTransform: 'capitalize',
+    },
+    calendarWeekdays: {
+        flexDirection: 'row',
+        marginBottom: 4,
+    },
+    calendarWeekday: {
+        width: '14.2857%',
+        paddingVertical: 8,
+        color: '#777',
+        fontSize: 12,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+    calendarGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+    },
+    calendarDayCell: {
+        width: '14.2857%',
+        aspectRatio: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 24,
+    },
+    calendarDaySelected: {
+        backgroundColor: MyColors.primary,
+    },
+    calendarDayText: {
+        color: '#333',
+        fontSize: 14,
+    },
+    calendarDayTextSelected: {
+        color: '#fff',
+        fontWeight: '700',
+    },
+    calendarDayTextDisabled: {
+        color: '#bbb',
+    },
+    calendarYearList: {
+        maxHeight: 300,
+    },
+    calendarYearGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+    },
+    calendarYearButton: {
+        width: '25%',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderRadius: 8,
+    },
+    calendarYearButtonSelected: {
+        backgroundColor: '#fff2f2',
+    },
+    calendarYearText: {
+        color: '#444',
+        fontSize: 14,
+    },
+    calendarYearTextSelected: {
+        color: MyColors.primary,
+        fontWeight: '700',
+    },
+    datePickerActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: 10,
+        marginTop: 8,
+    },
+    datePickerAction: {
+        minWidth: 92,
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        borderRadius: 8,
+    },
+    datePickerConfirm: {
+        backgroundColor: MyColors.primary,
+    },
+    datePickerCancelText: {
+        color: '#555',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    datePickerConfirmText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
     },
     readonlyField: {
         borderWidth: 1,
