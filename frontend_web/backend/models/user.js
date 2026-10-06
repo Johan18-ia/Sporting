@@ -129,7 +129,8 @@ User.update = async (user, result) => {
         fields.push("image = ?");
         values.push(user.image);
     }
-    if (user.role) {
+    const validRoles = ['admin', 'seller', 'user'];
+    if (validRoles.includes(user.role)) {
         fields.push("role = ?");
         values.push(user.role);
     }

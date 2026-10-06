@@ -339,6 +339,7 @@ module.exports = {
     getUserUpdate(req, res) {
         // Obtiene datos del usuario
         const user = req.body;
+        user.id = req.params.id;
 
         // Validar que el usuario tenga ID
         if (!user.id) {
@@ -370,6 +371,13 @@ module.exports = {
             });
         }
 
+        if (currentUserRole !== 'admin' && currentUserId !== parseInt(req.params.id)) {
+            return res.status(403).json({
+                success: false,
+                message: "No puedes actualizar a otro usuario",
+            });
+        }
+
         // Un seller no puede cambiar el rol de un usuario a admin
         if (currentUserRole === 'seller' && user.role === 'admin') {
             return res.status(403).json({
@@ -398,6 +406,10 @@ module.exports = {
         // ============================================
         // ACTUALIZAR EL USUARIO
         // ============================================
+        if (currentUserRole !== 'admin') {
+            delete req.body.role;
+        }
+
         User.update(user, (err, data) => {
             // Validación de error
             if (err) {

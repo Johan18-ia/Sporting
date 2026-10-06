@@ -221,7 +221,7 @@ router.get(
  *         description: Usuario no encontrado
  */
 router.put(
-    '/',
+    '/:id',
     verifyToken,
     authorizeRoles(['admin', 'seller']),
     userController.getUserUpdate
