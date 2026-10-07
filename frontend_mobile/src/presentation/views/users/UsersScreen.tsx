@@ -28,6 +28,7 @@ interface User {
     lastname: string;
     email: string;
     role: 'admin' | 'seller' | 'user';
+    user_type?: 'student' | 'parent' | 'none';
     phone?: string;
     is_active: number;
     image?: string;
@@ -178,6 +179,8 @@ export const UsersScreen = () => {
     const getRoleLabel = (item: User) => {
         if (item.role === 'admin') return 'Administrador';
         if (item.role === 'seller') return 'Moderador';
+        if (item.user_type === 'parent') return 'Padre';
+        if (item.user_type === 'student' || item.isStudent) return 'Estudiante';
         return 'Usuario';
     };
 
@@ -212,7 +215,7 @@ export const UsersScreen = () => {
                     <View style={styles.userMeta}>
                         <View style={[styles.roleBadge, { backgroundColor: roleBadge.backgroundColor }]}>
                             <Text style={[styles.roleBadgeText, { color: roleBadge.color }]}>
-                                {item.role === 'user' && item.isStudent ? 'Estudiante' : getRoleLabel(item)}
+                                {getRoleLabel(item)}
                             </Text>
                         </View>
                         {item.is_active === 0 && (
