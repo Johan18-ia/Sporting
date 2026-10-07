@@ -31,6 +31,7 @@ import { ReportsScreen } from '../presentation/views/reports/ReportsScreen';
 import { ProfileScreen } from '../presentation/views/profile/ProfileScreen';
 import { ProfileDetailScreen } from '../presentation/views/profile/ProfileDetailScreen';
 import { SettingsScreen } from '../presentation/views/profile/SettingsScreen';
+import { ChangePasswordScreen } from '../presentation/views/profile/ChangePasswordScreen';
 import { RootStackParamList } from './RootStackParamList';
 import { useAuth } from '../hooks/useAuth';
 import { MyColors } from '../presentation/theme/AppTheme';
@@ -523,6 +524,11 @@ export const AppNavigator = () => {
                             name="Settings" 
                             component={SettingsScreen}
                             options={{ title: 'Configuración' }}
+                        />
+                        <Stack.Screen
+                            name="ChangePassword"
+                            component={ChangePasswordScreen}
+                            options={{ title: 'Cambiar contraseña' }}
                         />
                     </>
                 )}
