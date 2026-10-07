@@ -5,6 +5,8 @@
 // igual que el panel de administracion.
 // ====================================================
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../config/routes';
 import useAuth from '../../hooks/useAuth';
 import TournamentModel from '../../models/TournamentModel';
 import ScheduleModel from '../../models/ScheduleModel';
@@ -19,6 +21,7 @@ const StudentDashboardView = ({ activeTab = 'dashboard' }) => {
     // se reutiliza en todas las secciones/pestañas)
     // ============================================
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [myTournaments, setMyTournaments] = useState([]);
@@ -98,6 +101,14 @@ const StudentDashboardView = ({ activeTab = 'dashboard' }) => {
                         <span className="label">Rol</span>
                         <span className="badge-sporting badge-sporting-user">Estudiante</span>
                     </div>
+                    <button
+                        type="button"
+                        className="btn-sporting-secondary"
+                        onClick={() => navigate(ROUTES.CHANGE_PASSWORD)}
+                        style={{ marginTop: 12, width: '100%' }}
+                    >
+                        Cambiar contraseña
+                    </button>
                 </Card>
             </div>
         );

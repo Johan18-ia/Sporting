@@ -306,6 +306,10 @@
   padding: 20px;
 }
 
+.user-form .form-row-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .patch-toggle {
   padding: 15px 20px;
   background: #f8f9fa;

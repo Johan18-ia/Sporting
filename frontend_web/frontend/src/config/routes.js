@@ -8,6 +8,7 @@ export const ROUTES = {
     LOGIN: '/login',
     REGISTER: '/register',
     DASHBOARD: '/dashboard',
+    CHANGE_PASSWORD: '/dashboard/change-password',
     TOURNAMENTS: '/tournaments',
     TOURNAMENT_DETAIL: '/tournaments/:id',
     TOURNAMENT_TEAMS: '/tournaments/:id/teams',

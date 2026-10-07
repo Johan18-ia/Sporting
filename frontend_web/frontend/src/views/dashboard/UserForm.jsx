@@ -530,22 +530,24 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                         ROL Y CATEGORÍA
                         ============================================ */}
                         {canAssignRole() && (
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Rol</label>
-                                    <select
-                                        name="role"
-                                        value={formData.role}
-                                        onChange={handleChange}
-                                        className="form-control"
-                                        disabled={loading}
-                                    >
-                                        <option value="user">Usuario</option>
-                                        <option value="seller">Vendedor</option>
-                                        <option value="admin">Administrador</option>
-                                    </select>
-                                    <small className="form-hint">Define los permisos del usuario</small>
-                                </div>
+                            <div className={`form-row ${isEdit ? '' : 'form-row-single'}`}>
+                                {isEdit && (
+                                    <div className="form-group">
+                                        <label>Rol</label>
+                                        <select
+                                            name="role"
+                                            value={formData.role}
+                                            onChange={handleChange}
+                                            className="form-control"
+                                            disabled={loading}
+                                        >
+                                            <option value="user">Usuario</option>
+                                            <option value="seller">Vendedor</option>
+                                            <option value="admin">Administrador</option>
+                                        </select>
+                                        <small className="form-hint">Define los permisos del usuario</small>
+                                    </div>
+                                )}
                                 <div className="form-group">
                                     <label>Categoría (Año)</label>
                                     <select

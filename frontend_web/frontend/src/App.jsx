@@ -4,6 +4,7 @@ import { ROUTES } from './config/routes'
 import LoginView from './views/auth/LoginView'
 import RegisterView from './views/auth/RegisterView'
 import DashboardView from './views/dashboard/DashboardView'
+import ChangePasswordView from './views/dashboard/ChangePasswordView'
 import CatalogoView from './views/public/CatalogoView'
 import TournamentsView from './views/tournaments/TournamentsView'
 import TeamsView from './views/teams/TeamsView'
@@ -47,6 +48,15 @@ function App() {
                 <Route path={ROUTES.TOURNAMENTS} element={<TournamentsView />} />
                 <Route path={ROUTES.TEAMS} element={<TeamsView />} />
                 <Route path={ROUTES.SCHEDULES} element={<SchedulesView />} />
+
+                <Route
+                    path={ROUTES.CHANGE_PASSWORD}
+                    element={
+                        <ProtectedRoute>
+                            <ChangePasswordView />
+                        </ProtectedRoute>
+                    }
+                />
 
                 <Route
                     path={`${ROUTES.DASHBOARD}/*`}

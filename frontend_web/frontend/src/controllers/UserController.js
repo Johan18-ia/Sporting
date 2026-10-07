@@ -233,6 +233,36 @@ class UserController {
             onError('Error al cambiar estado del usuario')
         }
     }
+
+    // ============================================
+    // CAMBIAR CONTRASEÑA DEL USUARIO AUTENTICADO
+    // ============================================
+    static async changePassword(currentPassword, newPassword, onSuccess, onError) {
+        try {
+            if (!currentPassword || !newPassword) {
+                onError('Debes ingresar la contraseña actual y la nueva')
+                return
+            }
+            if (newPassword.length < 6) {
+                onError('La nueva contraseña debe tener al menos 6 caracteres')
+                return
+            }
+            if (currentPassword === newPassword) {
+                onError('La nueva contraseña debe ser diferente a la actual')
+                return
+            }
+
+            const result = await UserModel.changePassword(currentPassword, newPassword)
+            if (result.success) {
+                onSuccess(result.data)
+            } else {
+                onError(result.error)
+            }
+        } catch (error) {
+            console.error('Error en changePassword:', error)
+            onError('Error al cambiar la contraseña')
+        }
+    }
 }
 
 export default UserController

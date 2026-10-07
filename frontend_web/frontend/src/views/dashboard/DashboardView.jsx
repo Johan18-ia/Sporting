@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
+import { ROUTES } from '../../config/routes'
 import StudentModel from '../../models/StudentModel'
 import TournamentModel from '../../models/TournamentModel'
 import ProductModel from '../../models/ProductModel'
@@ -238,6 +239,14 @@ const DashboardView = () => {
             <span className="label">Rol</span>
             <span className="badge-sporting badge-sporting-admin">{currentUser?.role}</span>
           </div>
+          <button
+            type="button"
+            className="btn-sporting-secondary"
+            onClick={() => navigate(ROUTES.CHANGE_PASSWORD)}
+            style={{ marginTop: 12, width: '100%' }}
+          >
+            Cambiar contraseña
+          </button>
         </Card>
       </div>
     </>
