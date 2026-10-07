@@ -7,6 +7,7 @@ import StudentModel from '../../models/StudentModel'
 import PageHeader from '../ui/PageHeader'
 import Button from '../ui/Button'
 import '../../styles/Students.css'
+import { getFieldError } from '../../utils/validators'
 
 const emptyForm = {
   name: '',
@@ -81,6 +82,18 @@ const StudentsView = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const fieldErrors = [
+      getFieldError('name', formData.name),
+      getFieldError('name', formData.lastname),
+      getFieldError('digits', formData.document),
+      getFieldError('phone', formData.phone),
+      getFieldError('name', formData.emergency_contact),
+      getFieldError('phone', formData.emergency_phone)
+    ].filter(Boolean)
+    if (fieldErrors.length) {
+      setMessage({ type: 'error', text: fieldErrors[0] })
+      return
+    }
     if (!formData.name || !formData.lastname || !formData.document || !formData.category_id) {
       setMessage({ type: 'error', text: 'Complete todos los campos obligatorios' })
       setTimeout(() => setMessage(null), 3000)
@@ -250,15 +263,18 @@ const StudentsView = () => {
             <div className="stu-form-grid">
               <div className="ui-field">
                 <label>Nombre *</label>
-                <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+                <input type="text" name="name" value={formData.name} onChange={handleChange} className={getFieldError('name', formData.name) ? 'field-invalid' : ''} required />
+                {getFieldError('name', formData.name) && <small className="field-error-message">{getFieldError('name', formData.name)}</small>}
               </div>
               <div className="ui-field">
                 <label>Apellido *</label>
-                <input type="text" name="lastname" value={formData.lastname} onChange={handleChange} required />
+                <input type="text" name="lastname" value={formData.lastname} onChange={handleChange} className={getFieldError('name', formData.lastname) ? 'field-invalid' : ''} required />
+                {getFieldError('name', formData.lastname) && <small className="field-error-message">{getFieldError('name', formData.lastname)}</small>}
               </div>
               <div className="ui-field">
                 <label>Documento *</label>
-                <input type="text" name="document" value={formData.document} onChange={handleChange} required />
+                <input type="text" name="document" value={formData.document} onChange={handleChange} className={getFieldError('digits', formData.document) ? 'field-invalid' : ''} required />
+                {getFieldError('digits', formData.document) && <small className="field-error-message">{getFieldError('digits', formData.document)}</small>}
               </div>
               <div className="ui-field">
                 <label>Categoría *</label>
@@ -277,7 +293,8 @@ const StudentsView = () => {
               </div>
               <div className="ui-field">
                 <label>Teléfono</label>
-                <input type="text" name="phone" value={formData.phone} onChange={handleChange} />
+                <input type="text" name="phone" value={formData.phone} onChange={handleChange} className={getFieldError('phone', formData.phone) ? 'field-invalid' : ''} />
+                {getFieldError('phone', formData.phone) && <small className="field-error-message">{getFieldError('phone', formData.phone)}</small>}
               </div>
               <div className="ui-field" style={{ gridColumn: '1 / -1' }}>
                 <label>Dirección</label>
@@ -285,11 +302,13 @@ const StudentsView = () => {
               </div>
               <div className="ui-field">
                 <label>Contacto de emergencia</label>
-                <input type="text" name="emergency_contact" value={formData.emergency_contact} onChange={handleChange} />
+                <input type="text" name="emergency_contact" value={formData.emergency_contact} onChange={handleChange} className={getFieldError('name', formData.emergency_contact) ? 'field-invalid' : ''} />
+                {getFieldError('name', formData.emergency_contact) && <small className="field-error-message">{getFieldError('name', formData.emergency_contact)}</small>}
               </div>
               <div className="ui-field">
                 <label>Tel. emergencia</label>
-                <input type="text" name="emergency_phone" value={formData.emergency_phone} onChange={handleChange} />
+                <input type="text" name="emergency_phone" value={formData.emergency_phone} onChange={handleChange} className={getFieldError('phone', formData.emergency_phone) ? 'field-invalid' : ''} />
+                {getFieldError('phone', formData.emergency_phone) && <small className="field-error-message">{getFieldError('phone', formData.emergency_phone)}</small>}
               </div>
             </div>
             <div className="stu-form-actions">

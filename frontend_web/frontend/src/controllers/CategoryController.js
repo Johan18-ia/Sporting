@@ -28,7 +28,7 @@ class CategoryController {
         return
       }
 
-      if (!categoryData.name_year) {
+      if (categoryData.category_year == null || categoryData.category_year === '') {
         onError('El año de la categoría es requerido')
         return
       }

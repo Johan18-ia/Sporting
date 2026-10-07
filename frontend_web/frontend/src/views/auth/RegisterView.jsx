@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
 import CategoryModel from '../../models/CategoryModel'
+import { getFieldError } from '../../utils/validators'
 import '../../styles/Register.css'
 
 const initialForm = {
@@ -64,12 +65,12 @@ const RegisterView = () => {
     const autoCategory = useMemo(() => {
         if (!birthYear || !categories.length) return null
         return categories.find(
-            category => String(category.category_year || category.name_year) === birthYear
+            category => String(category.category_year) === birthYear
         ) || null
     }, [birthYear, categories])
 
     const autoCategoryId = autoCategory?.id == null ? '' : String(autoCategory.id)
-    const autoCategoryYear = autoCategory?.category_year || autoCategory?.name_year
+    const autoCategoryYear = autoCategory?.category_year
     const autoCategoryLabel = autoCategory ? `Categoría ${autoCategoryYear}` : ''
 
     useEffect(() => {
@@ -89,6 +90,26 @@ const RegisterView = () => {
 
         if (!formData.name || !formData.email || !formData.password) {
             setError('Nombre, email y contraseña son obligatorios')
+            return
+        }
+
+        const validationErrors = [
+            getFieldError('name', formData.name),
+            getFieldError('name', formData.lastname),
+            getFieldError('digits', formData.document),
+            getFieldError('email', formData.email),
+            getFieldError('phone', formData.phone),
+            getFieldError('name', formData.emergency_contact_name),
+            getFieldError('phone', formData.emergency_contact_phone),
+            getFieldError('url', formData.image)
+        ].filter(Boolean)
+        if (validationErrors.length) {
+            setError(validationErrors[0])
+            return
+        }
+
+        if (!formData.document.trim()) {
+            setError('El documento es obligatorio')
             return
         }
 
@@ -216,8 +237,9 @@ const RegisterView = () => {
                                 placeholder="Nombre completo"
                                 disabled={loading}
                                 required
-                                className="sporting-input"
+                                className={`sporting-input ${getFieldError('name', formData.name) ? 'field-invalid' : ''}`}
                             />
+                            {getFieldError('name', formData.name) && <small className="field-error-message">{getFieldError('name', formData.name)}</small>}
                         </div>
                         <div className="form-group">
                             <label htmlFor="lastname">Apellido</label>
@@ -229,8 +251,9 @@ const RegisterView = () => {
                                 onChange={handleChange}
                                 placeholder="Apellido"
                                 disabled={loading}
-                                className="sporting-input"
+                                className={`sporting-input ${getFieldError('name', formData.lastname) ? 'field-invalid' : ''}`}
                             />
+                            {getFieldError('name', formData.lastname) && <small className="field-error-message">{getFieldError('name', formData.lastname)}</small>}
                         </div>
                     </div>
 
@@ -246,8 +269,10 @@ const RegisterView = () => {
                                     onChange={handleChange}
                                     placeholder="Número de identificación"
                                     disabled={loading}
-                                    className="sporting-input"
+                                    className={`sporting-input ${getFieldError('digits', formData.document) ? 'field-invalid' : ''}`}
+                                    required
                                 />
+                                {getFieldError('digits', formData.document) && <small className="field-error-message">{getFieldError('digits', formData.document)}</small>}
                             </div>
                             <div className="form-group">
                                 <label htmlFor="birth_date">Fecha de nacimiento</label>
@@ -276,8 +301,10 @@ const RegisterView = () => {
                                     onChange={handleChange}
                                     placeholder="Número de identificación"
                                     disabled={loading}
-                                    className="sporting-input"
+                                    className={`sporting-input ${getFieldError('digits', formData.document) ? 'field-invalid' : ''}`}
+                                    required
                                 />
+                                {getFieldError('digits', formData.document) && <small className="field-error-message">{getFieldError('digits', formData.document)}</small>}
                             </div>
                             <div className="form-group">
                                 <label htmlFor="occupation">Ocupación</label>
@@ -352,8 +379,9 @@ const RegisterView = () => {
                                     onChange={handleChange}
                                     placeholder="Nombre del responsable"
                                     disabled={loading}
-                                    className="sporting-input"
+                                    className={`sporting-input ${getFieldError('name', formData.emergency_contact_name) ? 'field-invalid' : ''}`}
                                 />
+                                {getFieldError('name', formData.emergency_contact_name) && <small className="field-error-message">{getFieldError('name', formData.emergency_contact_name)}</small>}
                             </div>
                             <div className="form-group">
                                 <label htmlFor="emergency_contact_phone">Teléfono de emergencia</label>
@@ -365,8 +393,9 @@ const RegisterView = () => {
                                     onChange={handleChange}
                                     placeholder="Número de emergencia"
                                     disabled={loading}
-                                    className="sporting-input"
+                                    className={`sporting-input ${getFieldError('phone', formData.emergency_contact_phone) ? 'field-invalid' : ''}`}
                                 />
+                                {getFieldError('phone', formData.emergency_contact_phone) && <small className="field-error-message">{getFieldError('phone', formData.emergency_contact_phone)}</small>}
                             </div>
                         </div>
                     )}
@@ -398,8 +427,9 @@ const RegisterView = () => {
                             placeholder="usuario@ejemplo.com"
                             disabled={loading}
                             required
-                            className="sporting-input"
+                            className={`sporting-input ${getFieldError('email', formData.email) ? 'field-invalid' : ''}`}
                         />
+                        {getFieldError('email', formData.email) && <small className="field-error-message">{getFieldError('email', formData.email)}</small>}
                     </div>
 
                     <div className="form-row">
@@ -443,8 +473,9 @@ const RegisterView = () => {
                             onChange={handleChange}
                             placeholder="Número de contacto"
                             disabled={loading}
-                            className="sporting-input"
+                            className={`sporting-input ${getFieldError('phone', formData.phone) ? 'field-invalid' : ''}`}
                         />
+                        {getFieldError('phone', formData.phone) && <small className="field-error-message">{getFieldError('phone', formData.phone)}</small>}
                     </div>
 
                     <div className="form-row">
@@ -484,15 +515,16 @@ const RegisterView = () => {
                     <div className="form-group">
                         <label htmlFor="image">URL de imagen</label>
                         <input
-                            type="text"
+                            type="url"
                             id="image"
                             name="image"
                             value={formData.image}
                             onChange={handleChange}
                             placeholder="URL de la imagen de perfil"
                             disabled={loading}
-                            className="sporting-input"
+                            className={`sporting-input ${getFieldError('url', formData.image) ? 'field-invalid' : ''}`}
                         />
+                        {getFieldError('url', formData.image) && <small className="field-error-message">{getFieldError('url', formData.image)}</small>}
                     </div>
 
                     <button type="submit" className="register-button sporting-register-btn" disabled={loading}>

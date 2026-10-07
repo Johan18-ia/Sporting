@@ -5,6 +5,7 @@ import AlertMessage from '../common/AlertMessage'
 import PageHeader from '../ui/PageHeader'
 import Button from '../ui/Button'
 import '../../styles/Products.css'
+import { getFieldError } from '../../utils/validators'
 
 const ProductsView = () => {
   const [products, setProducts] = useState([])
@@ -60,6 +61,15 @@ const ProductsView = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const fieldErrors = [
+      getFieldError('price', formData.precio),
+      getFieldError('integer', formData.stock),
+      getFieldError('url', formData.imagen)
+    ].filter(Boolean)
+    if (fieldErrors.length) {
+      setMessage({ type: 'error', text: fieldErrors[0] })
+      return
+    }
     setLoading(true)
 
     const productData = {
@@ -166,11 +176,13 @@ const ProductsView = () => {
               </div>
               <div className="ui-field">
                 <label>Precio ($) *</label>
-                <input type="number" name="precio" value={formData.precio} onChange={handleChange} required min="0" step="0.01" />
+                <input type="number" name="precio" value={formData.precio} onChange={handleChange} className={getFieldError('price', formData.precio) ? 'field-invalid' : ''} required min="0" step="0.01" />
+                {getFieldError('price', formData.precio) && <small className="field-error-message">{getFieldError('price', formData.precio)}</small>}
               </div>
               <div className="ui-field">
                 <label>Stock *</label>
-                <input type="number" name="stock" value={formData.stock} onChange={handleChange} required min="0" />
+                <input type="number" name="stock" value={formData.stock} onChange={handleChange} className={getFieldError('integer', formData.stock) ? 'field-invalid' : ''} required min="0" step="1" />
+                {getFieldError('integer', formData.stock) && <small className="field-error-message">{getFieldError('integer', formData.stock)}</small>}
               </div>
               <div className="ui-field" style={{ gridColumn: '1 / -1' }}>
                 <label>URL de imagen</label>
@@ -180,7 +192,9 @@ const ProductsView = () => {
                   value={formData.imagen}
                   onChange={handleChange}
                   placeholder="https://..."
+                  className={getFieldError('url', formData.imagen) ? 'field-invalid' : ''}
                 />
+                {getFieldError('url', formData.imagen) && <small className="field-error-message">{getFieldError('url', formData.imagen)}</small>}
               </div>
               <div className="ui-field" style={{ gridColumn: '1 / -1' }}>
                 <label>Descripción</label>

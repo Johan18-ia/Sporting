@@ -119,6 +119,19 @@
   border-color: var(--sporting-red);
 }
 
+.field-invalid,
+.ui-field .field-invalid {
+  border-color: #c82333 !important;
+  background-color: #fff5f5 !important;
+}
+
+.field-error-message {
+  display: block;
+  margin-top: 4px;
+  color: #b42318;
+  font-size: 12px;
+}
+
 .ui-btn-full {
   width: 100%;
 }

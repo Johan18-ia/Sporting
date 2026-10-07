@@ -66,12 +66,15 @@ ApiDelivery.interceptors.response.use(
     },
     async (error) => {
         const isLoginRequest = error.config?.url?.includes('/users/login');
+        const status = error.response?.status;
         const errorMessage = String(error.response?.data?.message || error.message || 'Error desconocido');
-        if (isLoginRequest && error.response?.status === 401) {
+        if (isLoginRequest && status === 401) {
             console.log('Credenciales invalidas en login:', errorMessage);
+        } else if (status >= 400 && status < 500) {
+            console.log('Solicitud rechazada:', String(error.config?.url || 'URL desconocida'), status, errorMessage);
         } else {
             console.error('Error en respuesta:', String(error.config?.url || 'URL desconocida'));
-            console.error('Status:', String(error.response?.status || 'Sin respuesta'));
+            console.error('Status:', String(status || 'Sin respuesta'));
             console.error('Mensaje:', errorMessage);
             if (error.response?.data !== undefined) {
                 console.error('Cuerpo completo de la respuesta:', error.response.data);

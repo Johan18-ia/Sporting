@@ -21,6 +21,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
+import { getFieldValidationError } from '../../../utils/validators';
 
 interface Product {
     id: number;
@@ -93,12 +94,21 @@ export const ProductsScreen = () => {
             Alert.alert('Error', 'Nombre y precio son requeridos');
             return;
         }
+        const fieldErrors = [
+            getFieldValidationError('price', formData.precio),
+            getFieldValidationError('integer', formData.stock),
+            getFieldValidationError('url', formData.imagen)
+        ].filter(Boolean);
+        if (fieldErrors.length) {
+            Alert.alert('Revisa el formulario', fieldErrors[0]);
+            return;
+        }
 
         try {
             const payload = {
                 nombre: formData.nombre,
                 descripcion: formData.descripcion || '',
-                precio: parseFloat(formData.precio),
+                precio: parseFloat(formData.precio.replace(',', '.')),
                 stock: parseInt(formData.stock) || 0,
                 categoria: formData.categoria || '',
                 imagen: formData.imagen || ''
@@ -409,7 +419,7 @@ export const ProductsScreen = () => {
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>Nombre *</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, getFieldValidationError('price', formData.precio) && styles.inputInvalid]}
                                     placeholder="Nombre del producto"
                                     value={formData.nombre}
                                     onChangeText={(text) =>
@@ -442,11 +452,12 @@ export const ProductsScreen = () => {
                                             setFormData({ ...formData, precio: text })
                                         }
                                     />
+                                    {getFieldValidationError('price', formData.precio) && <Text style={styles.errorText}>{getFieldValidationError('price', formData.precio)}</Text>}
                                 </View>
                                 <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                                     <Text style={styles.label}>Stock</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, getFieldValidationError('integer', formData.stock) && styles.inputInvalid]}
                                         placeholder="0"
                                         keyboardType="number-pad"
                                         value={formData.stock}
@@ -454,12 +465,13 @@ export const ProductsScreen = () => {
                                             setFormData({ ...formData, stock: text })
                                         }
                                     />
+                                    {getFieldValidationError('integer', formData.stock) && <Text style={styles.errorText}>{getFieldValidationError('integer', formData.stock)}</Text>}
                                 </View>
                             </View>
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>Categoría</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, getFieldValidationError('url', formData.imagen) && styles.inputInvalid]}
                                     placeholder="Ej: Uniformes, Accesorios..."
                                     value={formData.categoria}
                                     onChangeText={(text) =>
@@ -478,6 +490,7 @@ export const ProductsScreen = () => {
                                         setFormData({ ...formData, imagen: text })
                                     }
                                 />
+                                {getFieldValidationError('url', formData.imagen) && <Text style={styles.errorText}>{getFieldValidationError('url', formData.imagen)}</Text>}
                                 {!!formData.imagen && (
                                     <Image
                                         source={{ uri: formData.imagen }}
@@ -802,6 +815,15 @@ const styles = StyleSheet.create({
         fontSize: 15,
         backgroundColor: '#FAF8F8',
         color: '#1A1A1A',
+    },
+    inputInvalid: {
+        borderColor: '#c82333',
+        backgroundColor: '#fff5f5',
+    },
+    errorText: {
+        color: '#b42318',
+        fontSize: 12,
+        marginTop: 4,
     },
     inputMultiline: {
         minHeight: 80,

@@ -348,12 +348,13 @@ export const TeamsScreen = () => {
             <ScrollView keyboardShouldPersistTaps="handled">
               <Text style={styles.label}>Nombre del equipo *</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, !formData.name.trim() && formData.name.length > 0 && styles.inputError]}
                 value={formData.name}
                 onChangeText={(t) => setFormData((p) => ({ ...p, name: t }))}
                 placeholder="Ej: Leones 2015"
                 placeholderTextColor="#aaa"
               />
+              {!formData.name.trim() && formData.name.length > 0 && <Text style={styles.errorText}>El nombre no puede contener solo espacios.</Text>}
 
               <Text style={styles.label}>Eslogan (opcional)</Text>
               <TextInput
@@ -376,6 +377,7 @@ export const TeamsScreen = () => {
                   {formData.studentIds.length} seleccionados
                 </Text>
               </View>
+              {formData.studentIds.length < MIN_MEMBERS && <Text style={styles.errorText}>Selecciona al menos {MIN_MEMBERS} estudiantes.</Text>}
 
               <TextInput
                 style={styles.input}
@@ -543,6 +545,8 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     backgroundColor: '#faf8f8'
   },
+  inputError: { borderColor: '#c82333', backgroundColor: '#fff5f5' },
+  errorText: { color: '#b42318', fontSize: 12, marginTop: 4, marginBottom: 8 },
   selectHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

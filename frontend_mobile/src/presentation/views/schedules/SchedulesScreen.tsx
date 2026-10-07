@@ -35,6 +35,7 @@ interface Category {
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const DAY_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const isValidTime = (value: string) => /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
 
 
 const getTodayDayName = (): string => {
@@ -112,6 +113,14 @@ export const SchedulesScreen = () => {
 
         if (!formData.id_category || !formData.day_of_week) {
             Alert.alert('Error', 'Todos los campos son requeridos');
+            return;
+        }
+        if (!isValidTime(formData.start_time) || !isValidTime(formData.end_time)) {
+            Alert.alert('Revisa el horario', 'Escribe las horas en formato HH:mm.');
+            return;
+        }
+        if (formData.start_time >= formData.end_time) {
+            Alert.alert('Revisa el horario', 'La hora de fin debe ser posterior a la de inicio.');
             return;
         }
 
@@ -479,24 +488,32 @@ export const SchedulesScreen = () => {
                                 <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                                     <Text style={styles.label}>Hora inicio *</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, !isValidTime(formData.start_time) && styles.inputError]}
                                         placeholder="08:00"
                                         value={formData.start_time}
+                                        keyboardType="numbers-and-punctuation"
                                         onChangeText={(text) =>
                                             setFormData({ ...formData, start_time: text })
                                         }
                                     />
+                                    {!isValidTime(formData.start_time) && <Text style={styles.errorText}>Usa HH:mm (00:00–23:59).</Text>}
                                 </View>
                                 <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                                     <Text style={styles.label}>Hora fin *</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, (!isValidTime(formData.end_time) || (isValidTime(formData.start_time) && formData.start_time >= formData.end_time)) && styles.inputError]}
                                         placeholder="10:00"
                                         value={formData.end_time}
+                                        keyboardType="numbers-and-punctuation"
                                         onChangeText={(text) =>
                                             setFormData({ ...formData, end_time: text })
                                         }
                                     />
+                                    {!isValidTime(formData.end_time) ? (
+                                        <Text style={styles.errorText}>Usa HH:mm (00:00–23:59).</Text>
+                                    ) : isValidTime(formData.start_time) && formData.start_time >= formData.end_time ? (
+                                        <Text style={styles.errorText}>Debe ser posterior a la hora de inicio.</Text>
+                                    ) : null}
                                 </View>
                             </View>
 
@@ -831,6 +848,15 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(139, 0, 0, 0.12)',
         marginBottom: 4,
         backgroundColor: '#FAF8F8',
+    },
+    inputError: {
+        borderColor: '#c82333',
+        backgroundColor: '#fff5f5',
+    },
+    errorText: {
+        color: '#b42318',
+        fontSize: 12,
+        marginTop: 4,
     },
     categoryOptionSelected: {
         backgroundColor: MyColors.primary,

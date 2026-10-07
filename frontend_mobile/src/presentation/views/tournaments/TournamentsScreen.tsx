@@ -257,12 +257,13 @@ export const TournamentsScreen = () => {
             <ScrollView keyboardShouldPersistTaps="handled">
               <Text style={styles.label}>Nombre *</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, !formData.name.trim() && formData.name.length > 0 && styles.inputError]}
                 placeholder="Nombre del torneo"
                 placeholderTextColor="#aaa"
                 value={formData.name}
                 onChangeText={(t) => setFormData((p) => ({ ...p, name: t }))}
               />
+              {!formData.name.trim() && formData.name.length > 0 && <Text style={styles.errorText}>El nombre no puede contener solo espacios.</Text>}
 
               <Text style={styles.label}>Categoría *</Text>
               <View style={styles.chips}>
@@ -304,6 +305,7 @@ export const TournamentsScreen = () => {
                   {formData.teamIds.length} seleccionados
                 </Text>
               </View>
+              {formData.teamIds.length < MIN_TEAMS && <Text style={styles.errorText}>Selecciona al menos {MIN_TEAMS} equipos.</Text>}
 
               {teams.length === 0 ? (
                 <Text style={styles.hint}>
@@ -463,6 +465,8 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     backgroundColor: '#faf8f8'
   },
+  inputError: { borderColor: '#c82333', backgroundColor: '#fff5f5' },
+  errorText: { color: '#b42318', fontSize: 12, marginTop: 4, marginBottom: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 14,

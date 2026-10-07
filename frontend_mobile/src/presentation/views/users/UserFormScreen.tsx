@@ -23,6 +23,7 @@ import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 import { useAuth } from '../../../hooks/useAuth';
 import { SaveUserLocalUseCase } from '../../../domain/useCases/userLocal/SaveUserLocal';
+import { getFieldValidationError } from '../../../utils/validators';
 
 type UserFormRouteProp = RouteProp<RootStackParamList, 'UserForm'>;
 
@@ -101,11 +102,19 @@ export const UserFormScreen = () => {
 
         if (!formData.name.trim()) {
             newErrors.name = 'El nombre es requerido';
+        } else if (getFieldValidationError('name', formData.name)) {
+            newErrors.name = getFieldValidationError('name', formData.name);
+        }
+        if (formData.lastname && getFieldValidationError('name', formData.lastname)) {
+            newErrors.lastname = getFieldValidationError('name', formData.lastname);
         }
         if (!formData.email.trim()) {
             newErrors.email = 'El email es requerido';
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
             newErrors.email = 'Email inválido';
+        }
+        if (formData.phone && getFieldValidationError('phone', formData.phone)) {
+            newErrors.phone = getFieldValidationError('phone', formData.phone);
         }
         if (mode === 'create') {
             if (!formData.password) {
@@ -241,28 +250,29 @@ export const UserFormScreen = () => {
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Nombres *</Text>
                         <TextInput
-                            style={[styles.input, errors.name && styles.inputError]}
+                            style={[styles.input, (errors.name || getFieldValidationError('name', formData.name)) && styles.inputError]}
                             placeholder="Nombre completo"
                             value={formData.name}
                             onChangeText={(text) => setFormData({ ...formData, name: text })}
                         />
-                        {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+                        {(errors.name || getFieldValidationError('name', formData.name)) && <Text style={styles.errorText}>{errors.name || getFieldValidationError('name', formData.name)}</Text>}
                     </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Apellidos</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, (errors.lastname || getFieldValidationError('name', formData.lastname)) && styles.inputError]}
                             placeholder="Apellido"
                             value={formData.lastname}
                             onChangeText={(text) => setFormData({ ...formData, lastname: text })}
                         />
+                        {(errors.lastname || getFieldValidationError('name', formData.lastname)) && <Text style={styles.errorText}>{errors.lastname || getFieldValidationError('name', formData.lastname)}</Text>}
                     </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Correo Electrónico *</Text>
                         <TextInput
-                            style={[styles.input, errors.email && styles.inputError]}
+                            style={[styles.input, (errors.email || getFieldValidationError('email', formData.email)) && styles.inputError]}
                             placeholder="usuario@ejemplo.com"
                             value={formData.email}
                             onChangeText={(text) => setFormData({ ...formData, email: text })}
@@ -270,18 +280,19 @@ export const UserFormScreen = () => {
                             autoCapitalize="none"
                             autoCorrect={false}
                         />
-                        {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+                        {(errors.email || getFieldValidationError('email', formData.email)) && <Text style={styles.errorText}>{errors.email || getFieldValidationError('email', formData.email)}</Text>}
                     </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Teléfono</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, (errors.phone || getFieldValidationError('phone', formData.phone)) && styles.inputError]}
                             placeholder="Número de contacto"
                             value={formData.phone}
                             onChangeText={(text) => setFormData({ ...formData, phone: text })}
                             keyboardType="phone-pad"
                         />
+                        {(errors.phone || getFieldValidationError('phone', formData.phone)) && <Text style={styles.errorText}>{errors.phone || getFieldValidationError('phone', formData.phone)}</Text>}
                     </View>
 
                     {mode === 'create' && (

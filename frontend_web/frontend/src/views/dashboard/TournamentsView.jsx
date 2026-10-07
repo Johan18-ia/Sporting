@@ -45,6 +45,10 @@ const TournamentsView = () => {
 
   const handleCreateTournament = (e) => {
     e.preventDefault();
+    if (!newTournament.name.trim() || !newTournament.category) {
+      setError('El nombre y la categoría del torneo son obligatorios');
+      return;
+    }
     TournamentController.create(
       newTournament,
       () => {
@@ -121,10 +125,12 @@ const TournamentsView = () => {
               <input
                 type="text"
                 value={newTournament.name}
-                onChange={(e) => setNewTournament({ ...newTournament, name: e.target.value })}
+                onChange={(e) => { setNewTournament({ ...newTournament, name: e.target.value }); setError(null); }}
                 placeholder="Ej: Copa Oro Sporting"
+                className={!newTournament.name.trim() && newTournament.name.length > 0 ? 'field-invalid' : ''}
                 required
               />
+              {!newTournament.name.trim() && newTournament.name.length > 0 && <small className="field-error-message">El nombre no puede contener solo espacios.</small>}
             </div>
             <div className="ui-field">
               <label>Categoría Permitida (Año)</label>

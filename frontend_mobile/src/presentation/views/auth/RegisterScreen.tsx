@@ -43,6 +43,12 @@ const parseFormDate = (value: string) => {
     return new Date(Number(year), Number(month) - 1, Number(day));
 };
 
+const hasInvalidNameCharacters = (value: string) => /[^A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0300-\u036F '\u2019-]/.test(value);
+const hasInvalidDocumentCharacters = (value: string) => /[^0-9]/.test(value);
+const hasInvalidPhone = (value: string) => Boolean(value) && !/^\d{7,15}$/.test(value);
+const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const validName = /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0300-\u036F]+(?:[ '\u2019-][A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0300-\u036F]+)*$/;
+
 export const RegisterScreen = () => {
     const navigation = useNavigation<RegisterScreenNavigationProp>();
     const { register, loading } = useAuth();
@@ -167,8 +173,43 @@ export const RegisterScreen = () => {
             return;
         }
 
+        if (!validName.test(name)) {
+            setError('El nombre solo puede contener letras, espacios, guiones y apóstrofes');
+            return;
+        }
+
+        if (lastname && !validName.test(lastname)) {
+            setError('El apellido solo puede contener letras, espacios, guiones y apóstrofes');
+            return;
+        }
+
+        if (!validEmail.test(email)) {
+            setError('Por favor ingrese un correo electrónico válido');
+            return;
+        }
+
+        if (phone && hasInvalidPhone(phone)) {
+            setError('El teléfono debe contener entre 7 y 15 números');
+            return;
+        }
+
+        if (emergencyName && !validName.test(emergencyName)) {
+            setError('El contacto de emergencia solo puede contener letras, espacios, guiones y apóstrofes');
+            return;
+        }
+
+        if (emergencyPhone && hasInvalidPhone(emergencyPhone)) {
+            setError('El teléfono de emergencia debe contener entre 7 y 15 números');
+            return;
+        }
+
         if (!document) {
             setError(userType === 'student' ? 'El documento del estudiante es obligatorio' : 'El documento del padre es obligatorio');
+            return;
+        }
+
+        if (hasInvalidDocumentCharacters(document)) {
+            setError('El documento solo puede contener números');
             return;
         }
 
@@ -195,13 +236,6 @@ export const RegisterScreen = () => {
 
         if (userType === 'student' && (!emergencyName || !emergencyPhone)) {
             setError('Debe completar el contacto y teléfono de emergencia');
-            return;
-        }
-
-        // Formato de email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            setError('Por favor ingrese un correo electrónico válido');
             return;
         }
 
@@ -248,7 +282,7 @@ export const RegisterScreen = () => {
             ]);
         } else {
             const err = (result.error || '').toLowerCase();
-            if (err.includes('email') && (err.includes('existe') || err.includes('duplicate') || err.includes('ya registrada'))) {
+            if (err.includes('email') && (err.includes('existe') || err.includes('duplicate') || err.includes('registrad'))) {
                 setError('El correo electrónico ya está registrado');
             } else if (err.includes('document') || err.includes('dni') || err.includes('cedula')) {
                 setError('El número de documento ya está registrado');
@@ -311,20 +345,32 @@ export const RegisterScreen = () => {
                         <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                             <Text style={styles.label}>Nombres *</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, hasInvalidNameCharacters(formData.name) && styles.inputInvalid]}
                                 placeholder="Tu nombre"
                                 value={formData.name}
                                 onChangeText={(value) => handleChange('name', value)}
+                                autoCapitalize="words"
+                                autoCorrect={false}
+                                maxLength={80}
                             />
+                            {hasInvalidNameCharacters(formData.name) && (
+                                <Text style={styles.fieldErrorText}>No se permiten números ni caracteres especiales.</Text>
+                            )}
                         </View>
                         <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                             <Text style={styles.label}>Apellidos</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, hasInvalidNameCharacters(formData.lastname) && styles.inputInvalid]}
                                 placeholder="Tu apellido"
                                 value={formData.lastname}
                                 onChangeText={(value) => handleChange('lastname', value)}
+                                autoCapitalize="words"
+                                autoCorrect={false}
+                                maxLength={80}
                             />
+                            {hasInvalidNameCharacters(formData.lastname) && (
+                                <Text style={styles.fieldErrorText}>No se permiten números ni caracteres especiales.</Text>
+                            )}
                         </View>
                     </View>
 
@@ -333,12 +379,15 @@ export const RegisterScreen = () => {
                             <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                                 <Text style={styles.label}>Documento *</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, hasInvalidDocumentCharacters(formData.document) && styles.inputInvalid]}
                                     placeholder="Documento"
                                     value={formData.document}
                                     onChangeText={(value) => handleChange('document', value)}
                                     keyboardType="number-pad"
                                 />
+                                {hasInvalidDocumentCharacters(formData.document) && (
+                                    <Text style={styles.fieldErrorText}>No se permiten letras ni símbolos. Usa solo números.</Text>
+                                )}
                             </View>
                             <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                                 <Text style={styles.label}>Fecha de nacimiento *</Text>
@@ -363,12 +412,15 @@ export const RegisterScreen = () => {
                             <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                                 <Text style={styles.label}>Documento del padre *</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, hasInvalidDocumentCharacters(formData.document) && styles.inputInvalid]}
                                     placeholder="Documento"
                                     value={formData.document}
                                     onChangeText={(value) => handleChange('document', value)}
                                     keyboardType="number-pad"
                                 />
+                                {hasInvalidDocumentCharacters(formData.document) && (
+                                    <Text style={styles.fieldErrorText}>No se permiten letras ni símbolos. Usa solo números.</Text>
+                                )}
                             </View>
                             <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                                 <Text style={styles.label}>Ocupación</Text>
@@ -404,7 +456,7 @@ export const RegisterScreen = () => {
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Correo Electrónico *</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, formData.email.length > 0 && !validEmail.test(formData.email.trim()) && styles.inputInvalid]}
                             placeholder="usuario@ejemplo.com"
                             value={formData.email}
                             onChangeText={(value) => handleChange('email', value)}
@@ -412,17 +464,23 @@ export const RegisterScreen = () => {
                             autoCapitalize="none"
                             autoCorrect={false}
                         />
+                        {formData.email.length > 0 && !validEmail.test(formData.email.trim()) && (
+                            <Text style={styles.fieldErrorText}>Ingresa un correo electrónico válido.</Text>
+                        )}
                     </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Teléfono</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, hasInvalidPhone(formData.phone) && styles.inputInvalid]}
                             placeholder="Número de contacto"
                             value={formData.phone}
                             onChangeText={(value) => handleChange('phone', value)}
                             keyboardType="phone-pad"
                         />
+                        {hasInvalidPhone(formData.phone) && (
+                            <Text style={styles.fieldErrorText}>Usa entre 7 y 15 dígitos, sin letras ni símbolos.</Text>
+                        )}
                     </View>
 
                     <View style={styles.inputGroup}>
@@ -440,21 +498,29 @@ export const RegisterScreen = () => {
                             <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                                 <Text style={styles.label}>Contacto emergencia *</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, hasInvalidNameCharacters(formData.emergency_contact_name) && styles.inputInvalid]}
                                     placeholder="Nombre"
                                     value={formData.emergency_contact_name}
                                     onChangeText={(value) => handleChange('emergency_contact_name', value)}
+                                    autoCapitalize="words"
+                                    autoCorrect={false}
                                 />
+                                {hasInvalidNameCharacters(formData.emergency_contact_name) && (
+                                    <Text style={styles.fieldErrorText}>El contacto solo puede contener letras y separadores de nombres.</Text>
+                                )}
                             </View>
                             <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                                 <Text style={styles.label}>Tel. emergencia *</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, hasInvalidPhone(formData.emergency_contact_phone) && styles.inputInvalid]}
                                     placeholder="Número"
                                     value={formData.emergency_contact_phone}
                                     onChangeText={(value) => handleChange('emergency_contact_phone', value)}
                                     keyboardType="phone-pad"
                                 />
+                                {hasInvalidPhone(formData.emergency_contact_phone) && (
+                                    <Text style={styles.fieldErrorText}>Usa entre 7 y 15 dígitos, sin letras ni símbolos.</Text>
+                                )}
                             </View>
                         </View>
                     )}
@@ -766,6 +832,15 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         fontSize: 15,
         backgroundColor: '#f8f9fa',
+    },
+    inputInvalid: {
+        borderColor: '#dc3545',
+        backgroundColor: '#fff5f5',
+    },
+    fieldErrorText: {
+        color: '#b42318',
+        fontSize: 12,
+        marginTop: 4,
     },
     dateInput: {
         height: 44,
