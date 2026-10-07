@@ -17,6 +17,7 @@ import {
     Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { MyColors } from '../../theme/AppTheme';
@@ -27,6 +28,29 @@ import { getFieldValidationError } from '../../../utils/validators';
 
 type UserFormRouteProp = RouteProp<RootStackParamList, 'UserForm'>;
 
+const isValidIsoDate = (value: string) => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    if (!match) return false;
+    const [, yearText, monthText, dayText] = match;
+    const year = Number(yearText);
+    const month = Number(monthText);
+    const day = Number(dayText);
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+};
+
+const formatIsoDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const parseIsoDate = (value: string) => {
+    if (!isValidIsoDate(value)) return new Date();
+    return new Date(`${value}T00:00:00`);
+};
+
 interface FormData {
     name: string;
     lastname: string;
@@ -35,6 +59,13 @@ interface FormData {
     confirmPassword: string;
     phone: string;
     role: string;
+    user_type: 'student' | 'parent';
+    document: string;
+    birth_date: string;
+    address: string;
+    occupation: string;
+    emergency_contact_name: string;
+    emergency_contact_phone: string;
     category_id: string;
 }
 
@@ -53,11 +84,19 @@ export const UserFormScreen = () => {
         confirmPassword: '',
         phone: '',
         role: 'user',
+        user_type: 'student',
+        document: '',
+        birth_date: '',
+        address: '',
+        occupation: '',
+        emergency_contact_name: '',
+        emergency_contact_phone: '',
         category_id: ''
     });
     const [categories, setCategories] = useState<any[]>([]);
     const [loadingCategories, setLoadingCategories] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     // ============================================
@@ -92,10 +131,34 @@ export const UserFormScreen = () => {
                 confirmPassword: '',
                 phone: editingUser.phone || '',
                 role: editingUser.role || 'user',
+                user_type: editingUser.user_type === 'parent' ? 'parent' : 'student',
+                document: editingUser.document || '',
+                birth_date: editingUser.birth_date || '',
+                address: editingUser.address || '',
+                occupation: editingUser.occupation || '',
+                emergency_contact_name: editingUser.emergency_contact_name || '',
+                emergency_contact_phone: editingUser.emergency_contact_phone || '',
                 category_id: editingUser.category_id ? String(editingUser.category_id) : ''
             });
         }
     }, [user, mode]);
+
+    const updateField = (field: keyof FormData, value: string) => {
+        setFormData((previous) => ({ ...previous, [field]: value }));
+        setErrors((previous) => {
+            const next = { ...previous };
+            delete next[field];
+            if (field === 'birth_date') delete next.category_id;
+            return next;
+        });
+    };
+
+    const handleBirthDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        if (Platform.OS === 'android') setShowBirthDatePicker(false);
+        if (event.type === 'set' && selectedDate) {
+            updateField('birth_date', formatIsoDate(selectedDate));
+        }
+    };
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -115,6 +178,34 @@ export const UserFormScreen = () => {
         }
         if (formData.phone && getFieldValidationError('phone', formData.phone)) {
             newErrors.phone = getFieldValidationError('phone', formData.phone);
+        }
+        if (mode === 'create' && formData.role === 'user') {
+            if (!formData.document.trim()) {
+                newErrors.document = 'El documento es requerido';
+            } else if (getFieldValidationError('document', formData.document)) {
+                newErrors.document = getFieldValidationError('document', formData.document);
+            }
+
+            if (formData.user_type === 'student') {
+                if (!isValidIsoDate(formData.birth_date)) {
+                    newErrors.birth_date = 'Ingresa la fecha con formato AAAA-MM-DD';
+                } else {
+                    const birthYear = Number(formData.birth_date.slice(0, 4));
+                    const selectedCategory = categories.find((category) => String(category.id) === formData.category_id);
+                    if (!formData.category_id) {
+                        newErrors.category_id = 'Selecciona una categoría';
+                    } else if (Number(selectedCategory?.category_year) !== birthYear) {
+                        newErrors.category_id = `Selecciona la categoría ${birthYear}`;
+                    }
+                }
+
+                if (formData.emergency_contact_name && getFieldValidationError('name', formData.emergency_contact_name)) {
+                    newErrors.emergency_contact_name = getFieldValidationError('name', formData.emergency_contact_name);
+                }
+                if (formData.emergency_contact_phone && getFieldValidationError('phone', formData.emergency_contact_phone)) {
+                    newErrors.emergency_contact_phone = getFieldValidationError('phone', formData.emergency_contact_phone);
+                }
+            }
         }
         if (mode === 'create') {
             if (!formData.password) {
@@ -143,7 +234,19 @@ export const UserFormScreen = () => {
                 phone: formData.phone || '',
                 role: formData.role,
                 category_id: formData.category_id ? Number(formData.category_id) : null,
-                ...(mode === 'create' && { password: formData.password })
+                ...(mode === 'create' && {
+                    password: formData.password,
+                    user_type: formData.role === 'user' ? formData.user_type : 'none',
+                    ...(formData.role === 'user' && {
+                        document: formData.document.trim(),
+                        birth_date: formData.user_type === 'student' ? formData.birth_date : null,
+                        address: formData.address || null,
+                        occupation: formData.user_type === 'parent' ? formData.occupation || null : null,
+                        emergency_contact_name: formData.user_type === 'student' ? formData.emergency_contact_name || null : null,
+                        emergency_contact_phone: formData.user_type === 'student' ? formData.emergency_contact_phone || null : null,
+                        category_id: formData.user_type === 'student' ? Number(formData.category_id) : null
+                    })
+                })
             };
 
             let response;
@@ -248,88 +351,12 @@ export const UserFormScreen = () => {
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.form}>
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Nombres *</Text>
-                        <TextInput
-                            style={[styles.input, (errors.name || getFieldValidationError('name', formData.name)) && styles.inputError]}
-                            placeholder="Nombre completo"
-                            value={formData.name}
-                            onChangeText={(text) => setFormData({ ...formData, name: text })}
-                        />
-                        {(errors.name || getFieldValidationError('name', formData.name)) && <Text style={styles.errorText}>{errors.name || getFieldValidationError('name', formData.name)}</Text>}
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Apellidos</Text>
-                        <TextInput
-                            style={[styles.input, (errors.lastname || getFieldValidationError('name', formData.lastname)) && styles.inputError]}
-                            placeholder="Apellido"
-                            value={formData.lastname}
-                            onChangeText={(text) => setFormData({ ...formData, lastname: text })}
-                        />
-                        {(errors.lastname || getFieldValidationError('name', formData.lastname)) && <Text style={styles.errorText}>{errors.lastname || getFieldValidationError('name', formData.lastname)}</Text>}
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Correo Electrónico *</Text>
-                        <TextInput
-                            style={[styles.input, (errors.email || getFieldValidationError('email', formData.email)) && styles.inputError]}
-                            placeholder="usuario@ejemplo.com"
-                            value={formData.email}
-                            onChangeText={(text) => setFormData({ ...formData, email: text })}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                        />
-                        {(errors.email || getFieldValidationError('email', formData.email)) && <Text style={styles.errorText}>{errors.email || getFieldValidationError('email', formData.email)}</Text>}
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Teléfono</Text>
-                        <TextInput
-                            style={[styles.input, (errors.phone || getFieldValidationError('phone', formData.phone)) && styles.inputError]}
-                            placeholder="Número de contacto"
-                            value={formData.phone}
-                            onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                            keyboardType="phone-pad"
-                        />
-                        {(errors.phone || getFieldValidationError('phone', formData.phone)) && <Text style={styles.errorText}>{errors.phone || getFieldValidationError('phone', formData.phone)}</Text>}
-                    </View>
-
-                    {mode === 'create' && (
-                        <>
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Contraseña *</Text>
-                                <TextInput
-                                    style={[styles.input, errors.password && styles.inputError]}
-                                    placeholder="Mínimo 6 caracteres"
-                                    value={formData.password}
-                                    onChangeText={(text) => setFormData({ ...formData, password: text })}
-                                    secureTextEntry
-                                />
-                                {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Confirmar Contraseña *</Text>
-                                <TextInput
-                                    style={[styles.input, errors.confirmPassword && styles.inputError]}
-                                    placeholder="Repite tu contraseña"
-                                    value={formData.confirmPassword}
-                                    onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
-                                    secureTextEntry
-                                />
-                                {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
-                            </View>
-                        </>
-                    )}
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Rol</Text>
+                        <Text style={styles.label}>Rol *</Text>
                         {mode === 'edit' && editingUser && currentUser && editingUser.id === currentUser.id ? (
                             <View style={{ paddingVertical: 8 }}>
-                                <Text style={{ fontSize: 15, fontWeight: '600' }}>{
-                                    editingUser.role === 'admin' ? 'Administrador' : editingUser.role === 'seller' ? 'Moderador' : 'Usuario'
-                                }</Text>
+                                <Text style={{ fontSize: 15, fontWeight: '600' }}>
+                                    {editingUser.role === 'admin' ? 'Administrador' : editingUser.role === 'seller' ? 'Moderador' : 'Usuario'}
+                                </Text>
                                 <Text style={{ color: '#888', marginTop: 6 }}>El rol no puede ser modificado desde el perfil.</Text>
                             </View>
                         ) : (
@@ -337,11 +364,11 @@ export const UserFormScreen = () => {
                                 {['user', 'seller', 'admin'].map((role) => (
                                     <TouchableOpacity
                                         key={role}
-                                        style={[
-                                            styles.roleOption,
-                                            formData.role === role && styles.roleOptionSelected
-                                        ]}
-                                        onPress={() => setFormData({ ...formData, role, category_id: role === 'user' ? formData.category_id : '' })}
+                                        style={[styles.roleOption, formData.role === role && styles.roleOptionSelected]}
+                                        onPress={() => {
+                                            setFormData({ ...formData, role, category_id: role === 'user' ? formData.category_id : '' });
+                                            setErrors({});
+                                        }}
                                         disabled={role === 'admin' && currentUser?.role !== 'admin'}
                                     >
                                         <Text style={[
@@ -357,13 +384,236 @@ export const UserFormScreen = () => {
                         )}
                     </View>
 
+                    {mode === 'create' && formData.role === 'user' && (
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Tipo de usuario *</Text>
+                            <View style={styles.roleContainer}>
+                                {(['student', 'parent'] as const).map((userType) => (
+                                    <TouchableOpacity
+                                        key={userType}
+                                        style={[styles.roleOption, formData.user_type === userType && styles.roleOptionSelected]}
+                                        onPress={() => {
+                                            setFormData({ ...formData, user_type: userType, category_id: '' });
+                                            setErrors({});
+                                        }}
+                                    >
+                                        <Text style={[styles.roleOptionText, formData.user_type === userType && styles.roleOptionTextSelected]}>
+                                            {userType === 'student' ? 'Estudiante' : 'Padre'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    )}
+
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Nombres *</Text>
+                        <TextInput
+                            style={[styles.input, (errors.name || getFieldValidationError('name', formData.name)) && styles.inputError]}
+                            placeholder="Nombre completo"
+                            value={formData.name}
+                            onChangeText={(text) => updateField('name', text)}
+                        />
+                        {(errors.name || getFieldValidationError('name', formData.name)) && <Text style={styles.errorText}>{errors.name || getFieldValidationError('name', formData.name)}</Text>}
+                    </View>
+
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Apellidos</Text>
+                        <TextInput
+                            style={[styles.input, (errors.lastname || getFieldValidationError('name', formData.lastname)) && styles.inputError]}
+                            placeholder="Apellido"
+                            value={formData.lastname}
+                            onChangeText={(text) => updateField('lastname', text)}
+                        />
+                        {(errors.lastname || getFieldValidationError('name', formData.lastname)) && <Text style={styles.errorText}>{errors.lastname || getFieldValidationError('name', formData.lastname)}</Text>}
+                    </View>
+
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Correo Electrónico *</Text>
+                        <TextInput
+                            style={[styles.input, (errors.email || getFieldValidationError('email', formData.email)) && styles.inputError]}
+                            placeholder="usuario@ejemplo.com"
+                            value={formData.email}
+                            onChangeText={(text) => updateField('email', text)}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                        {(errors.email || getFieldValidationError('email', formData.email)) && <Text style={styles.errorText}>{errors.email || getFieldValidationError('email', formData.email)}</Text>}
+                    </View>
+
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Teléfono</Text>
+                        <TextInput
+                            style={[styles.input, (errors.phone || getFieldValidationError('phone', formData.phone)) && styles.inputError]}
+                            placeholder="Número de contacto"
+                            value={formData.phone}
+                            onChangeText={(text) => updateField('phone', text)}
+                            keyboardType="phone-pad"
+                        />
+                        {(errors.phone || getFieldValidationError('phone', formData.phone)) && <Text style={styles.errorText}>{errors.phone || getFieldValidationError('phone', formData.phone)}</Text>}
+                    </View>
+
+                    {mode === 'create' && formData.role === 'user' && (
+                        <>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Documento *</Text>
+                                <TextInput
+                                    style={[styles.input, (errors.document || getFieldValidationError('document', formData.document)) && styles.inputError]}
+                                    placeholder="Número de identificación"
+                                    value={formData.document}
+                                    onChangeText={(text) => updateField('document', text)}
+                                    keyboardType="number-pad"
+                                />
+                                {(errors.document || getFieldValidationError('document', formData.document)) && <Text style={styles.errorText}>{errors.document || getFieldValidationError('document', formData.document)}</Text>}
+                            </View>
+
+                            {formData.user_type === 'parent' ? (
+                                <>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Ocupación</Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Ej: Docente"
+                                            value={formData.occupation}
+                                            onChangeText={(text) => updateField('occupation', text)}
+                                        />
+                                    </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Dirección</Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Dirección de residencia"
+                                            value={formData.address}
+                                            onChangeText={(text) => updateField('address', text)}
+                                        />
+                                    </View>
+                                </>
+                            ) : (
+                                <>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Fecha de nacimiento *</Text>
+                                        <TouchableOpacity
+                                            style={[styles.input, styles.dateInput, errors.birth_date && styles.inputError]}
+                                            onPress={() => setShowBirthDatePicker(true)}
+                                            accessibilityRole="button"
+                                            accessibilityLabel="Seleccionar fecha de nacimiento"
+                                        >
+                                            <Text style={formData.birth_date ? styles.dateInputText : styles.dateInputPlaceholder}>
+                                                {formData.birth_date || 'Seleccionar fecha'}
+                                            </Text>
+                                            <Ionicons name="calendar-outline" size={20} color={MyColors.primary} />
+                                        </TouchableOpacity>
+                                        {errors.birth_date && <Text style={styles.errorText}>{errors.birth_date}</Text>}
+                                        {showBirthDatePicker && (
+                                            <>
+                                                <DateTimePicker
+                                                    value={parseIsoDate(formData.birth_date)}
+                                                    mode="date"
+                                                    display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
+                                                    maximumDate={new Date()}
+                                                    onChange={handleBirthDateChange}
+                                                />
+                                                {Platform.OS === 'ios' && (
+                                                    <TouchableOpacity
+                                                        style={styles.datePickerDone}
+                                                        onPress={() => setShowBirthDatePicker(false)}
+                                                    >
+                                                        <Text style={styles.datePickerDoneText}>Listo</Text>
+                                                    </TouchableOpacity>
+                                                )}
+                                            </>
+                                        )}
+                                    </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Categoría (año de nacimiento) *</Text>
+                                        <View style={styles.categoryContainer}>
+                                            {loadingCategories ? (
+                                                <ActivityIndicator color={MyColors.primary} />
+                                            ) : categories.map((category) => (
+                                                <TouchableOpacity
+                                                    key={category.id}
+                                                    style={[styles.categoryOption, formData.category_id === String(category.id) && styles.categoryOptionSelected]}
+                                                    onPress={() => updateField('category_id', String(category.id))}
+                                                >
+                                                    <Text style={[styles.categoryOptionText, formData.category_id === String(category.id) && styles.categoryOptionTextSelected]}>
+                                                        {category.category_year}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                        {errors.category_id && <Text style={styles.errorText}>{errors.category_id}</Text>}
+                                    </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Dirección</Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Dirección de residencia"
+                                            value={formData.address}
+                                            onChangeText={(text) => updateField('address', text)}
+                                        />
+                                    </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Contacto de emergencia</Text>
+                                        <TextInput
+                                            style={[styles.input, (errors.emergency_contact_name || getFieldValidationError('name', formData.emergency_contact_name)) && styles.inputError]}
+                                            placeholder="Nombre del contacto"
+                                            value={formData.emergency_contact_name}
+                                            onChangeText={(text) => updateField('emergency_contact_name', text)}
+                                        />
+                                        {(errors.emergency_contact_name || getFieldValidationError('name', formData.emergency_contact_name)) && <Text style={styles.errorText}>{errors.emergency_contact_name || getFieldValidationError('name', formData.emergency_contact_name)}</Text>}
+                                    </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Teléfono de emergencia</Text>
+                                        <TextInput
+                                            style={[styles.input, (errors.emergency_contact_phone || getFieldValidationError('phone', formData.emergency_contact_phone)) && styles.inputError]}
+                                            placeholder="Número de emergencia"
+                                            value={formData.emergency_contact_phone}
+                                            onChangeText={(text) => updateField('emergency_contact_phone', text)}
+                                            keyboardType="phone-pad"
+                                        />
+                                        {(errors.emergency_contact_phone || getFieldValidationError('phone', formData.emergency_contact_phone)) && <Text style={styles.errorText}>{errors.emergency_contact_phone || getFieldValidationError('phone', formData.emergency_contact_phone)}</Text>}
+                                    </View>
+                                </>
+                            )}
+                        </>
+                    )}
+
+                    {mode === 'create' && (
+                        <>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Contraseña *</Text>
+                                <TextInput
+                                    style={[styles.input, errors.password && styles.inputError]}
+                                    placeholder="Mínimo 6 caracteres"
+                                    value={formData.password}
+                                    onChangeText={(text) => updateField('password', text)}
+                                    secureTextEntry
+                                />
+                                {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Confirmar Contraseña *</Text>
+                                <TextInput
+                                    style={[styles.input, errors.confirmPassword && styles.inputError]}
+                                    placeholder="Repite tu contraseña"
+                                    value={formData.confirmPassword}
+                                    onChangeText={(text) => updateField('confirmPassword', text)}
+                                    secureTextEntry
+                                />
+                                {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
+                            </View>
+                        </>
+                    )}
+
                     {/* ============================================
                         CATEGORÍA (AÑO) — mismo patron visual de chips
                         que ya usa StudentFormScreen para consistencia.
                         Solo aplica a estudiantes (role === 'user'):
                         un admin o moderador no pertenece a una categoria.
                         ============================================ */}
-                    {formData.role === 'user' && (
+                    {mode === 'edit' && formData.role === 'user' && (
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Categoría (Año)</Text>
                         <View style={styles.categoryContainer}>
@@ -376,7 +626,7 @@ export const UserFormScreen = () => {
                                             styles.categoryOption,
                                             formData.category_id === '' && styles.categoryOptionSelected
                                         ]}
-                                        onPress={() => setFormData({ ...formData, category_id: '' })}
+                                        onPress={() => updateField('category_id', '')}
                                     >
                                         <Text style={[
                                             styles.categoryOptionText,
@@ -392,7 +642,7 @@ export const UserFormScreen = () => {
                                                 styles.categoryOption,
                                                 formData.category_id === String(cat.id) && styles.categoryOptionSelected
                                             ]}
-                                            onPress={() => setFormData({ ...formData, category_id: String(cat.id) })}
+                                            onPress={() => updateField('category_id', String(cat.id))}
                                         >
                                             <Text style={[
                                                 styles.categoryOptionText,
@@ -469,6 +719,30 @@ const styles = StyleSheet.create({
     },
     inputError: {
         borderColor: '#dc3545',
+    },
+    dateInput: {
+        minHeight: 44,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    dateInputText: {
+        color: '#333',
+        fontSize: 15,
+    },
+    dateInputPlaceholder: {
+        color: '#777',
+        fontSize: 15,
+    },
+    datePickerDone: {
+        alignSelf: 'flex-end',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+    },
+    datePickerDoneText: {
+        color: MyColors.primary,
+        fontSize: 15,
+        fontWeight: '700',
     },
     errorText: {
         color: '#dc3545',
