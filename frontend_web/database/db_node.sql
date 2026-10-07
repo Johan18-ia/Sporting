@@ -121,50 +121,116 @@ INSERT INTO users (
 
 INSERT INTO users (name, lastname, email, password, phone, image, role, user_type, is_active) VALUES
 (
-    'Ana', 'García', 'ana.garcia@email.com',
-    '$2b$10$NR8eRuuAB12JoHe81ZYnG.i2/5k/D5TKrxc7Pk74W4rgzADdABM9G',
-    '3201112233', NULL, 'user', 'student', 1
+    'Mariana', 'Rojas', 'estudiante01@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000001', NULL, 'user', 'student', 1
 ),
 (
-    'Luis', 'Martínez', 'luis.martinez@email.com',
-    '$2b$10$NR8eRuuAB12JoHe81ZYnG.i2/5k/D5TKrxc7Pk74W4rgzADdABM9G',
-    '3204445566', NULL, 'user', 'student', 1
+    'Samuel', 'Gómez', 'estudiante02@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000002', NULL, 'user', 'student', 1
 ),
 (
-    'Valentina', 'Pérez', 'valentina.perez@sporting.test',
-    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
-    '3105550101', NULL, 'user', 'student', 1
+    'Isabella', 'Martínez', 'estudiante03@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000003', NULL, 'user', 'student', 1
 ),
 (
-    'Samuel', 'Torres', 'samuel.torres@sporting.test',
-    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
-    '3105550102', NULL, 'user', 'student', 1
+    'Mateo', 'Hernández', 'estudiante04@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000004', NULL, 'user', 'student', 1
 ),
 (
-    'Isabella', 'Ramírez', 'isabella.ramirez@sporting.test',
-    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
-    '3105550103', NULL, 'user', 'student', 1
+    'Santiago', 'López', 'estudiante05@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000005', NULL, 'user', 'student', 1
 ),
 (
-    'Mateo', 'Herrera', 'mateo.herrera@sporting.test',
-    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
-    '3105550104', NULL, 'user', 'student', 1
+    'Luciana', 'Díaz', 'estudiante06@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000006', NULL, 'user', 'student', 1
 ),
 (
-    'Sofia', 'Castro', 'sofia.castro@sporting.test',
-    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
-    '3105550105', NULL, 'user', 'student', 1
+    'Nicolás', 'Pérez', 'estudiante07@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000007', NULL, 'user', 'student', 1
 ),
 (
-    'Carlos', 'Pérez', 'carlos.perez@sporting.test',
-    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
-    '3105550201', NULL, 'user', 'parent', 1
+    'Gabriela', 'Torres', 'estudiante08@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000008', NULL, 'user', 'student', 1
 ),
 (
-    'Mónica', 'Torres', 'monica.torres@sporting.test',
-    '$2b$10$9BiwJLG9kP8YbxMRkxJzf.5PZE3lYRmtZWx86zHtfi/E1MPMkjYAK',
-    '3105550202', NULL, 'user', 'parent', 1
+    'David', 'Ramírez', 'estudiante09@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000009', NULL, 'user', 'student', 1
+),
+(
+    'Valentina', 'Castro', 'estudiante10@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000010', NULL, 'user', 'student', 1
+),
+(
+    'Tomás', 'Moreno', 'estudiante11@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000011', NULL, 'user', 'student', 1
+),
+(
+    'Manuela', 'Vargas', 'estudiante12@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000012', NULL, 'user', 'student', 1
+),
+(
+    'Andrés', 'Jiménez', 'estudiante13@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000013', NULL, 'user', 'student', 1
+),
+(
+    'Antonella', 'Ruiz', 'estudiante14@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000014', NULL, 'user', 'student', 1
+),
+(
+    'Felipe', 'Ortiz', 'estudiante15@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000015', NULL, 'user', 'student', 1
+),
+(
+    'Carlos', 'Pérez', 'padre01@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000016', NULL, 'user', 'parent', 1
+),
+(
+    'Mónica', 'Torres', 'padre02@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000017', NULL, 'user', 'parent', 1
+),
+(
+    'Jorge', 'Ramírez', 'padre03@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000018', NULL, 'user', 'parent', 1
+),
+(
+    'Laura', 'Gómez', 'padre04@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000019', NULL, 'user', 'parent', 1
+),
+(
+    'Andrés', 'Morales', 'padre05@sporting.test',
+    '$2b$10$5OZTpq.FnSTqc1KO1OMin.co9DbTMyRySg7AQxv4MLUjAcS6jANL.',
+    '3110000020', NULL, 'user', 'parent', 1
 );
+
+INSERT INTO parent_profiles (user_id, document, address, occupation)
+SELECT u.id, p.document, p.address, p.occupation
+FROM (
+    SELECT 'padre01@sporting.test' AS email, '20000000001' AS document, 'Calle 20 #10-15' AS address, 'Docente' AS occupation
+    UNION ALL SELECT 'padre02@sporting.test', '20000000002', 'Carrera 8 #25-40', 'Comerciante'
+    UNION ALL SELECT 'padre03@sporting.test', '20000000003', 'Calle 42 #18-22', 'Ingeniero'
+    UNION ALL SELECT 'padre04@sporting.test', '20000000004', 'Carrera 15 #60-11', 'Enfermera'
+    UNION ALL SELECT 'padre05@sporting.test', '20000000005', 'Calle 9 #31-07', 'Contador'
+) p
+INNER JOIN users u ON u.email = p.email;
 
 -- ============================================
 -- CREAR TABLA DE PRODUCTOS
@@ -274,26 +340,32 @@ CREATE TABLE student_profiles (
 INSERT INTO student_profiles (
     user_id, document, category_id, birth_date, address,
     emergency_contact_name, emergency_contact_phone, status
-) VALUES
-(2, '1234567890', 1, '2015-03-15', 'Calle 123 #45-67', 'María García', '3109998888', 'approved'),
-(3, '0987654321', 2, '2016-07-20', 'Carrera 89 #12-34', 'Ana Martínez', '3107776666', 'pending');
-
-INSERT INTO student_profiles (
-    user_id, document, category_id, birth_date, address,
-    emergency_contact_name, emergency_contact_phone, status
 )
-SELECT u.id, p.document, p.category_id, p.birth_date, p.address,
-       p.emergency_contact_name, p.emergency_contact_phone, p.profile_status
+SELECT u.id, p.document, c.id, p.birth_date, p.address,
+       p.emergency_contact_name, p.emergency_contact_phone, 'pending'
 FROM (
-    SELECT 'valentina.perez@sporting.test' AS email, 'TEST-20001' AS document, 1 AS category_id,
-           '2015-02-12' AS birth_date, 'Calle 10 #20-30' AS address, 'Carlos Pérez' AS emergency_contact_name,
-           '3105550201' AS emergency_contact_phone, 'approved' AS profile_status
-    UNION ALL SELECT 'samuel.torres@sporting.test', 'TEST-20002', 1, '2015-08-21', 'Carrera 12 #14-20', 'Mónica Torres', '3105550202', 'approved'
-    UNION ALL SELECT 'isabella.ramirez@sporting.test', 'TEST-20003', 2, '2016-04-08', 'Calle 22 #15-18', 'Laura Ramírez', '3105550203', 'pending'
-    UNION ALL SELECT 'mateo.herrera@sporting.test', 'TEST-20004', 2, '2016-11-03', 'Carrera 30 #8-16', 'Andrés Herrera', '3105550204', 'approved'
-    UNION ALL SELECT 'sofia.castro@sporting.test', 'TEST-20005', 3, '2017-06-17', 'Calle 45 #12-09', 'Daniela Castro', '3105550205', 'pending'
+    SELECT 'estudiante01@sporting.test' AS email, '10000000001' AS document, 2006 AS category_year,
+           '2006-03-15' AS birth_date, 'Calle 10 #20-30' AS address, 'Carlos Pérez' AS emergency_contact_name,
+           '3120000001' AS emergency_contact_phone
+    UNION ALL SELECT 'estudiante02@sporting.test', '10000000002', 2007, '2007-08-21', 'Carrera 12 #14-20', 'Mónica Torres', '3120000002'
+    UNION ALL SELECT 'estudiante03@sporting.test', '10000000003', 2008, '2008-04-08', 'Calle 22 #15-18', 'Laura Ramírez', '3120000003'
+    UNION ALL SELECT 'estudiante04@sporting.test', '10000000004', 2009, '2009-11-03', 'Carrera 30 #8-16', 'Andrés Herrera', '3120000004'
+    UNION ALL SELECT 'estudiante05@sporting.test', '10000000005', 2010, '2010-06-17', 'Calle 45 #12-09', 'Daniela Castro', '3120000005'
+    UNION ALL SELECT 'estudiante06@sporting.test', '10000000006', 2011, '2011-02-12', 'Calle 10 #20-30', 'Carlos Pérez', '3120000006'
+    UNION ALL SELECT 'estudiante07@sporting.test', '10000000007', 2012, '2012-08-21', 'Carrera 12 #14-20', 'Mónica Torres', '3120000007'
+    UNION ALL SELECT 'estudiante08@sporting.test', '10000000008', 2013, '2013-04-08', 'Calle 22 #15-18', 'Laura Ramírez', '3120000008'
+    UNION ALL SELECT 'estudiante09@sporting.test', '10000000009', 2014, '2014-11-03', 'Carrera 30 #8-16', 'Andrés Herrera', '3120000009'
+    UNION ALL SELECT 'estudiante10@sporting.test', '10000000010', 2015, '2015-06-17', 'Calle 45 #12-09', 'Daniela Castro', '3120000010'
+    UNION ALL SELECT 'estudiante11@sporting.test', '10000000011', 2016, '2016-03-15', 'Calle 10 #20-30', 'Carlos Pérez', '3120000011'
+    UNION ALL SELECT 'estudiante12@sporting.test', '10000000012', 2017, '2017-08-21', 'Carrera 12 #14-20', 'Mónica Torres', '3120000012'
+    UNION ALL SELECT 'estudiante13@sporting.test', '10000000013', 2018, '2018-04-08', 'Calle 22 #15-18', 'Laura Ramírez', '3120000013'
+    UNION ALL SELECT 'estudiante14@sporting.test', '10000000014', 2019, '2019-11-03', 'Carrera 30 #8-16', 'Andrés Herrera', '3120000014'
+    UNION ALL SELECT 'estudiante15@sporting.test', '10000000015', 2020, '2020-06-17', 'Calle 45 #12-09', 'Daniela Castro', '3120000015'
 ) p
-INNER JOIN users u ON u.email = p.email;
+INNER JOIN users u ON u.email = p.email
+INNER JOIN categories c ON c.category_year = p.category_year;
+
+-- Los cinco perfiles parentales quedan enlazados con los usuarios de tipo parent.
 
 CREATE TABLE tournament_students (
     tournament_id INT NOT NULL,
@@ -381,7 +453,9 @@ SELECT '📊 TABLA', 'HORARIOS', COUNT(*) FROM schedules
 UNION ALL
 SELECT '📊 TABLA', 'TORNEOS', COUNT(*) FROM tournaments
 UNION ALL
-SELECT '📊 TABLA', 'PERFILES DE ESTUDIANTES', COUNT(*) FROM student_profiles;
+SELECT '📊 TABLA', 'PERFILES DE ESTUDIANTES', COUNT(*) FROM student_profiles
+UNION ALL
+SELECT '📊 TABLA', 'PERFILES DE PADRES', COUNT(*) FROM parent_profiles;
 
 -- ============================================
 -- MOSTRAR USUARIO ADMIN
@@ -397,13 +471,14 @@ SELECT
 FROM users 
 WHERE role = 'admin';
 
--- ============================================
--- CREDENCIALES DE ACCESO
--- ============================================
 SELECT '========================================' AS '';
 SELECT '🔑 CREDENCIALES DE ACCESO' AS '';
 SELECT '========================================' AS '';
 SELECT '📧 Email: profealbeiro2020@gmail.com' AS '';
 SELECT '🔐 Contraseña: admin123' AS '';
 SELECT '👤 Rol: admin' AS '';
+SELECT '🔐 Contraseña para las 15 cuentas estudiante y 5 cuentas padre: 12345' AS '';
+SELECT '📧 Cuentas estudiante: estudiante01@sporting.test a estudiante15@sporting.test' AS '';
+SELECT '📧 Cuentas padre: padre01@sporting.test a padre05@sporting.test' AS '';
+SELECT '========================================' AS '';
 SELECT '========================================' AS '';
