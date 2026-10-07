@@ -170,4 +170,26 @@ User.delete = (id, result) => {
     });
 };
 
+// ====================================================
+// CAMBIAR CONTRASEÑA DE UN USUARIO
+// ====================================================
+User.changePassword = async (userId, newPassword, result) => {
+    try {
+        const hash = await bcrypt.hash(newPassword, 10);
+        const sql = 'UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?';
+        db.query(sql, [hash, userId], (err, response) => {
+            if (err) {
+                console.error('Error al cambiar contraseña:', err);
+                result(err, null);
+                return;
+            }
+
+            result(null, { id: userId, affectedRows: response.affectedRows });
+        });
+    } catch (error) {
+        console.error('Error al hashear contraseña:', error);
+        result(error, null);
+    }
+};
+
 module.exports = User;

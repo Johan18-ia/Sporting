@@ -161,6 +161,55 @@ router.get(
 );
 
 // ====================================================
+// CAMBIAR CONTRASEÑA DEL USUARIO AUTENTICADO
+// ====================================================
+/**
+ * @swagger
+ * /api/users/change-password:
+ *   put:
+ *     tags: [Users]
+ *     summary: Cambiar contraseña del usuario autenticado
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 format: password
+ *                 description: Contraseña actual del usuario
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 6
+ *                 description: Nueva contraseña
+ *             example:
+ *               currentPassword: "12345"
+ *               newPassword: "nuevaClave123"
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: Contraseña actual incorrecta o token inválido
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.put(
+    '/change-password',
+    verifyToken,
+    userController.changePassword
+);
+
+// ====================================================
 // ACTUALIZAR USUARIO
 // ====================================================
 /**

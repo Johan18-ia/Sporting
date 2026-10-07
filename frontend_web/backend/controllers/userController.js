@@ -452,6 +452,98 @@ module.exports = {
     },
 
     // ====================================================
+    // CAMBIAR CONTRASEÑA DEL USUARIO AUTENTICADO
+    // ====================================================
+    changePassword(req, res) {
+        const userId = req.user?.id;
+        const { currentPassword, newPassword } = req.body || {};
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'No se pudo identificar al usuario autenticado'
+            });
+        }
+
+        if (typeof currentPassword !== 'string' || !currentPassword || typeof newPassword !== 'string' || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'La contraseña actual y la nueva son obligatorias'
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'La nueva contraseña debe tener al menos 6 caracteres'
+            });
+        }
+
+        if (currentPassword === newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'La nueva contraseña debe ser diferente a la actual'
+            });
+        }
+
+        User.findById(userId, async (err, user) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error al consultar el usuario',
+                    error: err
+                });
+            }
+
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Usuario no encontrado'
+                });
+            }
+
+            if (!user.password) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'No se pudo verificar la contraseña actual'
+                });
+            }
+
+            try {
+                const isMatch = await bcrypt.compare(currentPassword, user.password);
+                if (!isMatch) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'La contraseña actual es incorrecta'
+                    });
+                }
+
+                User.changePassword(userId, newPassword, (updateErr) => {
+                    if (updateErr) {
+                        return res.status(500).json({
+                            success: false,
+                            message: 'Error al actualizar la contraseña',
+                            error: updateErr
+                        });
+                    }
+
+                    return res.status(200).json({
+                        success: true,
+                        message: 'Contraseña actualizada correctamente. Vuelve a iniciar sesión.',
+                        data: { id: userId }
+                    });
+                });
+            } catch (compareErr) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error al verificar la contraseña',
+                    error: compareErr
+                });
+            }
+        });
+    },
+
+    // ====================================================
     // ACTUALIZAR USUARIO
     // ====================================================
     getUserUpdate(req, res) {
