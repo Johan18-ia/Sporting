@@ -139,6 +139,14 @@ export const RegisterScreen = () => {
         if (error) setError('');
     };
 
+    const handleBack = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+        } else {
+            navigation.replace('Welcome');
+        }
+    };
+
     const openBirthDatePicker = () => {
         const value = formData.birth_date ? parseFormDate(formData.birth_date) : new Date();
         setDateDraft(value);
@@ -299,7 +307,13 @@ export const RegisterScreen = () => {
         >
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <TouchableOpacity
+                        onPress={handleBack}
+                        style={styles.backButton}
+                        accessibilityRole="button"
+                        accessibilityLabel="Volver"
+                        hitSlop={12}
+                    >
                         <Ionicons name="arrow-back" size={24} color={MyColors.primary} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Crear Cuenta</Text>
