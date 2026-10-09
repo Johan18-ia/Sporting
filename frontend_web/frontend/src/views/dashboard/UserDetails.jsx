@@ -13,7 +13,7 @@ const UserDetails = ({ user, onClose, onEdit }) => {
   const getRoleText = (role) => {
     switch (String(role || '').toLowerCase()) {
       case 'admin': return '👑 Administrador'
-      case 'seller': return '🛒 Vendedor'
+      case 'seller': return '�️ Moderador'
       case 'customer': return '👤 Cliente'
       case 'user': return '🎓 Estudiante'
       default: return '👤 Usuario'

@@ -311,7 +311,7 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                 >
                                     <option value="">Seleccionar rol</option>
                                     <option value="admin">Administrador</option>
-                                    <option value="seller">Vendedor</option>
+                                    <option value="seller">Moderador</option>
                                     <option value="user">Usuario</option>
                                 </select>
                             ) : patchField === 'is_active' ? (
@@ -561,7 +561,7 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                             disabled={loading}
                                         >
                                             <option value="user">Usuario</option>
-                                            <option value="seller">Vendedor</option>
+                                            <option value="seller">Moderador</option>
                                             <option value="admin">Administrador</option>
                                         </select>
                                         <small className="form-hint">Define los permisos del usuario</small>

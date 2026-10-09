@@ -17,7 +17,7 @@ import '../../styles/UsersCards.css'
 
 const ROLE_META = {
   admin: { label: 'Administrador', color: '#8B0000' },
-  seller: { label: 'Vendedor', color: '#A52A2A' },
+  seller: { label: 'Moderador', color: '#A52A2A' },
   user: { label: 'Estudiante', color: '#B22222' },
   customer: { label: 'Cliente', color: '#6B2D2D' }
 }
@@ -281,7 +281,7 @@ const UsersView = () => {
         </div>
         <div className="usr-stat">
           <span className="usr-stat-value">{stats.seller}</span>
-          <span className="usr-stat-label">Vendedores</span>
+          <span className="usr-stat-label">Moderadores</span>
         </div>
         <div className="usr-stat">
           <span className="usr-stat-value">{stats.user}</span>

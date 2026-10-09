@@ -103,7 +103,7 @@ const ProfileView = () => {
           <div className="ui-account-row">
             <span className="label">Rol</span>
             <span className={`badge-sporting ${currentUser?.role === 'admin' ? 'badge-sporting-admin' : currentUser?.role === 'seller' ? 'badge-sporting-seller' : 'badge-sporting-user'}`}>
-              {currentUser?.role || 'Usuario'}
+              {currentUser?.role === 'seller' ? 'Moderador' : currentUser?.role || 'Usuario'}
             </span>
           </div>
 

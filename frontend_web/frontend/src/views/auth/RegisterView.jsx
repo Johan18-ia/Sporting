@@ -497,7 +497,7 @@ const RegisterView = () => {
                                 className="sporting-input"
                             >
                                 <option value="user">Usuario</option>
-                                <option value="seller">Vendedor</option>
+                                <option value="seller">Moderador</option>
                                 {currentUser?.role === 'admin' && <option value="admin">Administrador</option>}
                             </select>
                         </div>

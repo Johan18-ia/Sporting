@@ -4,7 +4,7 @@ import { IconMenu, IconLogout } from './NavIcons';
 
 const ROLE_LABELS = {
     admin: 'Administrador',
-    seller: 'Vendedor',
+    seller: 'Moderador',
     user: 'Estudiante',
 };
 
