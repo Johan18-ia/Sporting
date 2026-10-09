@@ -1,4 +1,9 @@
-// src/models/AuthModel.js
+/**
+ * AuthModel.js:
+ * - ¿Qué hace? Envía las peticiones de login y registro al backend y normaliza la respuesta para la capa de vista.
+ * - ¿Qué función cumple en el proyecto? Es el modelo equivalente al auth del mobile que guarda la sesión con usuario y JWT.
+ * - Origen mobile equivalente: frontend_mobile/src/data/repositories/UserLocalRepository.ts y frontend_mobile/src/hooks/useAuth.ts
+ */
 import httpService from '../services/httpService'
 import storageService from '../services/storageService'
 import jwtService from '../services/jwtService'
@@ -7,99 +12,76 @@ import API_CONFIG from '../config/api'
 class AuthModel {
   static async login(credentials) {
     try {
-      console.log('🔐 Enviando login a API real:', credentials.email)
-      console.log('🔐 URL completa:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`)
-      
+      const normalizedCredentials = {
+        email: String(credentials?.email || '').trim(),
+        password: String(credentials?.password || '')
+      }
+
       const response = await httpService.post(
         API_CONFIG.ENDPOINTS.LOGIN,
-        {
-          email: credentials.email,
-          password: credentials.password
-        },
+        normalizedCredentials,
         false
       )
-      
-      console.log('📦 Respuesta COMPLETA del login:', JSON.stringify(response, null, 2))
-      
-      // Verificar si la respuesta es exitosa
-      if (!response.success) {
-        console.error('❌ La API respondió con success=false:', response.message)
+
+      if (!response || !response.success) {
         return {
           success: false,
-          error: response.message || 'Error en el servidor'
+          error: response?.message || 'Contraseña o correo incorrecto'
         }
       }
-      
-      // Los datos del usuario están en response.data
+
       const userDataFromApi = response.data
-      
+
       if (!userDataFromApi) {
-        console.error('❌ No se encontró response.data')
         return {
           success: false,
           error: 'Error en la respuesta del servidor: no hay datos'
         }
       }
-      
-      console.log('👤 userDataFromApi:', userDataFromApi)
-      
-      const sessionToken = userDataFromApi.session_token
-      
+
+      const sessionToken = userDataFromApi.session_token || userDataFromApi.token
       if (!sessionToken) {
-        console.error('❌ No se encontró session_token')
         return {
           success: false,
           error: 'Error al obtener token de autenticación'
         }
       }
-      
-      let token = sessionToken
-      if (sessionToken && sessionToken.startsWith('JWT ')) {
-        token = sessionToken.substring(4)
-      }
-      
-      console.log('✅ Token extraído correctamente')
-      
-      storageService.setToken(token)
-      
+
+      const token = String(sessionToken).replace(/^JWT\s+/i, '').trim()
       const userData = {
         id: userDataFromApi.id,
         email: userDataFromApi.email,
-        name: userDataFromApi.name || userDataFromApi.email.split('@')[0],
+        name: userDataFromApi.name || userDataFromApi.email?.split('@')[0] || '',
         lastname: userDataFromApi.lastname || '',
         role: userDataFromApi.role || 'user',
         user_type: userDataFromApi.user_type || 'none',
         phone: userDataFromApi.phone || '',
-        image: userDataFromApi.image || ''
+        image: userDataFromApi.image || '',
+        session_token: token,
+        expiresAt: storageService.getTokenExpiry(token)
       }
-      
-      storageService.setUser(userData)
-      
-      if (userData.role) {
-        storageService.setUserRole(userData.role)
-      }
-      
-      console.log('✅ Login exitoso, usuario guardado:', userData.email)
-      
+
+      storageService.saveUser(userData)
+      storageService.setUserRole(userData.role)
+
       return {
         success: true,
-        token: token,
-        user: userData
+        token,
+        user: userData,
+        data: userData,
+        message: response.message || 'Usuario autenticado'
       }
-      
     } catch (error) {
-      console.error('❌ Error en login:', error)
+      const message = error?.message || 'Error de conexión con el servidor'
       return {
         success: false,
-        error: error.message || 'Error de conexión con el servidor'
+        error: message
       }
     }
   }
 
   static async register(userData) {
     try {
-      console.log('📝 Registrando usuario:', userData.email)
-      
       const userToCreate = {
         name: userData.name,
         lastname: userData.lastname || '',
@@ -117,35 +99,32 @@ class AuthModel {
         emergency_contact_phone: userData.emergency_contact_phone || null,
         occupation: userData.occupation || null
       }
-      
+
       const response = await httpService.post(
         API_CONFIG.ENDPOINTS.REGISTER,
         userToCreate,
         false
       )
-      
-      console.log('✅ Respuesta registro:', response)
-      
-      if (!response.success) {
+
+      if (!response || !response.success) {
         return {
           success: false,
-          error: response.message || 'Error al registrar usuario'
+          error: response?.message || 'Error al registrar usuario'
         }
       }
-      
+
       const createdUser = response.data || response
-      
+
       return {
         success: true,
         user: createdUser,
-        message: 'Usuario registrado exitosamente'
+        data: createdUser,
+        message: response.message || 'Usuario registrado exitosamente'
       }
-      
     } catch (error) {
-      console.error('❌ Error en registro:', error)
       return {
         success: false,
-        error: error.message || 'Error al registrar usuario'
+        error: error?.message || 'Error al registrar usuario'
       }
     }
   }
@@ -163,14 +142,14 @@ class AuthModel {
   static isAuthenticated() {
     const token = storageService.getToken()
     if (!token) return false
-    
+
     const isValid = jwtService.verifyToken(token)
-    
+
     if (!isValid) {
       storageService.clearSession()
       return false
     }
-    
+
     return true
   }
 
