@@ -1,6 +1,11 @@
-// src/views/auth/RegisterView.jsx
+/**
+ * RegisterView.jsx:
+ * - ¿Qué hace? Valida y crea la cuenta del usuario, con las reglas de registro del mobile en una vista web.
+ * - ¿Qué función cumple en el proyecto? Es la vista equivalente a RegisterScreen del mobile, manteniendo validaciones y mensajes consistentes.
+ * - Origen mobile equivalente: frontend_mobile/src/presentation/views/auth/RegisterScreen.tsx
+ */
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
 import CategoryModel from '../../models/CategoryModel'
@@ -55,7 +60,6 @@ const RegisterView = () => {
         loadCategories()
     }, [])
 
-    // Deriva el año de nacimiento y busca la categoría que le corresponde.
     const birthYear = useMemo(() => {
         if (!formData.birth_date) return null
         const year = formData.birth_date.slice(0, 4)
@@ -70,8 +74,6 @@ const RegisterView = () => {
     }, [birthYear, categories])
 
     const autoCategoryId = autoCategory?.id == null ? '' : String(autoCategory.id)
-    const autoCategoryYear = autoCategory?.category_year
-    const autoCategoryLabel = autoCategory ? `Categoría ${autoCategoryYear}` : ''
 
     useEffect(() => {
         if (isAuthenticated && currentUser) {
@@ -88,28 +90,28 @@ const RegisterView = () => {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        if (!formData.name || !formData.email || !formData.password) {
-            setError('Nombre, email y contraseña son obligatorios')
+        const email = formData.email.trim()
+        const name = formData.name.trim()
+        const lastname = formData.lastname.trim()
+
+        if (!name || !lastname || !email || !formData.password || !formData.confirmPassword) {
+            setError('Nombre, apellido, email y contraseña son obligatorios')
             return
         }
 
-        const validationErrors = [
-            getFieldError('name', formData.name),
-            getFieldError('name', formData.lastname),
-            getFieldError('digits', formData.document),
-            getFieldError('email', formData.email),
-            getFieldError('phone', formData.phone),
-            getFieldError('name', formData.emergency_contact_name),
-            getFieldError('phone', formData.emergency_contact_phone),
-            getFieldError('url', formData.image)
-        ].filter(Boolean)
-        if (validationErrors.length) {
-            setError(validationErrors[0])
+        if (!formData.phone || formData.phone.trim().length < 7) {
+            setError('El teléfono es obligatorio y debe tener al menos 7 dígitos')
             return
         }
 
-        if (!formData.document.trim()) {
-            setError('El documento es obligatorio')
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email)) {
+            setError('Por favor ingrese un email válido')
+            return
+        }
+
+        if (formData.password.length < 6) {
+            setError('La contraseña debe tener al menos 6 caracteres')
             return
         }
 
@@ -118,8 +120,19 @@ const RegisterView = () => {
             return
         }
 
-        if (formData.password.length < 6) {
-            setError('La contraseña debe tener al menos 6 caracteres')
+        const validationErrors = [
+            getFieldError('name', name),
+            getFieldError('name', lastname),
+            getFieldError('digits', formData.document),
+            getFieldError('email', email),
+            getFieldError('phone', formData.phone),
+            getFieldError('name', formData.emergency_contact_name),
+            getFieldError('phone', formData.emergency_contact_phone),
+            getFieldError('url', formData.image)
+        ].filter(Boolean)
+
+        if (validationErrors.length) {
+            setError(validationErrors[0])
             return
         }
 
@@ -138,25 +151,19 @@ const RegisterView = () => {
             }
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(formData.email)) {
-            setError('Por favor ingrese un email válido')
-            return
-        }
-
         setLoading(true)
         setError('')
 
         try {
             const payload = {
-                name: formData.name,
-                lastname: formData.lastname || '',
+                name,
+                lastname,
                 document: formData.document || null,
                 birth_date: formData.birth_date || null,
-                email: formData.email,
+                email,
                 password: formData.password,
-                phone: formData.phone || '',
-                role: formData.role || 'user',
+                phone: formData.phone.trim(),
+                role: 'user',
                 user_type: formData.user_type || 'student',
                 category_id: formData.user_type === 'student' && autoCategoryId ? Number(autoCategoryId) : null,
                 emergency_contact_name: formData.emergency_contact_name || null,

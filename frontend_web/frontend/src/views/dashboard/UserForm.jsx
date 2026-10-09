@@ -1,4 +1,9 @@
-// src/views/dashboard/UserForm.jsx
+/**
+ * UserForm.jsx:
+ * - ¿Qué hace? Administra el formulario de creación y edición de usuarios con validaciones y permisos.
+ * - ¿Qué función cumple en el proyecto? Es la interfaz que permite actualizar información y mantener la sesión sincronizada con el usuario actual.
+ * - Origen mobile equivalente: frontend_mobile/src/presentation/views/users/UserFormScreen.tsx
+ */
 import { useState, useEffect } from 'react'
 import useUsers from '../../hooks/useUsers'
 import useAuth from '../../hooks/useAuth'
@@ -7,7 +12,7 @@ import { getFieldError } from '../../utils/validators'
 
 const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
     const { createUser, updateUser, patchUser } = useUsers()
-    const { currentUser } = useAuth()
+    const { currentUser, updateUserSession } = useAuth()
     const [categories, setCategories] = useState([])
     const [formData, setFormData] = useState({
         name: '',
@@ -165,6 +170,20 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                     }
 
                     await updateUser(user.id, updateData)
+
+                    if (Number(user.id) === Number(currentUser?.id)) {
+                        const syncedUser = {
+                            ...(currentUser || {}),
+                            ...updateData,
+                            id: user.id,
+                            name: updateData.name || user.name || currentUser?.name,
+                            lastname: updateData.lastname || user.lastname || currentUser?.lastname,
+                            email: updateData.email || user.email || currentUser?.email,
+                            phone: updateData.phone || user.phone || currentUser?.phone,
+                            role: currentUser?.role || user.role || 'user'
+                        }
+                        updateUserSession(syncedUser)
+                    }
                 }
             } else {
                 // Modo POST - Crear nuevo usuario

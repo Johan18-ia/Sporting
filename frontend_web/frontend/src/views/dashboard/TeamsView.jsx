@@ -10,6 +10,7 @@ import Button from '../ui/Button'
 const MIN_MEMBERS = 4
 
 const emptyForm = { name: '', description: '', studentIds: [] }
+const toNumberId = (value) => Number(value)
 
 const TeamsView = () => {
     const [teams, setTeams] = useState([])
@@ -37,18 +38,19 @@ const TeamsView = () => {
     }, [])
 
     const studentsById = students.reduce((acc, s) => {
-        acc[s.id] = s
+        acc[toNumberId(s.id)] = s
         return acc
     }, {})
 
     const toggleStudent = (id) => {
+        const numericId = toNumberId(id)
         setFormData(prev => {
-            const isSelected = prev.studentIds.includes(id)
+            const isSelected = prev.studentIds.some(sid => toNumberId(sid) === numericId)
             return {
                 ...prev,
                 studentIds: isSelected
-                    ? prev.studentIds.filter(sid => sid !== id)
-                    : [...prev.studentIds, id]
+                    ? prev.studentIds.filter(sid => toNumberId(sid) !== numericId)
+                    : [...prev.studentIds, numericId]
             }
         })
     }
@@ -65,7 +67,7 @@ const TeamsView = () => {
         setFormData({
             name: team.name,
             description: team.description,
-            studentIds: [...team.studentIds]
+            studentIds: Array.isArray(team.studentIds) ? team.studentIds.map((id) => toNumberId(id)) : []
         })
         setStudentSearch('')
         setShowForm(true)
@@ -92,9 +94,9 @@ const TeamsView = () => {
         }
 
         const payload = {
-            name: formData.name,
-            description: formData.description,
-            studentIds: formData.studentIds
+            name: formData.name.trim(),
+            description: formData.description.trim(),
+            studentIds: [...new Set(formData.studentIds.map((id) => toNumberId(id)))]
         }
 
         const result = editingTeam
@@ -235,7 +237,7 @@ const TeamsView = () => {
                                 )}
 
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-                                    {team.studentIds.map((id) => {
+                                    {Array.from(new Set((team.studentIds || []).map((id) => toNumberId(id)))).map((id) => {
                                         const student = studentsById[id]
                                         return (
                                             <span key={id} className="team-member-chip">

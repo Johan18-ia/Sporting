@@ -11,10 +11,11 @@ const UserDetails = ({ user, onClose, onEdit }) => {
 
   // Obtener texto legible del rol
   const getRoleText = (role) => {
-    switch (role) {
+    switch (String(role || '').toLowerCase()) {
       case 'admin': return '👑 Administrador'
       case 'seller': return '🛒 Vendedor'
       case 'customer': return '👤 Cliente'
+      case 'user': return '🎓 Estudiante'
       default: return '👤 Usuario'
     }
   }

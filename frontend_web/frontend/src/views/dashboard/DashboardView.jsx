@@ -25,6 +25,7 @@ import StudentsView from './StudentsView'
 import TournamentsView from './TournamentsView'
 import TeamsView from './TeamsView'
 import ReportsView from './ReportsView'
+import ProfileView from './ProfileView'
 import StudentDashboardView from './StudentDashboardView'
 import '../../styles/Dashboard.css'
 import '../../styles/DashboardChart.css'
@@ -109,6 +110,22 @@ const DashboardView = () => {
       overview.teams,
     [overview]
   )
+
+  if (!currentUser) {
+    return (
+      <div style={{ padding: '32px 20px' }}>
+        <PageHeader
+          title="Cargando sesión"
+          description="Estamos preparando tu panel de Sporting Club."
+        />
+        <Card>
+          <p style={{ margin: 0, color: 'var(--sporting-text-muted)' }}>
+            No se encontró información de usuario. Intenta nuevamente.
+          </p>
+        </Card>
+      </div>
+    )
+  }
 
   const maxMetric = useMemo(() => {
     const vals = METRIC_META.map((m) => overview[m.key] || 0)
@@ -256,6 +273,8 @@ const DashboardView = () => {
     switch (activeTab) {
       case 'dashboard':
         return renderDashboardHome()
+      case 'profile':
+        return <ProfileView />
       case 'users':
         return <UsersView />
       case 'categories':
