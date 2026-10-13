@@ -62,8 +62,6 @@ ON DUPLICATE KEY UPDATE
 -- ============================================
 -- CREAR TABLA DE USUARIOS
 -- ============================================
--- users contiene autenticacion y datos base. Los datos propios de un
--- estudiante se almacenan en student_profiles para evitar duplicacion.
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -221,6 +219,9 @@ INSERT INTO users (name, lastname, email, password, phone, image, role, user_typ
     '3110000020', NULL, 'user', 'parent', 1
 );
 
+-- ============================================
+-- INSERTAR PERFILES DE PADRES (CORREGIDO)
+-- ============================================
 INSERT INTO parent_profiles (user_id, document, address, occupation)
 SELECT u.id, p.document, p.address, p.occupation
 FROM (
@@ -247,9 +248,6 @@ CREATE TABLE IF NOT EXISTS productos(
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- ============================================
--- INSERTAR PRODUCTOS DE EJEMPLO
--- ============================================
 INSERT INTO productos(nombre, descripcion, precio, stock, imagen, categoria) VALUES
 ('Balón Oficial', 'Balón de fútbol profesional', 150000, 20, 'https://placehold.co/300x200/8B0000/FFFFFF?text=Balon', 'Equipamiento'),
 ('Camiseta Local', 'Camiseta oficial del equipo', 80000, 30, 'https://placehold.co/300x200/8B0000/FFFFFF?text=Camiseta', 'Indumentaria'),
@@ -267,7 +265,6 @@ CREATE TABLE IF NOT EXISTS schedules(
     field_name VARCHAR(150) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_schedule_category
         FOREIGN KEY(id_category)
         REFERENCES categories(id)
@@ -275,9 +272,6 @@ CREATE TABLE IF NOT EXISTS schedules(
         ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- ============================================
--- INSERTAR HORARIOS DE EJEMPLO
--- ============================================
 INSERT INTO schedules(id_category, day_of_week, start_time, end_time, field_name) VALUES
 (1, 'Lunes', '16:00:00', '18:00:00', 'Cancha Principal'),
 (1, 'Miércoles', '15:00:00', '17:00:00', 'Cancha Sintética'),
@@ -297,7 +291,6 @@ CREATE TABLE tournaments(
     max_teams INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_tournament_category
         FOREIGN KEY(id_category)
         REFERENCES categories(id)
@@ -305,9 +298,6 @@ CREATE TABLE tournaments(
         ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- ============================================
--- INSERTAR TORNEOS DE EJEMPLO
--- ============================================
 INSERT INTO tournaments(name, description, id_category, tournament_date, location, status, max_teams) VALUES
 ('Copa Infantil 2026', 'Torneo de categorías menores', 1, '2026-06-15', 'Cancha Principal', 'Activo', 8),
 ('Liga Juvenil Bogotá', 'Competencia juvenil distrital', 2, '2026-07-10', 'Estadio Municipal', 'Pendiente', 12);
@@ -315,8 +305,6 @@ INSERT INTO tournaments(name, description, id_category, tournament_date, locatio
 -- ============================================
 -- CREAR PERFIL DE ESTUDIANTE
 -- ============================================
--- Un usuario puede tener como maximo un perfil de estudiante. El nombre,
--- apellido, email y telefono se leen desde users.
 CREATE TABLE student_profiles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL UNIQUE,
@@ -365,8 +353,9 @@ FROM (
 INNER JOIN users u ON u.email = p.email
 INNER JOIN categories c ON c.category_year = p.category_year;
 
--- Los cinco perfiles parentales quedan enlazados con los usuarios de tipo parent.
-
+-- ============================================
+-- CREAR TABLAS DE TORNEOS Y EQUIPOS
+-- ============================================
 CREATE TABLE tournament_students (
     tournament_id INT NOT NULL,
     student_id INT NOT NULL,
