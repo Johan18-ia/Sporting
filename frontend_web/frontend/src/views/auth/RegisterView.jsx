@@ -1,102 +1,112 @@
-// src/views/auth/RegisterView.jsx
-// ====================================================
-// VISTA: REGISTRO DE USUARIOS (SOLO ADMIN/SELLER)
-// ====================================================
-import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+/**
+ * RegisterView.jsx:
+ * - ¿Qué hace? Valida y crea la cuenta del usuario, con las reglas de registro del mobile en una vista web.
+ * - ¿Qué función cumple en el proyecto? Es la vista equivalente a RegisterScreen del mobile, manteniendo validaciones y mensajes consistentes.
+ * - Origen mobile equivalente: frontend_mobile/src/presentation/views/auth/RegisterScreen.tsx
+ */
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
 import CategoryModel from '../../models/CategoryModel'
+import { getFieldError } from '../../utils/validators'
 import '../../styles/Register.css'
 
+const initialForm = {
+    name: '',
+    lastname: '',
+    document: '',
+    birth_date: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phone: '',
+    role: 'user',
+    user_type: 'student',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    address: '',
+    occupation: '',
+    image: '',
+    is_active: 1
+}
+
 const RegisterView = () => {
-    const { currentUser, isAuthenticated } = useAuth()
+    const { currentUser, isAuthenticated, register } = useAuth()
     const navigate = useNavigate()
-
-    // ============================================
-    // ESTADOS
-    // ============================================
-    const [formData, setFormData] = useState({
-        name: '',
-        lastname: '',
-        document: '',
-        birth_date: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phone: '',
-        role: 'user',
-        category_id: '',
-        emergency_contact: '',
-        emergency_phone: '',
-        address: '',
-        image: '',
-        is_active: 1
-    })
-
+    const [formData, setFormData] = useState(initialForm)
     const [categories, setCategories] = useState([])
+    const [categoriesLoaded, setCategoriesLoaded] = useState(false)
+    const [categoriesLoadError, setCategoriesLoadError] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
 
-    // ============================================
-    // CARGAR CATEGORÍAS
-    // ============================================
     useEffect(() => {
         const loadCategories = async () => {
-            const result = await CategoryModel.getAllCategories()
-            if (result.success) {
-                setCategories(result.data)
+            try {
+                const result = await CategoryModel.getAllCategories()
+                if (result.success) {
+                    setCategories(result.data)
+                } else {
+                    setCategoriesLoadError(true)
+                }
+            } catch {
+                setCategoriesLoadError(true)
+            } finally {
+                setCategoriesLoaded(true)
             }
         }
         loadCategories()
     }, [])
 
-    // ============================================
-    // VERIFICAR PERMISOS (SOLO ADMIN/SELLER)
-    // ============================================
+    const birthYear = useMemo(() => {
+        if (!formData.birth_date) return null
+        const year = formData.birth_date.slice(0, 4)
+        return /^\d{4}$/.test(year) ? year : null
+    }, [formData.birth_date])
+
+    const autoCategory = useMemo(() => {
+        if (!birthYear || !categories.length) return null
+        return categories.find(
+            category => String(category.category_year) === birthYear
+        ) || null
+    }, [birthYear, categories])
+
+    const autoCategoryId = autoCategory?.id == null ? '' : String(autoCategory.id)
+
     useEffect(() => {
-        if (!isAuthenticated) {
-            // Si no está autenticado, redirigir al login
-            navigate('/login')
-            return
+        if (isAuthenticated && currentUser) {
+            navigate('/dashboard')
         }
+    }, [isAuthenticated, currentUser, navigate])
 
-        // Si está autenticado pero no es admin ni seller
-        if (currentUser && !['admin', 'seller'].includes(currentUser.role)) {
-            setError('No tienes permisos para registrar usuarios. Contacta al administrador.')
-            setTimeout(() => {
-                navigate('/dashboard')
-            }, 3000)
-        }
-    }, [currentUser, isAuthenticated, navigate])
-
-    // ============================================
-    // MANEJAR CAMBIOS EN FORMULARIO
-    // ============================================
     const handleChange = (e) => {
         const { name, value } = e.target
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }))
+        setFormData(prev => ({ ...prev, [name]: value }))
         if (error) setError('')
     }
 
-    // ============================================
-    // MANEJAR ENVÍO DEL FORMULARIO
-    // ============================================
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        // Validar campos obligatorios
-        if (!formData.name || !formData.email || !formData.password) {
-            setError('Nombre, email y contraseña son obligatorios')
+        const email = formData.email.trim()
+        const name = formData.name.trim()
+        const lastname = formData.lastname.trim()
+
+        if (!name || !lastname || !email || !formData.password || !formData.confirmPassword) {
+            setError('Nombre, apellido, email y contraseña son obligatorios')
             return
         }
 
-        if (formData.password !== formData.confirmPassword) {
-            setError('Las contraseñas no coinciden')
+        if (!formData.phone || formData.phone.trim().length < 7) {
+            setError('El teléfono es obligatorio y debe tener al menos 7 dígitos')
+            return
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email)) {
+            setError('Por favor ingrese un email válido')
             return
         }
 
@@ -105,72 +115,81 @@ const RegisterView = () => {
             return
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(formData.email)) {
-            setError('Por favor ingrese un email válido')
+        if (formData.password !== formData.confirmPassword) {
+            setError('Las contraseñas no coinciden')
             return
+        }
+
+        const validationErrors = [
+            getFieldError('name', name),
+            getFieldError('name', lastname),
+            getFieldError('digits', formData.document),
+            getFieldError('email', email),
+            getFieldError('phone', formData.phone),
+            getFieldError('name', formData.emergency_contact_name),
+            getFieldError('phone', formData.emergency_contact_phone),
+            getFieldError('url', formData.image)
+        ].filter(Boolean)
+
+        if (validationErrors.length) {
+            setError(validationErrors[0])
+            return
+        }
+
+        if (formData.user_type === 'student') {
+            if (!formData.birth_date) {
+                setError('La fecha de nacimiento es obligatoria')
+                return
+            }
+            if (!categoriesLoaded || categoriesLoadError) {
+                setError('No se pudieron cargar las categorías. Inténtalo nuevamente.')
+                return
+            }
+            if (!birthYear || !autoCategoryId) {
+                setError(`No existe una categoría para el año ${birthYear || 'indicado'}`)
+                return
+            }
         }
 
         setLoading(true)
         setError('')
 
         try {
-            // Preparar datos para enviar
-            const userData = {
-                name: formData.name,
-                lastname: formData.lastname || '',
+            const payload = {
+                name,
+                lastname,
                 document: formData.document || null,
                 birth_date: formData.birth_date || null,
-                email: formData.email,
+                email,
                 password: formData.password,
-                phone: formData.phone || '',
-                role: formData.role || 'user',
-                category_id: formData.category_id ? parseInt(formData.category_id) : null,
-                emergency_contact: formData.emergency_contact || null,
-                emergency_phone: formData.emergency_phone || null,
+                phone: formData.phone.trim(),
+                role: 'user',
+                user_type: formData.user_type || 'student',
+                category_id: formData.user_type === 'student' && autoCategoryId ? Number(autoCategoryId) : null,
+                emergency_contact_name: formData.emergency_contact_name || null,
+                emergency_contact_phone: formData.emergency_contact_phone || null,
                 address: formData.address || null,
+                occupation: formData.occupation || null,
                 image: formData.image || '',
-                is_active: formData.is_active
+                is_active: Number(formData.is_active)
             }
 
-            // Llamar al controlador para crear usuario
-            const { register } = useAuth()
-            const result = await register(userData)
+            const result = await register(payload)
 
             if (result.success) {
                 setSuccess('Usuario creado exitosamente')
-                setFormData({
-                    name: '',
-                    lastname: '',
-                    document: '',
-                    birth_date: '',
-                    email: '',
-                    password: '',
-                    confirmPassword: '',
-                    phone: '',
-                    role: 'user',
-                    category_id: '',
-                    emergency_contact: '',
-                    emergency_phone: '',
-                    address: '',
-                    image: '',
-                    is_active: 1
-                })
-
-                setTimeout(() => {
-                    navigate('/dashboard/users')
-                }, 2000)
+                setFormData(initialForm)
+                setTimeout(() => navigate('/login'), 1500)
+            } else {
+                setError(result.error || 'No se pudo crear el usuario')
             }
         } catch (err) {
-            setError(err.error || 'Error al crear el usuario')
+            setError(err?.error || err?.message || 'Error al crear el usuario')
         } finally {
             setLoading(false)
         }
     }
 
-    // ============================================
-    // RENDERIZADO
-    // ============================================
     return (
         <div className="register-container">
             <div className="register-card sporting-register-card">
@@ -179,35 +198,40 @@ const RegisterView = () => {
                 </div>
 
                 <div className="register-header sporting-header">
-                    <h1>Registrar Usuario</h1>
-                    <p>Completa los datos para crear un nuevo usuario</p>
-                    {currentUser && (
-                        <p style={{ fontSize: '0.85rem', color: '#666' }}>
-                            Registrando como <strong>{currentUser.role}</strong>
-                        </p>
-                    )}
+                    <h1>Crear Cuenta</h1>
+                    <p>Registra tu perfil como estudiante o padre de familia</p>
                 </div>
 
-                {error && (
-                    <AlertMessage
-                        type="error"
-                        message={error}
-                        onClose={() => setError('')}
-                    />
-                )}
-
-                {success && (
-                    <AlertMessage
-                        type="success"
-                        message={success}
-                        onClose={() => setSuccess('')}
-                    />
-                )}
+                {error && <AlertMessage type="error" message={error} onClose={() => setError('')} />}
+                {success && <AlertMessage type="success" message={success} onClose={() => setSuccess('')} />}
 
                 <form onSubmit={handleSubmit} className="register-form">
-                    {/* ============================================
-                    DATOS PERSONALES
-                    ============================================ */}
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                        <label>Tipo de usuario</label>
+                        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <input
+                                    type="radio"
+                                    name="user_type"
+                                    value="student"
+                                    checked={formData.user_type === 'student'}
+                                    onChange={handleChange}
+                                />
+                                Estudiante
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <input
+                                    type="radio"
+                                    name="user_type"
+                                    value="parent"
+                                    checked={formData.user_type === 'parent'}
+                                    onChange={handleChange}
+                                />
+                                Padre
+                            </label>
+                        </div>
+                    </div>
+
                     <div className="form-row">
                         <div className="form-group">
                             <label htmlFor="name">Nombre *</label>
@@ -220,8 +244,9 @@ const RegisterView = () => {
                                 placeholder="Nombre completo"
                                 disabled={loading}
                                 required
-                                className="sporting-input"
+                                className={`sporting-input ${getFieldError('name', formData.name) ? 'field-invalid' : ''}`}
                             />
+                            {getFieldError('name', formData.name) && <small className="field-error-message">{getFieldError('name', formData.name)}</small>}
                         </div>
                         <div className="form-group">
                             <label htmlFor="lastname">Apellido</label>
@@ -233,44 +258,173 @@ const RegisterView = () => {
                                 onChange={handleChange}
                                 placeholder="Apellido"
                                 disabled={loading}
-                                className="sporting-input"
+                                className={`sporting-input ${getFieldError('name', formData.lastname) ? 'field-invalid' : ''}`}
                             />
+                            {getFieldError('name', formData.lastname) && <small className="field-error-message">{getFieldError('name', formData.lastname)}</small>}
                         </div>
                     </div>
 
-                    <div className="form-row">
+                    {formData.user_type === 'student' && (
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="document">Documento</label>
+                                <input
+                                    type="text"
+                                    id="document"
+                                    name="document"
+                                    value={formData.document}
+                                    onChange={handleChange}
+                                    placeholder="Número de identificación"
+                                    disabled={loading}
+                                    className={`sporting-input ${getFieldError('digits', formData.document) ? 'field-invalid' : ''}`}
+                                    required
+                                />
+                                {getFieldError('digits', formData.document) && <small className="field-error-message">{getFieldError('digits', formData.document)}</small>}
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="birth_date">Fecha de nacimiento</label>
+                                <input
+                                    type="date"
+                                    id="birth_date"
+                                    name="birth_date"
+                                    value={formData.birth_date}
+                                    onChange={handleChange}
+                                    disabled={loading}
+                                    className="sporting-input"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.user_type === 'parent' && (
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="document">Documento del padre</label>
+                                <input
+                                    type="text"
+                                    id="document"
+                                    name="document"
+                                    value={formData.document}
+                                    onChange={handleChange}
+                                    placeholder="Número de identificación"
+                                    disabled={loading}
+                                    className={`sporting-input ${getFieldError('digits', formData.document) ? 'field-invalid' : ''}`}
+                                    required
+                                />
+                                {getFieldError('digits', formData.document) && <small className="field-error-message">{getFieldError('digits', formData.document)}</small>}
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="occupation">Ocupación</label>
+                                <input
+                                    type="text"
+                                    id="occupation"
+                                    name="occupation"
+                                    value={formData.occupation}
+                                    onChange={handleChange}
+                                    placeholder="Ej: Empresario"
+                                    disabled={loading}
+                                    className="sporting-input"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.user_type === 'student' && (
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="category_id">Categoría asignada</label>
+                                <input
+                                    type="text"
+                                    id="category_id"
+                                    value={autoCategoryLabel}
+                                    readOnly
+                                    disabled
+                                    className="sporting-input sporting-input-readonly"
+                                    placeholder="Se asigna al ingresar la fecha de nacimiento"
+                                />
+                                {!formData.birth_date && (
+                                    <small className="form-hint">
+                                        Ingresa la fecha de nacimiento para asignar la categoría
+                                    </small>
+                                )}
+                                {birthYear && categoriesLoaded && !categoriesLoadError && !autoCategoryId && (
+                                    <small className="form-hint form-hint-error">
+                                        No existe una categoría para el año {birthYear}. Contacta al administrador.
+                                    </small>
+                                )}
+                                {categoriesLoadError && (
+                                    <small className="form-hint form-hint-error">
+                                        No se pudieron cargar las categorías.
+                                    </small>
+                                )}
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="address">Dirección</label>
+                                <input
+                                    type="text"
+                                    id="address"
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleChange}
+                                    placeholder="Dirección principal"
+                                    disabled={loading}
+                                    className="sporting-input"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.user_type === 'student' && (
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="emergency_contact_name">Contacto de emergencia</label>
+                                <input
+                                    type="text"
+                                    id="emergency_contact_name"
+                                    name="emergency_contact_name"
+                                    value={formData.emergency_contact_name}
+                                    onChange={handleChange}
+                                    placeholder="Nombre del responsable"
+                                    disabled={loading}
+                                    className={`sporting-input ${getFieldError('name', formData.emergency_contact_name) ? 'field-invalid' : ''}`}
+                                />
+                                {getFieldError('name', formData.emergency_contact_name) && <small className="field-error-message">{getFieldError('name', formData.emergency_contact_name)}</small>}
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="emergency_contact_phone">Teléfono de emergencia</label>
+                                <input
+                                    type="tel"
+                                    id="emergency_contact_phone"
+                                    name="emergency_contact_phone"
+                                    value={formData.emergency_contact_phone}
+                                    onChange={handleChange}
+                                    placeholder="Número de emergencia"
+                                    disabled={loading}
+                                    className={`sporting-input ${getFieldError('phone', formData.emergency_contact_phone) ? 'field-invalid' : ''}`}
+                                />
+                                {getFieldError('phone', formData.emergency_contact_phone) && <small className="field-error-message">{getFieldError('phone', formData.emergency_contact_phone)}</small>}
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.user_type === 'parent' && (
                         <div className="form-group">
-                            <label htmlFor="document">Documento</label>
+                            <label htmlFor="address">Dirección</label>
                             <input
                                 type="text"
-                                id="document"
-                                name="document"
-                                value={formData.document}
+                                id="address"
+                                name="address"
+                                value={formData.address}
                                 onChange={handleChange}
-                                placeholder="Número de identificación"
+                                placeholder="Dirección principal"
                                 disabled={loading}
                                 className="sporting-input"
                             />
                         </div>
-                        <div className="form-group">
-                            <label htmlFor="birth_date">Fecha de Nacimiento</label>
-                            <input
-                                type="date"
-                                id="birth_date"
-                                name="birth_date"
-                                value={formData.birth_date}
-                                onChange={handleChange}
-                                disabled={loading}
-                                className="sporting-input"
-                            />
-                        </div>
-                    </div>
+                    )}
 
-                    {/* ============================================
-                    DATOS DE ACCESO
-                    ============================================ */}
                     <div className="form-group">
-                        <label htmlFor="email">Correo Electrónico *</label>
+                        <label htmlFor="email">Correo electrónico *</label>
                         <input
                             type="email"
                             id="email"
@@ -280,8 +434,9 @@ const RegisterView = () => {
                             placeholder="usuario@ejemplo.com"
                             disabled={loading}
                             required
-                            className="sporting-input"
+                            className={`sporting-input ${getFieldError('email', formData.email) ? 'field-invalid' : ''}`}
                         />
+                        {getFieldError('email', formData.email) && <small className="field-error-message">{getFieldError('email', formData.email)}</small>}
                     </div>
 
                     <div className="form-row">
@@ -300,7 +455,7 @@ const RegisterView = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="confirmPassword">Confirmar Contraseña *</label>
+                            <label htmlFor="confirmPassword">Confirmar contraseña *</label>
                             <input
                                 type="password"
                                 id="confirmPassword"
@@ -325,13 +480,11 @@ const RegisterView = () => {
                             onChange={handleChange}
                             placeholder="Número de contacto"
                             disabled={loading}
-                            className="sporting-input"
+                            className={`sporting-input ${getFieldError('phone', formData.phone) ? 'field-invalid' : ''}`}
                         />
+                        {getFieldError('phone', formData.phone) && <small className="field-error-message">{getFieldError('phone', formData.phone)}</small>}
                     </div>
 
-                    {/* ============================================
-                    ROL Y CATEGORÍA
-                    ============================================ */}
                     <div className="form-row">
                         <div className="form-group">
                             <label htmlFor="role">Rol</label>
@@ -344,137 +497,52 @@ const RegisterView = () => {
                                 className="sporting-input"
                             >
                                 <option value="user">Usuario</option>
-                                <option value="seller">Vendedor</option>
-                                {currentUser?.role === 'admin' && (
-                                    <option value="admin">Administrador</option>
-                                )}
-                            </select>
-                            {currentUser?.role === 'seller' && (
-                                <small className="form-hint">Solo puedes crear usuarios o vendedores</small>
-                            )}
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="category_id">Categoría (Año)</label>
-                            <select
-                                id="category_id"
-                                name="category_id"
-                                value={formData.category_id}
-                                onChange={handleChange}
-                                disabled={loading}
-                                className="sporting-input"
-                            >
-                                <option value="">Sin categoría</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>
-                                        {cat.category_year || cat.name_year} - {cat.description || ''}
-                                    </option>
-                                ))}
+                                <option value="seller">Moderador</option>
+                                {currentUser?.role === 'admin' && <option value="admin">Administrador</option>}
                             </select>
                         </div>
-                    </div>
-
-                    {/* ============================================
-                    INFORMACIÓN DE EMERGENCIA
-                    ============================================ */}
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="emergency_contact">Contacto de Emergencia</label>
-                            <input
-                                type="text"
-                                id="emergency_contact"
-                                name="emergency_contact"
-                                value={formData.emergency_contact}
-                                onChange={handleChange}
-                                placeholder="Nombre del contacto"
-                                disabled={loading}
-                                className="sporting-input"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="emergency_phone">Teléfono de Emergencia</label>
-                            <input
-                                type="tel"
-                                id="emergency_phone"
-                                name="emergency_phone"
-                                value={formData.emergency_phone}
-                                onChange={handleChange}
-                                placeholder="Número de emergencia"
-                                disabled={loading}
-                                className="sporting-input"
-                            />
-                        </div>
+                        {currentUser?.role === 'admin' && (
+                            <div className="form-group">
+                                <label htmlFor="is_active">Estado</label>
+                                <select
+                                    id="is_active"
+                                    name="is_active"
+                                    value={formData.is_active}
+                                    onChange={handleChange}
+                                    disabled={loading}
+                                    className="sporting-input"
+                                >
+                                    <option value={1}>Activo</option>
+                                    <option value={0}>Inactivo</option>
+                                </select>
+                            </div>
+                        )}
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="address">Dirección</label>
+                        <label htmlFor="image">URL de imagen</label>
                         <input
-                            type="text"
-                            id="address"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            placeholder="Dirección de residencia"
-                            disabled={loading}
-                            className="sporting-input"
-                        />
-                    </div>
-
-                    {/* ============================================
-                    ESTADO DEL USUARIO (SOLO ADMIN)
-                    ============================================ */}
-                    {currentUser?.role === 'admin' && (
-                        <div className="form-group">
-                            <label htmlFor="is_active">Estado del Usuario</label>
-                            <select
-                                id="is_active"
-                                name="is_active"
-                                value={formData.is_active}
-                                onChange={handleChange}
-                                disabled={loading}
-                                className="sporting-input"
-                            >
-                                <option value={1}>Activo</option>
-                                <option value={0}>Inactivo</option>
-                            </select>
-                        </div>
-                    )}
-
-                    {/* ============================================
-                    IMAGEN
-                    ============================================ */}
-                    <div className="form-group">
-                        <label htmlFor="image">URL de Imagen</label>
-                        <input
-                            type="text"
+                            type="url"
                             id="image"
                             name="image"
                             value={formData.image}
                             onChange={handleChange}
                             placeholder="URL de la imagen de perfil"
                             disabled={loading}
-                            className="sporting-input"
+                            className={`sporting-input ${getFieldError('url', formData.image) ? 'field-invalid' : ''}`}
                         />
+                        {getFieldError('url', formData.image) && <small className="field-error-message">{getFieldError('url', formData.image)}</small>}
                     </div>
 
-                    {/* ============================================
-                    BOTÓN DE ENVÍO
-                    ============================================ */}
-                    <button
-                        type="submit"
-                        className="register-button sporting-register-btn"
-                        disabled={loading}
-                    >
+                    <button type="submit" className="register-button sporting-register-btn" disabled={loading}>
                         {loading ? 'Creando usuario...' : 'Crear Usuario'}
                     </button>
                 </form>
 
-                {/* ============================================
-                FOOTER
-                ============================================ */}
                 <div className="register-footer sporting-footer">
                     <p>
-                        <Link to="/dashboard" className="sporting-link">
-                            ← Volver al Dashboard
+                        <Link to="/login" className="sporting-link">
+                            ← Ya tengo cuenta
                         </Link>
                     </p>
                     <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '10px' }}>

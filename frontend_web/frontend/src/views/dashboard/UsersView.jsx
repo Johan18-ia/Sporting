@@ -1,7 +1,13 @@
-// src/views/dashboard/UsersView.jsx
-import { useState, useMemo } from 'react'
+/**
+ * UsersView.jsx:
+ * - ¿Qué hace? Muestra la lista de usuarios con roles, filtros, estado y acciones de administración.
+ * - ¿Qué función cumple en el proyecto? Es la vista equivalente al listado del mobile para controlar identidad, permisos y estudiantes.
+ * - Origen mobile equivalente: frontend_mobile/src/presentation/views/users/UsersScreen.tsx
+ */
+import { useState, useMemo, useEffect } from 'react'
 import useUsers from '../../hooks/useUsers'
 import useAuth from '../../hooks/useAuth'
+import StudentModel from '../../models/StudentModel'
 import AlertMessage from '../common/AlertMessage'
 import UserForm from './UserForm'
 import UserDetails from './UserDetails'
@@ -11,9 +17,15 @@ import '../../styles/UsersCards.css'
 
 const ROLE_META = {
   admin: { label: 'Administrador', color: '#8B0000' },
-  seller: { label: 'Vendedor', color: '#A52A2A' },
+  seller: { label: 'Moderador', color: '#A52A2A' },
   user: { label: 'Estudiante', color: '#B22222' },
   customer: { label: 'Cliente', color: '#6B2D2D' }
+}
+
+const USER_TYPE_META = {
+  student: { label: 'Estudiante', color: '#B22222' },
+  parent: { label: 'Padre', color: '#6B2D2D' },
+  none: { label: 'Ninguno', color: '#777' }
 }
 
 const initials = (user) => {
@@ -33,9 +45,32 @@ const UsersView = () => {
   const [message, setMessage] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('')
+  const [filterType, setFilterType] = useState('')
+  const [studentMap, setStudentMap] = useState({})
 
-  const canEdit = () =>
-    currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
+  useEffect(() => {
+    const loadStudentMap = async () => {
+      try {
+        const result = await StudentModel.getAllStudents()
+        if (result.success && Array.isArray(result.data)) {
+          const nextMap = {}
+          result.data.forEach((student) => {
+            if (student && student.user_id) {
+              nextMap[Number(student.user_id)] = student
+            }
+          })
+          setStudentMap(nextMap)
+        }
+      } catch (err) {
+        console.warn('No se pudo cargar el mapa de estudiantes:', err)
+      }
+    }
+
+    loadStudentMap()
+  }, [])
+
+  const canEdit = (user) =>
+    Boolean(user) && Boolean(currentUser) && (currentUser.role === 'admin' || currentUser.role === 'seller')
 
   const canDelete = (user) => {
     if (!currentUser || currentUser.role !== 'admin') return false
@@ -52,26 +87,63 @@ const UsersView = () => {
   const canCreateUser = () =>
     currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
 
-  const roleLabel = (role) => ROLE_META[role]?.label || role || 'Usuario'
-  const roleColor = (role) => ROLE_META[role]?.color || '#8B0000'
+    const normalizeRole = (role) => {
+    const value = String(role || '').toLowerCase()
+    if (['admin', 'seller', 'user', 'customer'].includes(value)) return value
+    return 'user'
+  }
+
+  const roleLabel = (role) => ROLE_META[normalizeRole(role)]?.label || 'Usuario'
+  const roleColor = (role) => ROLE_META[normalizeRole(role)]?.color || '#8B0000'
+  const userTypeLabel = (type) => USER_TYPE_META[type]?.label || 'Ninguno'
 
   const filteredUsers = useMemo(() => {
-    let list = users || []
-    if (filterRole) list = list.filter((u) => u.role === filterRole)
+    let list = [...(users || [])]
+
+    list = list.map((user) => {
+      const normalizedRole = normalizeRole(user.role)
+      const isStudentUser = normalizedRole === 'user' && (
+        String(user.user_type || '').toLowerCase() === 'student' ||
+        Boolean(studentMap[Number(user.id)]) ||
+        Boolean(user.isStudent)
+      )
+
+      return {
+        ...user,
+        role: normalizedRole,
+        isStudentUser,
+        resolvedUserType: isStudentUser ? 'student' : (String(user.user_type || 'none').toLowerCase() || 'none')
+      }
+    })
+
+    if (filterRole) list = list.filter((u) => normalizeRole(u.role) === filterRole)
+    if (filterType) list = list.filter((u) => (u.resolvedUserType || 'none') === filterType)
     if (searchTerm.trim()) {
       const q = searchTerm.trim().toLowerCase()
-      list = list.filter(
-        (user) =>
-          user.email?.toLowerCase().includes(q) ||
-          user.id?.toString().includes(q) ||
-          user.name?.toLowerCase().includes(q) ||
-          user.lastname?.toLowerCase().includes(q) ||
-          user.document?.includes(searchTerm) ||
-          user.role?.toLowerCase().includes(q)
-      )
+      list = list.filter((user) => {
+        const documentText = String(user.document ?? '')
+        const roleText = normalizeRole(user.role)
+        return (
+          String(user.email || '').toLowerCase().includes(q) ||
+          String(user.id ?? '').includes(q) ||
+          String(user.name || '').toLowerCase().includes(q) ||
+          String(user.lastname || '').toLowerCase().includes(q) ||
+          documentText.toLowerCase().includes(q) ||
+          roleText.toLowerCase().includes(q)
+        )
+      })
     }
-    return list
-  }, [users, searchTerm, filterRole])
+
+    const roleOrder = { admin: 1, seller: 2, user: 3, customer: 4 }
+    return list.sort((a, b) => {
+      const aRole = normalizeRole(a.role)
+      const bRole = normalizeRole(b.role)
+      const aOrder = roleOrder[aRole] ?? 99
+      const bOrder = roleOrder[bRole] ?? 99
+      if (aOrder !== bOrder) return aOrder - bOrder
+      return String(a.name || '').localeCompare(String(b.name || ''))
+    })
+  }, [users, searchTerm, filterRole, filterType, studentMap])
 
   const stats = useMemo(() => {
     const all = users || []
@@ -209,7 +281,7 @@ const UsersView = () => {
         </div>
         <div className="usr-stat">
           <span className="usr-stat-value">{stats.seller}</span>
-          <span className="usr-stat-label">Vendedores</span>
+          <span className="usr-stat-label">Moderadores</span>
         </div>
         <div className="usr-stat">
           <span className="usr-stat-value">{stats.user}</span>
@@ -248,6 +320,25 @@ const UsersView = () => {
             </button>
           ))}
         </div>
+        <div className="usr-chips" style={{ marginTop: '8px' }}>
+          <button
+            type="button"
+            className={`usr-chip ${!filterType ? 'is-active' : ''}`}
+            onClick={() => setFilterType('')}
+          >
+            Todos los tipos
+          </button>
+          {Object.entries(USER_TYPE_META).map(([key, meta]) => (
+            <button
+              key={key}
+              type="button"
+              className={`usr-chip ${filterType === key ? 'is-active' : ''}`}
+              onClick={() => setFilterType(key)}
+            >
+              {meta.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {filteredUsers.length === 0 ? (
@@ -267,6 +358,7 @@ const UsersView = () => {
                 ? true
                 : user.is_active === 1 || user.is_active === true
             const color = roleColor(user.role)
+            const studentTypeLabel = user.role === 'user' && user.isStudentUser ? 'Estudiante' : userTypeLabel(user.resolvedUserType || 'none')
             return (
               <article key={user.id} className="usr-card">
                 <div className="usr-card-top">
@@ -307,6 +399,14 @@ const UsersView = () => {
                       <span className="usr-row-value">{user.document}</span>
                     </div>
                   )}
+                  <div className="usr-row">
+                    <span className="usr-row-label">Tipo</span>
+                    <span className="usr-row-value">{studentTypeLabel}</span>
+                  </div>
+                  <div className="usr-row">
+                    <span className="usr-row-label">Estado</span>
+                    <span className="usr-row-value">{isActive ? 'Activo' : 'Inactivo'}</span>
+                  </div>
                   <div className="usr-row">
                     <span className="usr-row-label">ID</span>
                     <span className="usr-row-value">#{user.id}</span>

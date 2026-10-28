@@ -1,4 +1,9 @@
-// src/views/auth/LoginView.jsx
+/**
+ * LoginView.jsx:
+ * - ¿Qué hace? Presenta el formulario de acceso, valida credenciales y redirige la sesión según el perfil.
+ * - ¿Qué función cumple en el proyecto? Es la vista equivalente a la pantalla de login del mobile para mantener el mismo flujo de autenticación.
+ * - Origen mobile equivalente: frontend_mobile/src/presentation/views/auth/LoginScreen.tsx
+ */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
@@ -19,12 +24,12 @@ const LoginHeroImage = () => {
   }
 
   return (
-<img
-  src={login}
-  alt="Sporting Club"
-  className="login-hero-image"
-  onError={() => setFailed(true)}
-/>
+    <img
+      src={login}
+      alt="Sporting Club"
+      className="login-hero-image"
+      onError={() => setFailed(true)}
+    />
   )
 }
 
@@ -51,18 +56,28 @@ const LoginView = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!credentials.email || !credentials.password) {
+    const email = credentials.email.trim()
+    const password = credentials.password
+
+    if (!email || !password) {
       setError('Por favor complete todos los campos')
+      return
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Por favor ingrese un email válido')
       return
     }
 
     setLoading(true)
 
     try {
-      await login(credentials)
-      navigate('/dashboard')
+      const result = await login({ email, password })
+      const user = result?.user || result?.data || null
+      navigate(user?.role === 'admin' || user?.role === 'seller' ? '/dashboard' : '/dashboard')
     } catch (err) {
-      setError(err.error || 'Error al iniciar sesión. Verifica tus credenciales.')
+      setError(err?.error || err?.message || 'Error al iniciar sesión. Verifica tus credenciales.')
     } finally {
       setLoading(false)
     }
@@ -70,8 +85,6 @@ const LoginView = () => {
 
   const handleForgotPassword = (e) => {
     e.preventDefault()
-    // No existe todavia un flujo de recuperacion de contraseña en el backend.
-    // Se deja este aviso para no simular una funcionalidad que no existe.
     alert('Para restablecer tu contraseña, comunícate con el administrador del sistema.')
   }
 

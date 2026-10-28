@@ -10,6 +10,7 @@ import Button from '../ui/Button'
 const MIN_MEMBERS = 4
 
 const emptyForm = { name: '', description: '', studentIds: [] }
+const toNumberId = (value) => Number(value)
 
 const TeamsView = () => {
     const [teams, setTeams] = useState([])
@@ -37,18 +38,19 @@ const TeamsView = () => {
     }, [])
 
     const studentsById = students.reduce((acc, s) => {
-        acc[s.id] = s
+        acc[toNumberId(s.id)] = s
         return acc
     }, {})
 
     const toggleStudent = (id) => {
+        const numericId = toNumberId(id)
         setFormData(prev => {
-            const isSelected = prev.studentIds.includes(id)
+            const isSelected = prev.studentIds.some(sid => toNumberId(sid) === numericId)
             return {
                 ...prev,
                 studentIds: isSelected
-                    ? prev.studentIds.filter(sid => sid !== id)
-                    : [...prev.studentIds, id]
+                    ? prev.studentIds.filter(sid => toNumberId(sid) !== numericId)
+                    : [...prev.studentIds, numericId]
             }
         })
     }
@@ -65,7 +67,7 @@ const TeamsView = () => {
         setFormData({
             name: team.name,
             description: team.description,
-            studentIds: [...team.studentIds]
+            studentIds: Array.isArray(team.studentIds) ? team.studentIds.map((id) => toNumberId(id)) : []
         })
         setStudentSearch('')
         setShowForm(true)
@@ -80,6 +82,11 @@ const TeamsView = () => {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
+        if (!formData.name.trim()) {
+            setMessage({ type: 'error', text: 'El nombre del equipo es obligatorio' })
+            return
+        }
+
         if (formData.studentIds.length < MIN_MEMBERS) {
             setMessage({ type: 'error', text: `Selecciona al menos ${MIN_MEMBERS} estudiantes para el equipo` })
             setTimeout(() => setMessage(null), 3500)
@@ -87,9 +94,9 @@ const TeamsView = () => {
         }
 
         const payload = {
-            name: formData.name,
-            description: formData.description,
-            studentIds: formData.studentIds
+            name: formData.name.trim(),
+            description: formData.description.trim(),
+            studentIds: [...new Set(formData.studentIds.map((id) => toNumberId(id)))]
         }
 
         const result = editingTeam
@@ -147,8 +154,10 @@ const TeamsView = () => {
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="Ej: Los Halcones"
+                                    className={!formData.name.trim() && formData.name.length > 0 ? 'field-invalid' : ''}
                                     required
                                 />
+                                {!formData.name.trim() && formData.name.length > 0 && <small className="field-error-message">El nombre no puede contener solo espacios.</small>}
                             </div>
                             <div className="ui-field">
                                 <label>Descripción</label>
@@ -165,6 +174,7 @@ const TeamsView = () => {
                             <label>
                                 Seleccionar Estudiantes ({formData.studentIds.length} seleccionados — mínimo {MIN_MEMBERS})
                             </label>
+                            {formData.studentIds.length < MIN_MEMBERS && <small className="field-error-message">Selecciona al menos {MIN_MEMBERS} estudiantes para crear el equipo.</small>}
                             <input
                                 type="text"
                                 value={studentSearch}
@@ -227,7 +237,7 @@ const TeamsView = () => {
                                 )}
 
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-                                    {team.studentIds.map((id) => {
+                                    {Array.from(new Set((team.studentIds || []).map((id) => toNumberId(id)))).map((id) => {
                                         const student = studentsById[id]
                                         return (
                                             <span key={id} className="team-member-chip">

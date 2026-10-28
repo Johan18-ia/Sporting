@@ -41,30 +41,9 @@ Category.findById = (id, result) => {
 };
 
 // ====================================================
-// OBTENER CATEGORÍA POR ID
-// ====================================================
-Category.findById = (id, result) => {
-    // Consulta SQL para obtener una categoría por ID
-    const sql = 'SELECT * FROM categories WHERE id = ?';
-    // Ejecuta la consulta
-    db.query(sql, [id], (err, res) => {
-        // Manejo de error
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, res[0]);
-        }
-    });
-};
-// ====================================================
 // CREAR CATEGORÍA
 // ====================================================
 Category.create = (category, result) => {
-    // ============================================
-    // CORREGIDO: USAR category_year (estandarizado)
-    // ============================================
-    const categoryYear = category.category_year || category.name_year;
-    
     // Consulta SQL para insertar una categoría
     const sql = `
         INSERT INTO categories (
@@ -77,7 +56,7 @@ Category.create = (category, result) => {
     `;
     // Ejecuta la consulta
     db.query(sql, [
-        categoryYear,
+        category.category_year,
         category.description || ''
     ], (err, res) => {
         // Manejo de error
@@ -86,7 +65,7 @@ Category.create = (category, result) => {
         } else {
             result(null, {
                 id: res.insertId,
-                category_year: categoryYear,
+                category_year: category.category_year,
                 description: category.description || ''
             });
         }
@@ -97,11 +76,6 @@ Category.create = (category, result) => {
 // ACTUALIZAR CATEGORÍA
 // ====================================================
 Category.update = (category, result) => {
-    // ============================================
-    // CORREGIDO: USAR category_year (estandarizado)
-    // ============================================
-    const categoryYear = category.category_year || category.name_year;
-    
     // Consulta SQL para actualizar una categoría
     const sql = `
         UPDATE categories 
@@ -112,7 +86,7 @@ Category.update = (category, result) => {
     `;
     // Ejecuta la consulta
     db.query(sql, [
-        categoryYear,
+        category.category_year,
         category.description,
         category.id
     ], (err, res) => {
@@ -142,49 +116,4 @@ Category.delete = (id, result) => {
     });
 };
 
-// ====================================================
-// ACTUALIZAR CATEGORÍA
-// ====================================================
-Category.update = (category, result) => {
-    // Consulta SQL para actualizar una categoría
-    const sql = `
-        UPDATE categories 
-        SET category_year = ?,
-            description = ?,
-            updated_at = NOW()
-        WHERE id = ?
-    `;
-    // Ejecuta la consulta
-    db.query(sql, [
-        category.name_year || category.category_year,
-        category.description,
-        category.id
-    ], (err, res) => {
-        // Manejo de error
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, category);
-        }
-    });
-};
-// ====================================================
-// ELIMINAR CATEGORÍA
-// ====================================================
-Category.delete = (id, result) => {
-    // Consulta SQL para eliminar una categoría
-    const sql = 'DELETE FROM categories WHERE id = ?';
-    // Ejecuta la consulta
-    db.query(sql, [id], (err, res) => {
-        // Manejo de error
-        if (err) {
-            result(err, null);
-        } else {
-            result(null, res);
-        }
-    });
-};
-// ====================================================
-// EXPORTA EL MODELO
-// ====================================================
 module.exports = Category;

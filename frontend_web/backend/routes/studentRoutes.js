@@ -15,6 +15,52 @@ const { verifyToken, authorizeRoles } = require('../middlewares/authMiddleware')
  */
 
 // ============================================
+// MIS TORNEOS DEL ESTUDIANTE
+// ============================================
+/**
+ * @swagger
+ * /api/students/me/tournaments:
+ *   get:
+ *     tags: [Students]
+ *     summary: Obtener los torneos en los que participa el estudiante autenticado
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Torneos del estudiante
+ *       401:
+ *         description: Token ausente o inválido
+ *       403:
+ *         description: Rol no autorizado
+ */
+router.get(
+    '/me/tournaments',
+    verifyToken,
+    authorizeRoles(['admin', 'seller', 'user']),
+    (req, res) => {
+        const studentId = req.user?.id;
+        if (!studentId) {
+            return res.status(400).json({ success: false, message: 'No se pudo identificar al estudiante' });
+        }
+
+        const sql = `
+            SELECT DISTINCT t.*
+            FROM tournaments t
+            JOIN tournament_teams tt ON tt.tournament_id = t.id
+            JOIN team_members tm ON tm.team_id = tt.team_id
+            WHERE tm.student_id = ? AND tm.is_active = 1
+        `;
+
+        require('../config/config').query(sql, [studentId], (err, rows) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: 'Error consultando tus torneos', error: err });
+            }
+            return res.status(200).json({ success: true, message: 'Torneos del estudiante', data: rows });
+        });
+    }
+);
+
+// ============================================
 // LISTAR ESTUDIANTES
 // ============================================
 /**

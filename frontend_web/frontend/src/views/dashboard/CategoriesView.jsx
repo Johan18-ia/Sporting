@@ -4,15 +4,23 @@ import useCategories from '../../hooks/useCategories';
 import PageHeader from '../ui/PageHeader';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import { getFieldError } from '../../utils/validators';
 
 const CategoriesView = () => {
     const { categories, loading, error, createCategory, deleteCategory } = useCategories();
     const [year, setYear] = useState('');
     const [description, setDescription] = useState('');
+    const [formError, setFormError] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!year || !description) return;
+        const yearError = getFieldError('year', year);
+        if (yearError) {
+            setFormError(yearError);
+            return;
+        }
+        setFormError('');
 
         const res = await createCategory(year, description);
         if (res.success) {
@@ -64,10 +72,15 @@ const CategoriesView = () => {
                         <input
                             type="number"
                             value={year}
-                            onChange={(e) => setYear(e.target.value)}
+                            onChange={(e) => { setYear(e.target.value); setFormError(''); }}
                             placeholder="Ej: 2014"
+                            min="1900"
+                            max={new Date().getFullYear()}
+                            step="1"
+                            className={getFieldError('year', year) ? 'field-invalid' : ''}
                             required
                         />
+                        {getFieldError('year', year) && <small className="field-error-message">{getFieldError('year', year)}</small>}
                     </div>
                     <div className="ui-field">
                         <label>Descripción</label>
@@ -79,6 +92,7 @@ const CategoriesView = () => {
                             required
                         />
                     </div>
+                    {formError && <p className="field-error-message" role="alert">{formError}</p>}
                     <Button type="submit">Guardar</Button>
                 </form>
             </Card>

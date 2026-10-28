@@ -215,6 +215,31 @@ class UserModel {
     }
 
     // ============================================
+    // PUT - CAMBIAR CONTRASEÑA DEL USUARIO AUTENTICADO
+    // ============================================
+    static async changePassword(currentPassword, newPassword) {
+        try {
+            const response = await httpService.put(
+                API_CONFIG.ENDPOINTS.USER_CHANGE_PASSWORD,
+                { currentPassword, newPassword },
+                true
+            )
+
+            return {
+                success: true,
+                data: response.data || response,
+                message: response.message || 'Contraseña actualizada correctamente'
+            }
+        } catch (error) {
+            console.error('Error al cambiar contraseña:', error)
+            return {
+                success: false,
+                error: error.message || 'Error al cambiar contraseña'
+            }
+        }
+    }
+
+    // ============================================
     // DELETE - ELIMINAR USUARIO
     // ============================================
     static async deleteUser(id) {

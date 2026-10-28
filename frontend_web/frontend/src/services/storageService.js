@@ -1,72 +1,144 @@
-// src/services/storageService.js
+/**
+ * storageService.js:
+ * - ¿Qué hace? Gestiona la sesión persistida del usuario en localStorage, incluyendo token JWT y expiración.
+ * - ¿Qué función cumple en el proyecto? Mantiene la autenticación del web sincronizada con el comportamiento móvil y evita sesiones inválidas.
+ * - Origen mobile equivalente: frontend_mobile/src/data/repositories/UserLocalRepository.ts
+ */
+import jwtService from './jwtService'
+
 class StorageService {
   constructor(storageType = 'localStorage') {
     this.storage = storageType === 'localStorage' ? localStorage : sessionStorage
     this.tokenKey = 'auth_token'
     this.userKey = 'user_data'
     this.roleKey = 'user_role'
+    this.tokenExpiryKey = 'auth_token_expiry'
   }
 
-  // Guardar token
   setToken(token) {
-    console.log('💾 Guardando token en storage')
-    return this.setItem(this.tokenKey, token)
+    const normalized = token ? String(token).replace(/^JWT\s+/i, '').trim() : ''
+    if (!normalized) {
+      this.removeToken()
+      return false
+    }
+
+    this.setItem(this.tokenKey, normalized)
+    const expiresAt = this.getTokenExpiry(normalized)
+    this.setItem(this.tokenExpiryKey, String(expiresAt))
+    return true
   }
 
-  // Obtener token
   getToken() {
     const token = this.getItem(this.tokenKey)
-    console.log('🔑 Token obtenido:', token ? 'Sí existe' : 'No existe')
+    if (!token) return null
+
+    if (this.isTokenExpired(token)) {
+      this.clearSession()
+      return null
+    }
+
     return token
   }
 
-  // Eliminar token
   removeToken() {
-    console.log('🗑️ Eliminando token')
-    return this.removeItem(this.tokenKey)
+    this.removeItem(this.tokenKey)
+    this.removeItem(this.tokenExpiryKey)
+    return true
   }
 
-  // Guardar usuario
-  setUser(user) {
-    console.log('💾 Guardando usuario en storage:', user)
-    return this.setItem(this.userKey, JSON.stringify(user))
+  saveUser(user) {
+    if (!user || typeof user !== 'object') {
+      return false
+    }
+
+    const sanitizedUser = { ...user }
+    const token = sanitizedUser.session_token || this.getToken()
+
+    if (token) {
+      const normalizedToken = String(token).replace(/^JWT\s+/i, '').trim()
+      sanitizedUser.session_token = normalizedToken
+      sanitizedUser.expiresAt = this.getTokenExpiry(normalizedToken)
+      this.setToken(normalizedToken)
+    }
+
+    const stored = this.setItem(this.userKey, JSON.stringify(sanitizedUser))
+    return stored
   }
 
-  // Obtener usuario
   getUser() {
-    const user = this.getItem(this.userKey)
-    return user ? JSON.parse(user) : null
+    const rawUser = this.getItem(this.userKey)
+    if (!rawUser) return null
+
+    try {
+      const user = JSON.parse(rawUser)
+      const token = user?.session_token || this.getToken()
+
+      if (!token || this.isTokenExpired(token)) {
+        this.clearSession()
+        return null
+      }
+
+      return user
+    } catch (error) {
+      console.error('Error al leer usuario del storage:', error)
+      this.removeUser()
+      return null
+    }
   }
 
-  // Eliminar usuario
   removeUser() {
-    return this.removeItem(this.userKey)
+    this.removeItem(this.userKey)
+    this.removeItem(this.roleKey)
+    return true
   }
 
-  // Guardar rol del usuario
   setUserRole(role) {
     console.log('💾 Guardando rol en storage:', role)
     return this.setItem(this.roleKey, role)
   }
 
-  // Obtener rol del usuario
   getUserRole() {
     return this.getItem(this.roleKey)
   }
 
-  // Eliminar rol
   removeUserRole() {
     return this.removeItem(this.roleKey)
   }
 
-  // Limpiar toda la sesión
   clearSession() {
     this.removeToken()
     this.removeUser()
     this.removeUserRole()
   }
 
-  // Guardar item
+  isTokenExpired(token) {
+    if (!token) return true
+
+    const normalizedToken = String(token).replace(/^JWT\s+/i, '').trim()
+    const payload = jwtService.decodeToken(normalizedToken)
+
+    if (!payload || !payload.exp) {
+      const storedExpiry = Number(this.getItem(this.tokenExpiryKey))
+      if (storedExpiry && Date.now() > storedExpiry) {
+        return true
+      }
+      return false
+    }
+
+    return Date.now() >= payload.exp * 1000
+  }
+
+  getTokenExpiry(token) {
+    const normalizedToken = String(token || '').replace(/^JWT\s+/i, '').trim()
+    const payload = jwtService.decodeToken(normalizedToken)
+
+    if (payload && payload.exp) {
+      return Number(payload.exp) * 1000
+    }
+
+    return Date.now() + 24 * 60 * 60 * 1000
+  }
+
   setItem(key, value) {
     try {
       this.storage.setItem(key, value)
@@ -77,7 +149,6 @@ class StorageService {
     }
   }
 
-  // Obtener item
   getItem(key) {
     try {
       return this.storage.getItem(key)
@@ -87,7 +158,6 @@ class StorageService {
     }
   }
 
-  // Eliminar item
   removeItem(key) {
     try {
       this.storage.removeItem(key)
@@ -98,7 +168,6 @@ class StorageService {
     }
   }
 
-  // Limpiar todo
   clear() {
     try {
       this.storage.clear()
@@ -109,7 +178,6 @@ class StorageService {
     }
   }
 
-  // Verificar si existe
   hasItem(key) {
     return this.getItem(key) !== null
   }

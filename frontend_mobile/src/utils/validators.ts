@@ -236,6 +236,37 @@ export const validateStudentForm = (data: {
     return errors;
 };
 
+export const getFieldValidationError = (type: string, value: string): string => {
+    const text = String(value ?? '').trim();
+    if (!text) return '';
+
+    switch (type) {
+        case 'name':
+            return /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0300-\u036F]+(?:[ '\u2019-][A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0300-\u036F]+)*$/.test(text)
+                ? ''
+                : 'Usa solo letras, espacios, guiones o apóstrofes.';
+        case 'document':
+            return /^\d+$/.test(text) ? '' : 'Usa solo números.';
+        case 'email':
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? '' : 'Ingresa un correo electrónico válido.';
+        case 'phone':
+            return /^\d{7,15}$/.test(text) ? '' : 'Usa entre 7 y 15 dígitos, sin letras ni símbolos.';
+        case 'price':
+            return /^\d+(?:[.,]\d{1,2})?$/.test(text) ? '' : 'Ingresa un precio no negativo con máximo dos decimales.';
+        case 'integer':
+            return /^\d+$/.test(text) ? '' : 'Ingresa un número entero no negativo.';
+        case 'url':
+            try {
+                const url = new URL(text);
+                return url.protocol === 'http:' || url.protocol === 'https:' ? '' : 'Ingresa una URL http o https válida.';
+            } catch {
+                return 'Ingresa una URL http o https válida.';
+            }
+        default:
+            return '';
+    }
+};
+
 /**
  * Valida un formulario de producto
  */

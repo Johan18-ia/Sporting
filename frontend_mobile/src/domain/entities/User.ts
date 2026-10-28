@@ -14,7 +14,12 @@ export interface User {
     phone?: string;
     document?: string;
     birth_date?: string;
+    address?: string;
+    occupation?: string;
+    emergency_contact_name?: string;
+    emergency_contact_phone?: string;
     role?: 'admin' | 'seller' | 'user';
+    user_type?: 'student' | 'parent' | 'none';
     image?: string;
     category_id?: number;
     isStudent?: boolean;
@@ -24,6 +29,9 @@ export interface User {
         category_id?: number;
         category_year?: string;
         status?: string;
+        address?: string;
+        emergency_contact_name?: string;
+        emergency_contact_phone?: string;
     } | null;
     is_active?: number;
     session_token?: string;

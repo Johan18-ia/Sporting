@@ -42,6 +42,16 @@ const Navbar = () => {
                     {isAuthenticated ? (
                         <>
                             {/* Si es admin o seller, mostrar enlaces de gestion */}
+                            <Link to="/tournaments" className="nav-link">
+                                Torneos
+                            </Link>
+                            <Link to="/teams" className="nav-link">
+                                Equipos
+                            </Link>
+                            <Link to="/schedules" className="nav-link">
+                                Horarios
+                            </Link>
+
                             {currentUser?.role !== 'user' && (
                                 <>
                                     <Link to="/dashboard" className="nav-link">

@@ -1,12 +1,18 @@
-// src/views/dashboard/UserForm.jsx
+/**
+ * UserForm.jsx:
+ * - ¿Qué hace? Administra el formulario de creación y edición de usuarios con validaciones y permisos.
+ * - ¿Qué función cumple en el proyecto? Es la interfaz que permite actualizar información y mantener la sesión sincronizada con el usuario actual.
+ * - Origen mobile equivalente: frontend_mobile/src/presentation/views/users/UserFormScreen.tsx
+ */
 import { useState, useEffect } from 'react'
 import useUsers from '../../hooks/useUsers'
 import useAuth from '../../hooks/useAuth'
 import CategoryModel from '../../models/CategoryModel'
+import { getFieldError } from '../../utils/validators'
 
 const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
     const { createUser, updateUser, patchUser } = useUsers()
-    const { currentUser } = useAuth()
+    const { currentUser, updateUserSession } = useAuth()
     const [categories, setCategories] = useState([])
     const [formData, setFormData] = useState({
         name: '',
@@ -93,6 +99,20 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
     const handleSubmit = async (e) => {
         e.preventDefault()
 
+        const fieldErrors = [
+            getFieldError('name', formData.name),
+            getFieldError('name', formData.lastname),
+            getFieldError('digits', formData.document),
+            getFieldError('email', formData.email),
+            getFieldError('phone', formData.phone),
+            getFieldError('name', formData.emergency_contact),
+            getFieldError('phone', formData.emergency_phone)
+        ].filter(Boolean)
+        if (fieldErrors.length) {
+            setError(fieldErrors[0])
+            return
+        }
+
         // Validaciones
         if (!formData.email) {
             setError('El email es requerido')
@@ -150,6 +170,20 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                     }
 
                     await updateUser(user.id, updateData)
+
+                    if (Number(user.id) === Number(currentUser?.id)) {
+                        const syncedUser = {
+                            ...(currentUser || {}),
+                            ...updateData,
+                            id: user.id,
+                            name: updateData.name || user.name || currentUser?.name,
+                            lastname: updateData.lastname || user.lastname || currentUser?.lastname,
+                            email: updateData.email || user.email || currentUser?.email,
+                            phone: updateData.phone || user.phone || currentUser?.phone,
+                            role: currentUser?.role || user.role || 'user'
+                        }
+                        updateUserSession(syncedUser)
+                    }
                 }
             } else {
                 // Modo POST - Crear nuevo usuario
@@ -277,7 +311,7 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                 >
                                     <option value="">Seleccionar rol</option>
                                     <option value="admin">Administrador</option>
-                                    <option value="seller">Vendedor</option>
+                                    <option value="seller">Moderador</option>
                                     <option value="user">Usuario</option>
                                 </select>
                             ) : patchField === 'is_active' ? (
@@ -337,10 +371,11 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                     value={formData.name}
                                     onChange={handleChange}
                                     placeholder="Nombre"
-                                    className="form-control"
+                                    className={`form-control ${getFieldError('name', formData.name) ? 'field-invalid' : ''}`}
                                     required={!isEdit}
                                     disabled={loading}
                                 />
+                                {getFieldError('name', formData.name) && <small className="field-error-message">{getFieldError('name', formData.name)}</small>}
                             </div>
                             <div className="form-group">
                                 <label>Apellido</label>
@@ -350,9 +385,10 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                     value={formData.lastname}
                                     onChange={handleChange}
                                     placeholder="Apellido"
-                                    className="form-control"
+                                    className={`form-control ${getFieldError('name', formData.lastname) ? 'field-invalid' : ''}`}
                                     disabled={loading}
                                 />
+                                {getFieldError('name', formData.lastname) && <small className="field-error-message">{getFieldError('name', formData.lastname)}</small>}
                             </div>
                         </div>
 
@@ -365,9 +401,10 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                     value={formData.document}
                                     onChange={handleChange}
                                     placeholder="Número de identificación"
-                                    className="form-control"
+                                    className={`form-control ${getFieldError('digits', formData.document) ? 'field-invalid' : ''}`}
                                     disabled={loading}
                                 />
+                                {getFieldError('digits', formData.document) && <small className="field-error-message">{getFieldError('digits', formData.document)}</small>}
                             </div>
                             <div className="form-group">
                                 <label>Fecha de Nacimiento</label>
@@ -393,10 +430,11 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="usuario@ejemplo.com"
-                                className="form-control"
+                                className={`form-control ${getFieldError('email', formData.email) ? 'field-invalid' : ''}`}
                                 required
                                 disabled={loading}
                             />
+                            {getFieldError('email', formData.email) && <small className="field-error-message">{getFieldError('email', formData.email)}</small>}
                         </div>
 
                         <div className="form-group">
@@ -407,9 +445,10 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                 value={formData.phone}
                                 onChange={handleChange}
                                 placeholder="Teléfono"
-                                className="form-control"
+                                className={`form-control ${getFieldError('phone', formData.phone) ? 'field-invalid' : ''}`}
                                 disabled={loading}
                             />
+                            {getFieldError('phone', formData.phone) && <small className="field-error-message">{getFieldError('phone', formData.phone)}</small>}
                         </div>
 
                         {/* ============================================
@@ -473,9 +512,10 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                     value={formData.emergency_contact}
                                     onChange={handleChange}
                                     placeholder="Nombre del contacto"
-                                    className="form-control"
+                                    className={`form-control ${getFieldError('name', formData.emergency_contact) ? 'field-invalid' : ''}`}
                                     disabled={loading}
                                 />
+                                {getFieldError('name', formData.emergency_contact) && <small className="field-error-message">{getFieldError('name', formData.emergency_contact)}</small>}
                             </div>
                             <div className="form-group">
                                 <label>Teléfono de Emergencia</label>
@@ -485,9 +525,10 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                     value={formData.emergency_phone}
                                     onChange={handleChange}
                                     placeholder="Teléfono de emergencia"
-                                    className="form-control"
+                                    className={`form-control ${getFieldError('phone', formData.emergency_phone) ? 'field-invalid' : ''}`}
                                     disabled={loading}
                                 />
+                                {getFieldError('phone', formData.emergency_phone) && <small className="field-error-message">{getFieldError('phone', formData.emergency_phone)}</small>}
                             </div>
                         </div>
 
@@ -508,22 +549,24 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                         ROL Y CATEGORÍA
                         ============================================ */}
                         {canAssignRole() && (
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Rol</label>
-                                    <select
-                                        name="role"
-                                        value={formData.role}
-                                        onChange={handleChange}
-                                        className="form-control"
-                                        disabled={loading}
-                                    >
-                                        <option value="user">Usuario</option>
-                                        <option value="seller">Vendedor</option>
-                                        <option value="admin">Administrador</option>
-                                    </select>
-                                    <small className="form-hint">Define los permisos del usuario</small>
-                                </div>
+                            <div className={`form-row ${isEdit ? '' : 'form-row-single'}`}>
+                                {isEdit && (
+                                    <div className="form-group">
+                                        <label>Rol</label>
+                                        <select
+                                            name="role"
+                                            value={formData.role}
+                                            onChange={handleChange}
+                                            className="form-control"
+                                            disabled={loading}
+                                        >
+                                            <option value="user">Usuario</option>
+                                            <option value="seller">Moderador</option>
+                                            <option value="admin">Administrador</option>
+                                        </select>
+                                        <small className="form-hint">Define los permisos del usuario</small>
+                                    </div>
+                                )}
                                 <div className="form-group">
                                     <label>Categoría (Año)</label>
                                     <select

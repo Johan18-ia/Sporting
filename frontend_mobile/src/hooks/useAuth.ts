@@ -64,9 +64,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         ) || null;
                         hydratedUser = {
                             ...userData,
-                            isStudent: Boolean(studentProfile),
+                            isStudent: Boolean(studentProfile) || userData.user_type === 'student',
                             studentProfile,
-                            category_id: studentProfile?.category_id ?? userData.category_id
+                            user_type: studentProfile ? 'student' : userData.user_type || 'none',
+                            category_id: studentProfile?.category_id ?? userData.category_id,
+                            document: userData.document || studentProfile?.document || '',
+                            birth_date: userData.birth_date || studentProfile?.birth_date || '',
+                            emergency_contact_name: userData.emergency_contact_name || studentProfile?.emergency_contact_name || '',
+                            emergency_contact_phone: userData.emergency_contact_phone || studentProfile?.emergency_contact_phone || ''
                         };
                         await SaveUserLocalUseCase(hydratedUser);
                     } catch (profileError) {
@@ -124,10 +129,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     email: payload?.email || '',
                     password: '',
                     phone: payload?.phone || '',
+                    document: payload?.document || payload?.studentProfile?.document || '',
+                    birth_date: payload?.birth_date || payload?.studentProfile?.birth_date || '',
+                    address: payload?.address || payload?.studentProfile?.address || '',
+                    occupation: payload?.occupation || '',
+                    emergency_contact_name: payload?.emergency_contact_name || payload?.studentProfile?.emergency_contact_name || '',
+                    emergency_contact_phone: payload?.emergency_contact_phone || payload?.studentProfile?.emergency_contact_phone || '',
                     role: payload?.role || 'user',
+                    user_type: payload?.user_type || (payload?.studentProfile ? 'student' : 'none'),
                     image: payload?.image || '',
-                    category_id: payload?.category_id,
-                    isStudent: payload?.isStudent === true || Boolean(payload?.studentProfile),
+                    category_id: payload?.category_id ?? payload?.studentProfile?.category_id,
+                    isStudent: payload?.user_type === 'student' || payload?.isStudent === true || Boolean(payload?.studentProfile),
                     studentProfile: payload?.studentProfile || null,
                     session_token: token
                 };

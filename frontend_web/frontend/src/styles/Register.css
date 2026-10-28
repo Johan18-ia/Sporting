@@ -127,9 +127,21 @@
   box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
 }
 
+.form-group input.field-invalid,
+.form-group select.field-invalid {
+  border-color: #c82333 !important;
+  background-color: #fff5f5;
+}
+
 .form-group input:disabled,
 .form-group select:disabled {
   background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.sporting-input-readonly {
+  background-color: #f0f0f0 !important;
+  color: #555 !important;
   cursor: not-allowed;
 }
 
@@ -155,6 +167,10 @@
   margin-top: 4px;
   color: #888;
   font-size: 0.75rem;
+}
+
+.form-hint-error {
+  color: #dc3545;
 }
 
 /* ===== BOTÓN ===== */

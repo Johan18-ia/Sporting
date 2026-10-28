@@ -9,6 +9,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 // Archivo de configuración donde está la clave secreta
 const keys = require("../config/keys");
+const db = require("../config/config");
+const Student = require("../models/student");
 
 // Exportación de métodos del controlador
 module.exports = {
@@ -77,12 +79,13 @@ module.exports = {
                     phone: myUser.phone,
                     image: myUser.image,
                     role: myUser.role,
+                    user_type: myUser.user_type || 'none',
                     is_active: isActive,
                     studentProfile: myUser.student_profile_id ? {
                         id: myUser.student_profile_id,
                         user_id: myUser.id,
                         category_id: myUser.student_category_id,
-                        category_year: myUser.student_category_year,
+                        category_name: myUser.student_category_name,
                         status: myUser.student_status
                     } : null,
                     isStudent: Boolean(myUser.student_profile_id),
@@ -168,13 +171,13 @@ module.exports = {
     // REGISTRAR USUARIO (PÚBLICO)
     // ====================================================
     register(req, res) {
-        // Obtiene datos del usuario desde el body
-        const user = req.body;
+        // Obtiene y normaliza el tipo de usuario solicitado.
+        const user = req.body || {};
         const currentUserRole = req.user?.role;
+        const userType = ['student', 'parent', 'none'].includes(user.user_type) ? user.user_type : 'none';
+        user.user_type = userType;
 
-        // ============================================
-        // VALIDACIONES DE CAMPOS OBLIGATORIOS
-        // ============================================
+        // Valida los datos obligatorios antes de abrir una transacción.
         if (!user.email) {
             return res.status(400).json({
                 success: false,
@@ -189,7 +192,7 @@ module.exports = {
             });
         }
 
-        if (user.password.length < 6) {
+        if (typeof user.password !== 'string' || user.password.length < 6) {
             return res.status(400).json({
                 success: false,
                 message: "La contraseña debe tener al menos 6 caracteres",
@@ -203,7 +206,21 @@ module.exports = {
             });
         }
 
-        // El registro público solo puede crear usuarios normales.
+        if (userType === 'student' && (!user.document || !user.birth_date || user.category_id == null || user.category_id === '')) {
+            return res.status(400).json({
+                success: false,
+                message: "Documento, fecha de nacimiento y categoría son obligatorios para el estudiante",
+            });
+        }
+
+        if (userType === 'parent' && !user.document) {
+            return res.status(400).json({
+                success: false,
+                message: "El documento es obligatorio para el padre",
+            });
+        }
+
+        // Conserva las restricciones de roles para el registro público y administrativo.
         if (!currentUserRole) {
             user.role = 'user';
         } else {
@@ -229,33 +246,300 @@ module.exports = {
             }
         }
 
-        // ============================================
-        // CREAR EL USUARIO
-        // ============================================
-        User.create(user, (err, data) => {
-            // Validación de error
-            if (err) {
-                // Verificar si el error es por email duplicado
-                if (err.code === 'ER_DUP_ENTRY') {
-                    return res.status(409).json({
-                        success: false,
-                        message: "El email ya está registrado",
-                    });
-                }
+        const validRoles = ['admin', 'seller', 'user'];
+        const role = validRoles.includes(user.role) ? user.role : 'user';
 
-                return res.status(501).json({
+        // Abre una conexión dedicada para que usuario y perfil sean atómicos.
+        db.getConnection((err, connection) => {
+            if (err) {
+                return res.status(500).json({
                     success: false,
-                    message: "Error al crear al usuario",
-                    error: err,
+                    message: "Error al crear el usuario y su perfil",
                 });
             }
 
-            // Respuesta exitosa
-            return res.status(201).json({
-                success: true,
-                message: "Usuario creado correctamente",
-                data: data,
+            connection.beginTransaction(async (transactionErr) => {
+                if (transactionErr) {
+                    connection.release();
+                    return res.status(500).json({
+                        success: false,
+                        message: "Error al crear el usuario y su perfil",
+                    });
+                }
+
+                let failedOperation = 'category_validation';
+
+                try {
+                    const connectionPromise = connection.promise();
+
+                    // Verifica que la categoría del estudiante corresponda a su año de nacimiento.
+                    if (userType === 'student') {
+                        const birthYear = String(user.birth_date).slice(0, 4);
+                        if (!/^\d{4}$/.test(birthYear)) {
+                            await connectionPromise.rollback();
+                            return res.status(400).json({
+                                success: false,
+                                message: "La fecha de nacimiento debe tener el formato YYYY-MM-DD",
+                            });
+                        }
+
+                        const [categoryRows] = await connectionPromise.query(
+                            'SELECT category_year FROM categories WHERE id = ?',
+                            [user.category_id]
+                        );
+
+                        if (!categoryRows.length) {
+                            await connectionPromise.rollback();
+                            return res.status(400).json({
+                                success: false,
+                                message: "La categoría seleccionada no existe",
+                            });
+                        }
+
+                        if (String(categoryRows[0].category_year) !== birthYear) {
+                            await connectionPromise.rollback();
+                            return res.status(400).json({
+                                success: false,
+                                message: `La categoría seleccionada no coincide con el año de nacimiento (${birthYear})`,
+                            });
+                        }
+                    }
+
+                    failedOperation = 'user_insert';
+                    const passwordHash = await bcrypt.hash(user.password, 10);
+                    const [userResult] = await connectionPromise.query(
+                        `INSERT INTO users (name, lastname, email, password, phone, image, role, user_type, is_active, created_at, updated_at)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                        [
+                            user.name,
+                            user.lastname || '',
+                            user.email,
+                            passwordHash,
+                            user.phone || '',
+                            user.image || '',
+                            role,
+                            userType,
+                            user.is_active ?? 1,
+                        ]
+                    );
+                    const createdUserId = userResult.insertId;
+
+                    if (userType === 'student') {
+                        failedOperation = 'student_profile';
+                        const profileStatus = ['pending', 'approved', 'rejected'].includes(user.status)
+                            ? user.status
+                            : 'pending';
+                        await connectionPromise.query(
+                            `INSERT INTO student_profiles (user_id, document, birth_date, address, category_id, emergency_contact_name, emergency_contact_phone, status, created_at, updated_at)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                            [
+                                createdUserId,
+                                user.document,
+                                user.birth_date,
+                                user.address || null,
+                                user.category_id,
+                                user.emergency_contact_name || null,
+                                user.emergency_contact_phone || null,
+                                profileStatus,
+                            ]
+                        );
+                    } else if (userType === 'parent') {
+                        failedOperation = 'parent_profile';
+                        await connectionPromise.query(
+                            `INSERT INTO parent_profiles (user_id, document, address, occupation, created_at, updated_at)
+                             VALUES (?, ?, ?, ?, NOW(), NOW())`,
+                            [createdUserId, user.document, user.address || null, user.occupation || null]
+                        );
+                    }
+
+                    // Confirma ambas inserciones solo cuando todo el flujo termina correctamente.
+                    await connectionPromise.commit();
+
+                    return res.status(201).json({
+                        success: true,
+                        message: "Usuario y perfil creados correctamente",
+                        data: {
+                            id: createdUserId,
+                            name: user.name,
+                            lastname: user.lastname || '',
+                            email: user.email,
+                            role,
+                            user_type: userType,
+                        },
+                    });
+                } catch (error) {
+                    // Revierte usuario y perfil juntos si falla cualquier consulta o el commit.
+                    try {
+                        await connection.promise().rollback();
+                    } catch (rollbackError) {
+                        console.error('Error al revertir el registro:', rollbackError);
+                    }
+
+                    // Registra el error original de MySQL con la etapa y los datos técnicos.
+                    const sqlMessage = error.sqlMessage || error.message || '';
+                    console.error(`Error al registrar usuario en ${failedOperation}:`, {
+                        code: error.code,
+                        errno: error.errno,
+                        sqlMessage: error.sqlMessage,
+                        sqlState: error.sqlState,
+                        sql: error.sql,
+                    });
+
+                    // Identifica el índice duplicado para responder con un conflicto concreto.
+                    if (error.code === 'ER_DUP_ENTRY') {
+                        const normalizedSqlMessage = sqlMessage.toLowerCase();
+                        let message = "Conflicto de datos duplicados";
+
+                        if (failedOperation === 'user_insert' && normalizedSqlMessage.includes('email')) {
+                            message = "El email ya está registrado";
+                        } else if (failedOperation === 'student_profile' && normalizedSqlMessage.includes('document')) {
+                            message = "El documento del estudiante ya está registrado";
+                        } else if (failedOperation === 'student_profile' && normalizedSqlMessage.includes('user_id')) {
+                            message = "Este usuario ya tiene un perfil de estudiante";
+                        } else if (failedOperation === 'parent_profile' && normalizedSqlMessage.includes('document')) {
+                            message = "El documento del padre ya está registrado";
+                        }
+
+                        return res.status(409).json({
+                            success: false,
+                            message,
+                            error: sqlMessage,
+                        });
+                    }
+
+                    if (error.code === 'ER_NO_REFERENCED_ROW_2' && failedOperation === 'student_profile') {
+                        return res.status(400).json({
+                            success: false,
+                            message: "La categoría seleccionada no existe",
+                            error: sqlMessage,
+                        });
+                    }
+
+                    if (error.code === 'ER_BAD_NULL_ERROR') {
+                        return res.status(400).json({
+                            success: false,
+                            message: `Falta un campo obligatorio: ${sqlMessage}`,
+                            error: sqlMessage,
+                        });
+                    }
+
+                    if (failedOperation === 'student_profile') {
+                        return res.status(500).json({
+                            success: false,
+                            message: "Error al crear el perfil de estudiante",
+                            error: sqlMessage,
+                        });
+                    }
+
+                    if (failedOperation === 'parent_profile') {
+                        return res.status(500).json({
+                            success: false,
+                            message: "Error al crear el perfil del padre",
+                            error: sqlMessage,
+                        });
+                    }
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Error al crear el usuario y su perfil",
+                    });
+                } finally {
+                    // Libera la conexión tanto si se confirma como si se revierte la transacción.
+                    connection.release();
+                }
             });
+        });
+    },
+
+    // ====================================================
+    // CAMBIAR CONTRASEÑA DEL USUARIO AUTENTICADO
+    // ====================================================
+    changePassword(req, res) {
+        const userId = req.user?.id;
+        const { currentPassword, newPassword } = req.body || {};
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'No se pudo identificar al usuario autenticado'
+            });
+        }
+
+        if (typeof currentPassword !== 'string' || !currentPassword || typeof newPassword !== 'string' || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'La contraseña actual y la nueva son obligatorias'
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'La nueva contraseña debe tener al menos 6 caracteres'
+            });
+        }
+
+        if (currentPassword === newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'La nueva contraseña debe ser diferente a la actual'
+            });
+        }
+
+        User.findById(userId, async (err, user) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error al consultar el usuario',
+                    error: err
+                });
+            }
+
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Usuario no encontrado'
+                });
+            }
+
+            if (!user.password) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'No se pudo verificar la contraseña actual'
+                });
+            }
+
+            try {
+                const isMatch = await bcrypt.compare(currentPassword, user.password);
+                if (!isMatch) {
+                    return res.status(401).json({
+                        success: false,
+                        message: 'La contraseña actual es incorrecta'
+                    });
+                }
+
+                User.changePassword(userId, newPassword, (updateErr) => {
+                    if (updateErr) {
+                        return res.status(500).json({
+                            success: false,
+                            message: 'Error al actualizar la contraseña',
+                            error: updateErr
+                        });
+                    }
+
+                    return res.status(200).json({
+                        success: true,
+                        message: 'Contraseña actualizada correctamente. Vuelve a iniciar sesión.',
+                        data: { id: userId }
+                    });
+                });
+            } catch (compareErr) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error al verificar la contraseña',
+                    error: compareErr
+                });
+            }
         });
     },
 
@@ -265,6 +549,7 @@ module.exports = {
     getUserUpdate(req, res) {
         // Obtiene datos del usuario
         const user = req.body;
+        user.id = req.params.id;
 
         // Validar que el usuario tenga ID
         if (!user.id) {
@@ -296,6 +581,13 @@ module.exports = {
             });
         }
 
+        if (currentUserRole !== 'admin' && currentUserId !== parseInt(req.params.id)) {
+            return res.status(403).json({
+                success: false,
+                message: "No puedes actualizar a otro usuario",
+            });
+        }
+
         // Un seller no puede cambiar el rol de un usuario a admin
         if (currentUserRole === 'seller' && user.role === 'admin') {
             return res.status(403).json({
@@ -324,6 +616,10 @@ module.exports = {
         // ============================================
         // ACTUALIZAR EL USUARIO
         // ============================================
+        if (currentUserRole !== 'admin') {
+            delete req.body.role;
+        }
+
         User.update(user, (err, data) => {
             // Validación de error
             if (err) {

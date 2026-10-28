@@ -25,6 +25,7 @@ import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { MyColors } from '../../theme/AppTheme';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
 import { useAuth } from '../../../hooks/useAuth';
+import { getFieldValidationError } from '../../../utils/validators';
 
 type StudentFormNavigationProp = StackNavigationProp<RootStackParamList, 'StudentForm'>;
 type StudentFormRouteProp = RouteProp<RootStackParamList, 'StudentForm'>;
@@ -125,9 +126,17 @@ export const StudentFormScreen = () => {
         }
         if (!formData.document.trim()) {
             newErrors.document = 'El documento es requerido';
+        } else if (getFieldValidationError('document', formData.document)) {
+            newErrors.document = getFieldValidationError('document', formData.document);
         }
         if (!formData.category_id) {
             newErrors.category_id = 'La categoría es requerida';
+        }
+        if (formData.emergency_contact_name && getFieldValidationError('name', formData.emergency_contact_name)) {
+            newErrors.emergency_contact_name = getFieldValidationError('name', formData.emergency_contact_name);
+        }
+        if (formData.emergency_contact_phone && getFieldValidationError('phone', formData.emergency_contact_phone)) {
+            newErrors.emergency_contact_phone = getFieldValidationError('phone', formData.emergency_contact_phone);
         }
 
         setErrors(newErrors);
@@ -203,13 +212,13 @@ export const StudentFormScreen = () => {
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Documento *</Text>
                         <TextInput
-                            style={[styles.input, errors.document && styles.inputError]}
+                            style={[styles.input, (errors.document || getFieldValidationError('document', formData.document)) && styles.inputError]}
                             placeholder="Número de identificación"
                             value={formData.document}
                             onChangeText={(text) => setFormData({ ...formData, document: text })}
                             keyboardType="numeric"
                         />
-                        {errors.document && <Text style={styles.errorText}>{errors.document}</Text>}
+                        {(errors.document || getFieldValidationError('document', formData.document)) && <Text style={styles.errorText}>{errors.document || getFieldValidationError('document', formData.document)}</Text>}
                     </View>
 
                     <View style={styles.inputGroup}>
@@ -264,21 +273,23 @@ export const StudentFormScreen = () => {
                         <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                             <Text style={styles.label}>Contacto de Emergencia</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, (errors.emergency_contact_name || getFieldValidationError('name', formData.emergency_contact_name)) && styles.inputError]}
                                 placeholder="Nombre del contacto"
                                 value={formData.emergency_contact_name}
                                 onChangeText={(text) => setFormData({ ...formData, emergency_contact_name: text })}
                             />
+                            {(errors.emergency_contact_name || getFieldValidationError('name', formData.emergency_contact_name)) && <Text style={styles.errorText}>{errors.emergency_contact_name || getFieldValidationError('name', formData.emergency_contact_name)}</Text>}
                         </View>
                         <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                             <Text style={styles.label}>Teléfono de Emergencia</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, (errors.emergency_contact_phone || getFieldValidationError('phone', formData.emergency_contact_phone)) && styles.inputError]}
                                 placeholder="Teléfono de emergencia"
                                 value={formData.emergency_contact_phone}
                                 onChangeText={(text) => setFormData({ ...formData, emergency_contact_phone: text })}
                                 keyboardType="phone-pad"
                             />
+                            {(errors.emergency_contact_phone || getFieldValidationError('phone', formData.emergency_contact_phone)) && <Text style={styles.errorText}>{errors.emergency_contact_phone || getFieldValidationError('phone', formData.emergency_contact_phone)}</Text>}
                         </View>
                     </View>
 

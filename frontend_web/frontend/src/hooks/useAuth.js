@@ -1,3 +1,9 @@
+/**
+ * useAuth.js:
+ * - ¿Qué hace? Centraliza la autenticación global, carga la sesión persistida y expone login/logout/register al resto del frontend.
+ * - ¿Qué función cumple en el proyecto? Es el hook equivalente al patrón de sesión del mobile para mantener la app web autenticada y consistente.
+ * - Origen mobile equivalente: frontend_mobile/src/hooks/useAuth.ts
+ */
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import AuthModel from '../models/AuthModel'
 import storageService from '../services/storageService'
@@ -13,10 +19,44 @@ export const AuthProvider = ({ children }) => {
 
   const syncAuthState = () => {
     const savedUser = storageService.getUser()
-    const hasToken = Boolean(storageService.getToken())
+    const token = storageService.getToken()
+    const hasValidToken = Boolean(token) && !storageService.isTokenExpired(token)
+
     setUser(savedUser)
     setCurrentUser(savedUser)
-    setIsAuthenticated(hasToken)
+    setIsAuthenticated(hasValidToken)
+
+    if (!hasValidToken && savedUser) {
+      storageService.clearSession()
+    }
+  }
+
+  const updateUserSession = (updatedUser) => {
+    const nextUser = updatedUser && typeof updatedUser === 'object' ? { ...updatedUser } : null
+
+    if (!nextUser) {
+      storageService.clearSession()
+      setUser(null)
+      setCurrentUser(null)
+      setIsAuthenticated(false)
+      return null
+    }
+
+    if (nextUser.session_token || storageService.getToken()) {
+      const token = nextUser.session_token || storageService.getToken()
+      storageService.setToken(token)
+      nextUser.session_token = String(token).replace(/^JWT\s+/i, '').trim()
+    }
+
+    storageService.saveUser(nextUser)
+    if (nextUser.role) {
+      storageService.setUserRole(nextUser.role)
+    }
+
+    setUser(nextUser)
+    setCurrentUser(nextUser)
+    setIsAuthenticated(true)
+    return nextUser
   }
 
   useEffect(() => {
@@ -42,19 +82,22 @@ export const AuthProvider = ({ children }) => {
 
       if (result.success) {
         const nextUser = result.user || storageService.getUser()
-        setUser(nextUser)
-        setCurrentUser(nextUser)
-        setIsAuthenticated(true)
+
+        if (nextUser) {
+          updateUserSession(nextUser)
+        }
+
         return result
       }
 
       setUser(null)
       setCurrentUser(null)
       setIsAuthenticated(false)
-      throw { error: result.error || 'Credenciales incorrectas' }
+      throw { error: result.error || 'Contraseña o correo incorrecto' }
     } catch (err) {
-      setError(err.error || 'Error al iniciar sesión')
-      throw err
+      const message = err?.error || err?.message || 'Error al iniciar sesión'
+      setError(message)
+      throw { error: message }
     } finally {
       setLoading(false)
     }
@@ -73,8 +116,9 @@ export const AuthProvider = ({ children }) => {
 
       return result
     } catch (err) {
-      setError(err.error || 'Error al registrar usuario')
-      throw err
+      const message = err?.error || err?.message || 'Error al registrar usuario'
+      setError(message)
+      throw { error: message }
     } finally {
       setLoading(false)
     }
@@ -91,7 +135,8 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false)
       return { success: true }
     } catch (err) {
-      setError(err.message || 'Error al cerrar sesión')
+      const message = err?.message || 'Error al cerrar sesión'
+      setError(message)
       throw err
     } finally {
       setLoading(false)
@@ -107,7 +152,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    checkAuth
+    checkAuth,
+    updateUserSession
   }
 
   return React.createElement(AuthContext.Provider, { value }, children)

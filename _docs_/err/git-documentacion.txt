@@ -170,4 +170,19 @@ Optimizar los assets con Vite.
 Reducir el tamaño de los recursos multimedia.
 Implementar code splitting.
 
+ejemplo para que copilot cree un texto 
+solo para copia y pega 
+=====================================
+fix(login): corregir redirección tras el inicio de sesión <-----este seria el titulo
 
+-coso que se cambia 
+-coso que se cambia
+-coso que se cambia
+-coso que se cambia
+-coso que se cambia
+-coso que se cambia
+-coso que se cambia
+                           (claramente todo mas detallado)
+=====================================
+fin
+=====================================

@@ -32,11 +32,8 @@ class CategoryModel {
 
     static async createCategory(categoryData) {
         try {
-            // ============================================
-            // CORREGIDO: USAR category_year (estandarizado)
-            // ============================================
             const payload = {
-                category_year: categoryData.category_year || categoryData.name_year,
+                category_year: categoryData.category_year,
                 description: categoryData.description || ''
             }
 

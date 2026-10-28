@@ -104,6 +104,11 @@ export const ProfileScreen = () => {
                     onPress={() => navigation.navigate('Settings')}
                 />
                 <MenuItem
+                    icon="key-outline"
+                    label="Cambiar contraseña"
+                    onPress={() => navigation.navigate('ChangePassword')}
+                />
+                <MenuItem
                     icon="notifications-outline"
                     label="Notificaciones"
                     onPress={() => Alert.alert('Notificaciones', 'Esta funcionalidad estará disponible pronto.')}

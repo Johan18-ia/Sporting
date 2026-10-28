@@ -64,6 +64,10 @@ const SchedulesView = () => {
       setTimeout(() => setMessage(null), 3000)
       return
     }
+    if (!formData.start_time || !formData.end_time || formData.start_time >= formData.end_time) {
+      setMessage({ type: 'error', text: 'La hora de fin debe ser posterior a la hora de inicio' })
+      return
+    }
 
     setLoading(true)
     const result = await ScheduleModel.createSchedule(formData)
@@ -216,8 +220,12 @@ const SchedulesView = () => {
                   name="end_time"
                   value={formData.end_time}
                   onChange={handleChange}
+                  className={formData.start_time && formData.end_time && formData.start_time >= formData.end_time ? 'field-invalid' : ''}
                   required
                 />
+                {formData.start_time && formData.end_time && formData.start_time >= formData.end_time && (
+                  <small className="field-error-message">La hora de fin debe ser posterior a la de inicio.</small>
+                )}
               </div>
             </div>
 

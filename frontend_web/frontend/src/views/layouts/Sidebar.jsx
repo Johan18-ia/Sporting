@@ -16,6 +16,7 @@ import logoSporting from '../../assets/logo.png';
 // solo se muestra visualmente deshabilitado.
 const ADMIN_NAV_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', icon: IconDashboard },
+    { id: 'profile', label: 'Mi Perfil', icon: IconUser },
     { id: 'users', label: 'Usuarios', icon: IconUsers },
     { id: 'categories', label: 'Categorías', icon: IconTag },
     { id: 'schedules', label: 'Horarios', icon: IconClock },

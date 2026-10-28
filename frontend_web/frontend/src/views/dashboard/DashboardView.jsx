@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
+import { ROUTES } from '../../config/routes'
 import StudentModel from '../../models/StudentModel'
 import TournamentModel from '../../models/TournamentModel'
 import ProductModel from '../../models/ProductModel'
@@ -24,6 +25,7 @@ import StudentsView from './StudentsView'
 import TournamentsView from './TournamentsView'
 import TeamsView from './TeamsView'
 import ReportsView from './ReportsView'
+import ProfileView from './ProfileView'
 import StudentDashboardView from './StudentDashboardView'
 import '../../styles/Dashboard.css'
 import '../../styles/DashboardChart.css'
@@ -108,6 +110,22 @@ const DashboardView = () => {
       overview.teams,
     [overview]
   )
+
+  if (!currentUser) {
+    return (
+      <div style={{ padding: '32px 20px' }}>
+        <PageHeader
+          title="Cargando sesión"
+          description="Estamos preparando tu panel de Sporting Club."
+        />
+        <Card>
+          <p style={{ margin: 0, color: 'var(--sporting-text-muted)' }}>
+            No se encontró información de usuario. Intenta nuevamente.
+          </p>
+        </Card>
+      </div>
+    )
+  }
 
   const maxMetric = useMemo(() => {
     const vals = METRIC_META.map((m) => overview[m.key] || 0)
@@ -238,6 +256,14 @@ const DashboardView = () => {
             <span className="label">Rol</span>
             <span className="badge-sporting badge-sporting-admin">{currentUser?.role}</span>
           </div>
+          <button
+            type="button"
+            className="btn-sporting-secondary"
+            onClick={() => navigate(ROUTES.CHANGE_PASSWORD)}
+            style={{ marginTop: 12, width: '100%' }}
+          >
+            Cambiar contraseña
+          </button>
         </Card>
       </div>
     </>
@@ -247,6 +273,8 @@ const DashboardView = () => {
     switch (activeTab) {
       case 'dashboard':
         return renderDashboardHome()
+      case 'profile':
+        return <ProfileView />
       case 'users':
         return <UsersView />
       case 'categories':
