@@ -69,8 +69,8 @@ const UsersView = () => {
     loadStudentMap()
   }, [])
 
-  const canEdit = () =>
-    currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
+  const canEdit = (user) =>
+    Boolean(user) && Boolean(currentUser) && (currentUser.role === 'admin' || currentUser.role === 'seller')
 
   const canDelete = (user) => {
     if (!currentUser || currentUser.role !== 'admin') return false

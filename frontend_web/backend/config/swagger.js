@@ -1,3 +1,4 @@
+require('dotenv').config();
 const path = require('path');
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -103,7 +104,7 @@ const options = {
           },
           example: {
             email: "usuario@example.com",
-            password: "miContraseña123"
+            password: process.env.SWAGGER_LOGIN_PASSWORD_EXAMPLE
           }
         },
         UserInput: {

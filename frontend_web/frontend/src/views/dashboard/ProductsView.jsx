@@ -46,7 +46,7 @@ const ProductsView = () => {
     products.forEach((p) => {
       if (p.categoria) set.add(p.categoria)
     })
-    return Array.from(set).sort()
+    return Array.from(set).sort((a, b) => String(a).localeCompare(String(b)))
   }, [products])
 
   const filtered = useMemo(() => {

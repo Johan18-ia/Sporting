@@ -177,7 +177,7 @@ export const ProductsScreen = () => {
         products.forEach((p) => {
             if (p.categoria && p.categoria.trim()) set.add(p.categoria.trim());
         });
-        return Array.from(set).sort();
+        return Array.from(set).sort((a, b) => String(a).localeCompare(String(b)));
     }, [products]);
 
     const filteredProducts = useMemo(() => {

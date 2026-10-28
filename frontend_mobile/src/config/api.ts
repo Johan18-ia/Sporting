@@ -7,10 +7,10 @@ const getBaseUrl = () => {
     if (manualUrl) return manualUrl.replace(/\/$/, '');
 
     if (Platform.OS === 'android') {
-        return 'http://10.1.202.161:3000/api';
+        return 'https://10.1.202.161:3000/api';
     }
 
-    return 'http://localhost:3000/api';
+    return 'https://localhost:3000/api';
 };
 // Endpoints
 export const API_CONFIG = {
