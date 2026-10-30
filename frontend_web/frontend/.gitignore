@@ -13,8 +13,6 @@ dist-ssr
 *.local
 
 # archivos locales del frontend
-/.env
-/src/config/api.js
 
 # Editor directories and files
 .vscode/*
