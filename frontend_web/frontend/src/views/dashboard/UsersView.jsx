@@ -16,16 +16,14 @@ import Button from '../ui/Button'
 import '../../styles/UsersCards.css'
 
 const ROLE_META = {
-  admin: { label: 'Administrador', color: '#8B0000' },
-  seller: { label: 'Moderador', color: '#A52A2A' },
-  user: { label: 'Estudiante', color: '#B22222' },
-  customer: { label: 'Cliente', color: '#6B2D2D' }
+  admin: { label: 'Admin', color: '#8B0000' },
+  seller: { label: 'Seller', color: '#A52A2A' },
+  user: { label: 'Usuario', color: '#B22222' }
 }
 
 const USER_TYPE_META = {
   student: { label: 'Estudiante', color: '#B22222' },
-  parent: { label: 'Padre', color: '#6B2D2D' },
-  none: { label: 'Ninguno', color: '#777' }
+  none: { label: 'Usuario regular', color: '#777' }
 }
 
 const initials = (user) => {
@@ -89,7 +87,7 @@ const UsersView = () => {
 
     const normalizeRole = (role) => {
     const value = String(role || '').toLowerCase()
-    if (['admin', 'seller', 'user', 'customer'].includes(value)) return value
+    if (['admin', 'seller', 'user'].includes(value)) return value
     return 'user'
   }
 
@@ -212,12 +210,12 @@ const UsersView = () => {
     setEditMode(false)
   }
 
-  const handleFormSuccess = () => {
+  const handleFormSuccess = (text) => {
     setShowForm(false)
     setEditMode(false)
     setSelectedUser(null)
     loadUsers()
-    setMessage({ type: 'success', text: 'Operación completada exitosamente' })
+    setMessage({ type: 'success', text: text || 'Operación completada exitosamente' })
     setTimeout(() => setMessage(null), 3000)
   }
 
@@ -377,6 +375,9 @@ const UsersView = () => {
                     <span className="usr-role-badge" style={{ color, background: `${color}14` }}>
                       {roleLabel(user.role)}
                     </span>
+                    {Number(user.id) === Number(currentUser?.id) && (
+                      <span className="usr-role-badge">Tú</span>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -427,6 +428,14 @@ const UsersView = () => {
                   </button>
                   <button
                     type="button"
+                    className="usr-btn"
+                    onClick={() => handleToggleStatus(user)}
+                    disabled={!canToggleStatus(user)}
+                  >
+                    {user.is_active === 1 || user.is_active === true ? 'Desactivar' : 'Activar'}
+                  </button>
+                  <button
+                    type="button"
                     className="usr-btn usr-btn-del"
                     onClick={() => handleDelete(user)}
                     disabled={!canDelete(user)}
@@ -453,6 +462,7 @@ const UsersView = () => {
         <UserDetails
           user={selectedUser}
           onClose={handleCloseDetails}
+          onChanged={loadUsers}
           onEdit={() => {
             handleCloseDetails()
             handleEdit(selectedUser)

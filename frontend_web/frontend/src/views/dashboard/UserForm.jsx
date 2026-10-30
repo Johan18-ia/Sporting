@@ -11,7 +11,7 @@ import CategoryModel from '../../models/CategoryModel'
 import { getFieldError } from '../../utils/validators'
 
 const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
-    const { createUser, updateUser, patchUser } = useUsers()
+    const { users, createUser, updateUser, patchUser } = useUsers()
     const { currentUser, updateUserSession } = useAuth()
     const [categories, setCategories] = useState([])
     const [formData, setFormData] = useState({
@@ -129,6 +129,16 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
             return
         }
 
+        const normalizedEmail = formData.email.trim().toLowerCase()
+        const emailExists = (users || []).some(existingUser =>
+            Number(existingUser.id) !== Number(user?.id) &&
+            String(existingUser.email || '').trim().toLowerCase() === normalizedEmail
+        )
+        if (emailExists) {
+            setError('Ya existe un usuario registrado con este email')
+            return
+        }
+
         if (!isEdit && !formData.name) {
             setError('El nombre es requerido')
             return
@@ -161,11 +171,12 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                         is_active: formData.is_active
                     }
 
-                    if (canAssignRole()) {
+                    const isCurrentUser = Number(user.id) === Number(currentUser?.id)
+                    if (canAssignRole() && (!isCurrentUser || formData.role === user.role)) {
                         updateData.role = formData.role
                     }
 
-                    if (formData.password) {
+                    if (formData.password.trim()) {
                         updateData.password = formData.password
                     }
 
@@ -205,7 +216,7 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                 }
                 await createUser(newUserData)
             }
-            onSuccess()
+            onSuccess(isEdit ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente')
         } catch (err) {
             setError(err.error || 'Error al guardar usuario')
         } finally {
@@ -550,24 +561,27 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                         ============================================ */}
                         {canAssignRole() && (
                             <div className={`form-row ${isEdit ? '' : 'form-row-single'}`}>
-                                {isEdit && (
-                                    <div className="form-group">
-                                        <label>Rol</label>
+                                <div className="form-group">
+                                        <label>Rol *</label>
                                         <select
                                             name="role"
                                             value={formData.role}
                                             onChange={handleChange}
                                             className="form-control"
-                                            disabled={loading}
+                                            required
+                                            disabled={loading || (isEdit && Number(user?.id) === Number(currentUser?.id))}
                                         >
                                             <option value="user">Usuario</option>
                                             <option value="seller">Moderador</option>
                                             <option value="admin">Administrador</option>
                                         </select>
-                                        <small className="form-hint">Define los permisos del usuario</small>
+                                        <small className="form-hint">
+                                            {Number(user?.id) === Number(currentUser?.id)
+                                                ? 'No puedes cambiar tu propio rol'
+                                                : 'Define los permisos del usuario'}
+                                        </small>
                                     </div>
-                                )}
-                                <div className="form-group">
+                                {formData.role === 'user' && <div className="form-group">
                                     <label>Categoría (Año)</label>
                                     <select
                                         name="category_id"
@@ -583,7 +597,7 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
                                             </option>
                                         ))}
                                     </select>
-                                </div>
+                                </div>}
                             </div>
                         )}
 
