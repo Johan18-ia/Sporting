@@ -7,7 +7,6 @@ node_modules
 
 # archivos locales del backend
 /.env
-/server.js
 
 # testing
 /coverage
