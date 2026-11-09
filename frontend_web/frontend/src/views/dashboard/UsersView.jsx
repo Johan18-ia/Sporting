@@ -183,7 +183,10 @@ const UsersView = () => {
     if (window.confirm(`¿Estás seguro de ${action} al usuario "${user.email}"?`)) {
       try {
         await toggleUserStatus(user.id, newStatus === 1)
-        setMessage({ type: 'success', text: `Usuario ${action}do exitosamente` })
+        setMessage({
+          type: 'success',
+          text: `Usuario ${newStatus === 1 ? 'activado' : 'desactivado'} exitosamente`
+        })
         setTimeout(() => setMessage(null), 3000)
       } catch (err) {
         setMessage({ type: 'error', text: err.error || `Error al ${action} usuario` })
