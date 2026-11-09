@@ -34,7 +34,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { getItem, save } = LocalStorage();
 
     useEffect(() => {
-        checkAuth(); // se ejecuta UNA sola vez al abrir la app
+        void (async () => {
+            try {
+                await checkAuth();
+            } catch (err) {
+                console.error('Error checking auth:', err);
+            }
+        })();
     }, []);
 
     const checkAuth = async () => {
