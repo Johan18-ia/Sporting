@@ -23,7 +23,7 @@ ApiDelivery.interceptors.request.use(
         const expiryStr = await AsyncStorage.getItem('auth_token_expiry');
         if (expiryStr) {
             const expiry = Number(expiryStr);
-            if (!isNaN(expiry) && expiry <= Date.now()) {
+            if (!Number.isNaN(expiry) && expiry <= Date.now()) {
                 console.log('Token expirado detectado en interceptor, limpiando sesión');
                 await AsyncStorage.removeItem('auth_token');
                 await AsyncStorage.removeItem('auth_token_expiry');

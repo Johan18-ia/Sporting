@@ -1,8 +1,11 @@
 // src/views/dashboard/UserDetails.jsx
 import useAuth from '../../hooks/useAuth'
+import useUsers from '../../hooks/useUsers'
 
-const UserDetails = ({ user, onClose, onEdit }) => {
+const UserDetails = ({ user, onClose, onEdit, onChanged }) => {
   const { currentUser } = useAuth()
+  const { deleteUser, toggleUserStatus } = useUsers()
+  const isOwnAccount = Number(user?.id) === Number(currentUser?.id)
   
   // Verificar si el usuario actual puede editar (admin o seller)
   const canEdit = () => {
@@ -28,6 +31,23 @@ const UserDetails = ({ user, onClose, onEdit }) => {
     } catch {
       return 'N/A'
     }
+  }
+
+  const handleToggleStatus = async () => {
+    if (isOwnAccount) return
+    const isActive = user.is_active === 1 || user.is_active === true
+    const action = isActive ? 'desactivar' : 'activar'
+    if (!window.confirm(`¿Deseas ${action} al usuario "${user.email}"?`)) return
+    await toggleUserStatus(user.id, !isActive)
+    onChanged?.()
+  }
+
+  const handleDelete = async () => {
+    if (isOwnAccount) return
+    if (!window.confirm(`¿Deseas eliminar al usuario "${user.email}"? Esta acción no se puede deshacer.`)) return
+    await deleteUser(user.id)
+    onChanged?.()
+    onClose()
   }
 
   return (
@@ -82,9 +102,19 @@ const UserDetails = ({ user, onClose, onEdit }) => {
         </div>
 
         <div className="modal-footer">
-          {canEdit() && (
+          {canEdit() && !isOwnAccount && (
             <button className="btn-primary" onClick={onEdit}>
               Editar Usuario
+            </button>
+          )}
+          {canEdit() && !isOwnAccount && (
+            <button className="btn-secondary" onClick={handleToggleStatus}>
+              {user.is_active === 1 || user.is_active === true ? 'Desactivar' : 'Activar'}
+            </button>
+          )}
+          {currentUser?.role === 'admin' && !isOwnAccount && (
+            <button className="btn-danger" onClick={handleDelete}>
+              Eliminar
             </button>
           )}
           <button className="btn-secondary" onClick={onClose}>

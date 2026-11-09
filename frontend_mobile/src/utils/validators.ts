@@ -15,8 +15,7 @@ export const isRequired = (value: string): boolean => {
  * Valida que un email sea válido
  */
 export const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return isEmail(email);
 };
 
 /**
@@ -248,7 +247,7 @@ export const getFieldValidationError = (type: string, value: string): string => 
         case 'document':
             return /^\d+$/.test(text) ? '' : 'Usa solo números.';
         case 'email':
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? '' : 'Ingresa un correo electrónico válido.';
+            return isValidEmail(text) ? '' : 'Ingresa un correo electrónico válido.';
         case 'phone':
             return /^\d{7,15}$/.test(text) ? '' : 'Usa entre 7 y 15 dígitos, sin letras ni símbolos.';
         case 'price':

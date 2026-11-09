@@ -164,8 +164,8 @@ const LoginView = () => {
           <div className="login-footer sporting-footer">
             <p>¿No tienes cuenta? <a href="#" onClick={(e) => { e.preventDefault(); navigate('/register') }} className="sporting-link">Regístrate aquí</a></p>
             <div className="demo-credentials sporting-demo">
-              <p><strong>Email:</strong> profealbeiro2020@gmail.com</p>
-              <p><strong>Contraseña:</strong> [la que usaste para hashear]</p>
+              <p>Ingresa el correo y la contraseña de una cuenta registrada.</p>
+              <p>Si no tienes una contraseña, solicita acceso al administrador.</p>
             </div>
           </div>
         </div>

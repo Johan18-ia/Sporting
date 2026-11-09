@@ -118,11 +118,14 @@ class UserController {
                 return
             }
 
-            // No permitir que un usuario se actualice a sí mismo a un rol superior
+            // Un usuario no puede cambiar su propio rol
             const currentUser = AuthController.getAuthState().currentUser
-            if (currentUser && currentUser.id === parseInt(id) && userData.role) {
-                console.warn('⚠️ Usuario intentando cambiar su propio rol')
-                // Opcional: permitir o denegar según política
+            if (currentUser && Number(currentUser.id) === Number(id) && userData.role) {
+                const currentRole = String(currentUser.role || '').toLowerCase()
+                if (String(userData.role).toLowerCase() !== currentRole) {
+                    onError('No puede cambiar su propio rol')
+                    return
+                }
             }
 
             const result = await UserModel.updateUser(id, userData)
