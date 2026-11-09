@@ -22,6 +22,7 @@ import { RootStackParamList } from '../../../navigation/RootStackParamList';
 import { useAuth } from '../../../hooks/useAuth';
 import { MyColors } from '../../theme/AppTheme';
 import { Ionicons } from '@expo/vector-icons';
+import { isValidEmail } from '../../../utils/validators';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -45,8 +46,7 @@ export const LoginScreen = () => {
             }
 
             // Validación de formato de email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
+            if (!isValidEmail(email)) {
                 setLocalError('Por favor ingrese un correo electrónico válido');
                 return;
             }

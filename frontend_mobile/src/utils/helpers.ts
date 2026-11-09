@@ -3,6 +3,7 @@
 // Archivo: src/utils/helpers.ts
 // ============================================
 // src/utils/helpers.ts
+import { isEmail } from 'validator';
 
 /**
  * Formatea un número como moneda (COP - Peso Colombiano)
@@ -148,8 +149,7 @@ export const generateId = (): string => {
  * @returns true si es válido
  */
 export const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return isEmail(email);
 };
 
 /**

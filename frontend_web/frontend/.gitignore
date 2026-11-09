@@ -12,10 +12,8 @@ dist
 dist-ssr
 *.local
 
-# archivos locales y directorios que sí deben versionarse
-*.local
-!src/
-!public/
+# archivos locales del frontend
+
 
 # Editor directories and files
 .vscode/*

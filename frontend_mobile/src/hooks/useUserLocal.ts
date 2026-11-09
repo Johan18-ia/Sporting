@@ -4,21 +4,23 @@
 // ============================================
 
 // src/hooks/useUserLocal.ts
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { User } from '../domain/entities/User';
 import { GetUserLocalUseCase } from '../domain/useCases/userLocal/GetUserLocal';
 
 export const useUserLocal = () => {
     const [user, setUser] = useState<User | null>(null);
 
-    useEffect(() => {
-        getUserSession();
-    }, []);
-
-    const getUserSession = async () => {
+    const getUserSession = useCallback(async () => {
         const userData = await GetUserLocalUseCase();
         setUser(userData);
-    };
+    }, []);
+
+    useEffect(() => {
+        void getUserSession().catch((error: unknown) => {
+            console.error('Error al obtener la sesión local del usuario:', error);
+        });
+    }, [getUserSession]);
 
     return {
         user,

@@ -123,9 +123,6 @@ const MainTabs = ({ route }: { route: RouteProp<RootStackParamList, 'MainTabs'> 
                         case 'Students':
                             iconName = focused ? 'school' : 'school-outline';
                             break;
-                        case 'Students':
-                            iconName = 'add';
-                            break;
                         case 'Schedules':
                             iconName = focused ? 'calendar' : 'calendar-outline';
                             break;

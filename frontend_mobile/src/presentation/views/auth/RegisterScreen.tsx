@@ -25,6 +25,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { MyColors } from '../../theme/AppTheme';
 import { Ionicons } from '@expo/vector-icons';
 import { ApiDelivery } from '../../../data/sources/remote/api/ApiDelivery';
+import { isValidEmail } from '../../../utils/validators';
 
 type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
 
@@ -46,8 +47,23 @@ const parseFormDate = (value: string) => {
 const hasInvalidNameCharacters = (value: string) => /[^A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0300-\u036F '\u2019-]/.test(value);
 const hasInvalidDocumentCharacters = (value: string) => /[^0-9]/.test(value);
 const hasInvalidPhone = (value: string) => Boolean(value) && !/^\d{7,15}$/.test(value);
-const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const validName = /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0300-\u036F]+(?:[ '\u2019-][A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0300-\u036F]+)*$/;
+const isNameLetter = (character: string) => /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0300-\u036F]$/.test(character);
+const isValidName = (value: string) => {
+    let expectingLetter = true;
+
+    for (const character of value) {
+        if (expectingLetter) {
+            if (!isNameLetter(character)) return false;
+            expectingLetter = false;
+        } else if (character === ' ' || character === "'" || character === '\u2019' || character === '-') {
+            expectingLetter = true;
+        } else if (!isNameLetter(character)) {
+            return false;
+        }
+    }
+
+    return value.length > 0 && !expectingLetter;
+};
 
 export const RegisterScreen = () => {
     const navigation = useNavigation<RegisterScreenNavigationProp>();
@@ -181,17 +197,17 @@ export const RegisterScreen = () => {
             return;
         }
 
-        if (!validName.test(name)) {
+        if (!isValidName(name)) {
             setError('El nombre solo puede contener letras, espacios, guiones y apóstrofes');
             return;
         }
 
-        if (lastname && !validName.test(lastname)) {
+        if (lastname && !isValidName(lastname)) {
             setError('El apellido solo puede contener letras, espacios, guiones y apóstrofes');
             return;
         }
 
-        if (!validEmail.test(email)) {
+        if (!isValidEmail(email)) {
             setError('Por favor ingrese un correo electrónico válido');
             return;
         }
@@ -201,7 +217,7 @@ export const RegisterScreen = () => {
             return;
         }
 
-        if (emergencyName && !validName.test(emergencyName)) {
+        if (emergencyName && !isValidName(emergencyName)) {
             setError('El contacto de emergencia solo puede contener letras, espacios, guiones y apóstrofes');
             return;
         }
@@ -470,7 +486,7 @@ export const RegisterScreen = () => {
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Correo Electrónico *</Text>
                         <TextInput
-                            style={[styles.input, formData.email.length > 0 && !validEmail.test(formData.email.trim()) && styles.inputInvalid]}
+                            style={[styles.input, formData.email.length > 0 && !isValidEmail(formData.email.trim()) && styles.inputInvalid]}
                             placeholder="usuario@ejemplo.com"
                             value={formData.email}
                             onChangeText={(value) => handleChange('email', value)}
@@ -478,7 +494,7 @@ export const RegisterScreen = () => {
                             autoCapitalize="none"
                             autoCorrect={false}
                         />
-                        {formData.email.length > 0 && !validEmail.test(formData.email.trim()) && (
+                        {formData.email.length > 0 && !isValidEmail(formData.email.trim()) && (
                             <Text style={styles.fieldErrorText}>Ingresa un correo electrónico válido.</Text>
                         )}
                     </View>

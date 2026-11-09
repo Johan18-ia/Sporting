@@ -66,13 +66,6 @@ class HttpService {
         return data
     }
 
-    normalizeNetworkError(error) {
-        if (error instanceof TypeError || String(error?.message || '').includes('Failed to fetch')) {
-            return new Error(`No se pudo conectar con el servidor en ${this.baseURL}. Verifica que el backend esté iniciado.`)
-        }
-        return error
-    }
-
     // ============================================
     // POST
     // ============================================
@@ -92,7 +85,7 @@ class HttpService {
             return await this.handleResponse(response)
         } catch (error) {
             console.error(`❌ POST ${endpoint} error:`, error)
-            throw this.normalizeNetworkError(error)
+            throw error
         }
     }
 
@@ -110,7 +103,7 @@ class HttpService {
             return await this.handleResponse(response)
         } catch (error) {
             console.error(`❌ GET ${endpoint} error:`, error)
-            throw this.normalizeNetworkError(error)
+            throw error
         }
     }
 
@@ -129,7 +122,7 @@ class HttpService {
             return await this.handleResponse(response)
         } catch (error) {
             console.error(`❌ PUT ${endpoint} error:`, error)
-            throw this.normalizeNetworkError(error)
+            throw error
         }
     }
 
@@ -148,7 +141,7 @@ class HttpService {
             return await this.handleResponse(response)
         } catch (error) {
             console.error(`❌ PATCH ${endpoint} error:`, error)
-            throw this.normalizeNetworkError(error)
+            throw error
         }
     }
 
@@ -166,7 +159,7 @@ class HttpService {
             return await this.handleResponse(response)
         } catch (error) {
             console.error(`❌ DELETE ${endpoint} error:`, error)
-            throw this.normalizeNetworkError(error)
+            throw error
         }
     }
 }
