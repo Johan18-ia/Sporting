@@ -134,7 +134,7 @@ class UserModel {
         try {
             console.log(`✏️ Actualizando usuario ID: ${id}`)
 
-            const endpoint = API_CONFIG.ENDPOINTS.USER_UPDATE
+            const endpoint = API_CONFIG.ENDPOINTS.USER_UPDATE.replace(':id', id)
 
             const updateData = {}
             if (userData.name !== undefined) updateData.name = userData.name
@@ -186,7 +186,7 @@ class UserModel {
         try {
             console.log(`📝 Actualizando campo(s) de usuario ID: ${id}`, partialData)
 
-            const endpoint = API_CONFIG.ENDPOINTS.USER_UPDATE
+            const endpoint = API_CONFIG.ENDPOINTS.USER_UPDATE.replace(':id', id)
 
             // Agregar el ID al objeto para el backend
             const patchData = { id, ...partialData }
