@@ -5,7 +5,7 @@
  * - Origen mobile equivalente: frontend_mobile/src/presentation/views/auth/RegisterScreen.tsx
  */
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import AlertMessage from '../common/AlertMessage'
 import CategoryModel from '../../models/CategoryModel'
@@ -74,6 +74,9 @@ const RegisterView = () => {
     }, [birthYear, categories])
 
     const autoCategoryId = autoCategory?.id == null ? '' : String(autoCategory.id)
+    const autoCategoryLabel = autoCategory
+        ? String(autoCategory.category_year || autoCategory.name_year || '')
+        : ''
 
     useEffect(() => {
         if (isAuthenticated && currentUser) {
