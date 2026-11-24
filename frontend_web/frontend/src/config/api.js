@@ -59,7 +59,11 @@ const API_CONFIG = {
         // ============================================
         TOURNAMENTS: '/tournaments',
         TOURNAMENT_CREATE: '/tournaments/create',
-        TOURNAMENT_GENERATE_TEAMS: '/tournaments/generate-teams'
+        TOURNAMENT_GENERATE_TEAMS: '/tournaments/generate-teams',
+
+        FORGOT_PASSWORD: '/users/forgot-password',
+        RESET_PASSWORD: '/users/reset-password',
+        USER_CHANGE_PASSWORD: '/users/change-password',
     }
 }
 

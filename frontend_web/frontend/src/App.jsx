@@ -13,6 +13,8 @@ import Navbar from './views/common/Navbar'
 import Footer from './views/common/Footer'
 import LoadingSpinner from './views/common/LoadingSpinner'
 import useAuth from './hooks/useAuth'
+import ForgotPasswordView from './views/auth/ForgotPasswordView'
+import ResetPasswordView from './views/auth/ResetPasswordView'
 
 // ============================================
 // COMPONENTE: RUTA PROTEGIDA
@@ -48,6 +50,8 @@ function App() {
                 <Route path={ROUTES.TOURNAMENTS} element={<TournamentsView />} />
                 <Route path={ROUTES.TEAMS} element={<TeamsView />} />
                 <Route path={ROUTES.SCHEDULES} element={<SchedulesView />} />
+                <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordView />} />
+                <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordView />} />
 
                 <Route
                     path={ROUTES.CHANGE_PASSWORD}

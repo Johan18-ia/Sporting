@@ -15,7 +15,9 @@ export const ROUTES = {
     TEAMS: '/teams',
     TEAM_DETAIL: '/teams/:id',
     TEAM_MEMBERS: '/teams/:id/members',
-    SCHEDULES: '/schedules'
+    SCHEDULES: '/schedules',
+    FORGOT_PASSWORD: '/forgot-password',
+    RESET_PASSWORD: '/reset-password',
 }
 
 export const PROTECTED_ROUTES = [ROUTES.DASHBOARD, ROUTES.TOURNAMENTS, ROUTES.TEAMS, ROUTES.SCHEDULES]
@@ -27,5 +29,7 @@ export const PUBLIC_ROUTES = [
     ROUTES.REGISTER,
     ROUTES.TOURNAMENTS,
     ROUTES.TEAMS,
-    ROUTES.SCHEDULES
+    ROUTES.SCHEDULES,
+    ROUTES.FORGOT_PASSWORD,
+    ROUTES.RESET_PASSWORD,
 ]

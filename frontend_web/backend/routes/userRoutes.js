@@ -39,7 +39,8 @@ const { verifyToken, optionalVerifyToken, authorizeRoles } = require('../middlew
  *         description: Credenciales inválidas
  */
 router.post('/login', userController.login);
-
+router.post('/forgot-password', userController.forgotPassword);
+router.post('/reset-password', userController.resetPassword);
 // ====================================================
 // REGISTRO DE USUARIO (PÚBLICO)
 // ====================================================

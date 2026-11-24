@@ -85,7 +85,7 @@ const LoginView = () => {
 
   const handleForgotPassword = (e) => {
     e.preventDefault()
-    alert('Para restablecer tu contraseña, comunícate con el administrador del sistema.')
+    navigate('/forgot-password')
   }
 
   return (
