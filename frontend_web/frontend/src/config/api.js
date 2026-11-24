@@ -3,11 +3,12 @@
 // CONFIGURACIÓN DE API
 // ====================================================
 
-// ============================================
-// USAR VARIABLE DE ENTORNO CON FALLBACK
-// ============================================
+const defaultApiUrl = import.meta.env.DEV
+    ? 'http://localhost:3000/api'
+    : 'https://nube-de-sporty.onrender.com/api'
+
 const API_CONFIG = {
-    BASE_URL: import.meta.env.VITE_API_URL || 'http://192.168.80.22:3000/api',
+    BASE_URL: import.meta.env.VITE_API_URL || defaultApiUrl,
     TIMEOUT: 10000,
     ENDPOINTS: {
         // ============================================
@@ -18,7 +19,7 @@ const API_CONFIG = {
         USERS: '/users',
         USER_BY_ID: '/users/:id',
         USER_DELETE: '/users/delete/:id',
-        USER_UPDATE: '/users',
+        USER_UPDATE: '/users/:id',
         USER_TOGGLE_STATUS: '/users/toggle-status/:id',
 
         // ============================================
