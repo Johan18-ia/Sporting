@@ -1,0 +1,9 @@
+{
+  "name": "frontend-mob",
+  "compatibility_date": "2026-11-18",
+  "main": "worker/index.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  }
+}

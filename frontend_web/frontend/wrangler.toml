@@ -1,0 +1,3 @@
+name = "nube-sporty-web"
+compatibility_date = "2026-11-18"
+pages_build_output_dir = "./dist"
