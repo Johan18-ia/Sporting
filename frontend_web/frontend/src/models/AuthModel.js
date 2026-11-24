@@ -160,6 +160,61 @@ class AuthModel {
   static getCurrentToken() {
     return storageService.getToken()
   }
+
+    static async forgotPassword(email) {
+    try {
+      const response = await httpService.post(
+        API_CONFIG.ENDPOINTS.FORGOT_PASSWORD,
+        { email: String(email || '').trim().toLowerCase() },
+        false
+      )
+      if (!response || !response.success) {
+        return {
+          success: false,
+          error: response?.message || 'No se pudo solicitar la recuperación'
+        }
+      }
+      return {
+        success: true,
+        message: response.message,
+        data: response.data || {}
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error?.message || 'Error de conexión con el servidor'
+      }
+    }
+  }
+
+  static async resetPassword({ email, code, newPassword }) {
+    try {
+      const response = await httpService.post(
+        API_CONFIG.ENDPOINTS.RESET_PASSWORD,
+        {
+          email: String(email || '').trim().toLowerCase(),
+          code: String(code || '').trim(),
+          newPassword: String(newPassword || '')
+        },
+        false
+      )
+      if (!response || !response.success) {
+        return {
+          success: false,
+          error: response?.message || 'No se pudo restablecer la contraseña'
+        }
+      }
+      return {
+        success: true,
+        message: response.message || 'Contraseña actualizada'
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error?.message || 'Error de conexión con el servidor'
+      }
+    }
+  }
 }
 
 export default AuthModel

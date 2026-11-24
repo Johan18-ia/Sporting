@@ -541,6 +541,116 @@ module.exports = {
                 });
             }
         });
+    },    forgotPassword(req, res) {
+        const email = String(req.body?.email || '').trim().toLowerCase();
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'El correo electrónico es obligatorio'
+            });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ingresa un correo válido'
+            });
+        }
+
+        User.findByEmail(email, (err, user) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error al consultar el usuario',
+                    error: err
+                });
+            }
+
+            if (!user || !user.id) {
+                return res.status(200).json({
+                    success: true,
+                    message: 'Si el correo está registrado, se generó un código de recuperación.',
+                    data: { email }
+                });
+            }
+
+            if (user.is_active === 0 || user.is_active === false) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Esta cuenta está desactivada. Contacta al administrador.'
+                });
+            }
+
+            User.generateResetCode(email, user.id, (genErr, payload) => {
+                if (genErr) {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'No se pudo generar el código de recuperación'
+                    });
+                }
+
+                console.log(`[Sporting] Código para ${email}: ${payload.code}`);
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Código generado. Válido por 15 minutos.',
+                    data: {
+                        email,
+                        recoveryCode: payload.code,
+                        expiresInMinutes: 15
+                    }
+                });
+            });
+        });
+    },
+
+    resetPassword(req, res) {
+        const email = String(req.body?.email || '').trim().toLowerCase();
+        const code = String(req.body?.code || '').trim();
+        const newPassword = String(req.body?.newPassword || '');
+
+        if (!email || !code || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Correo, código y nueva contraseña son obligatorios'
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'La nueva contraseña debe tener al menos 6 caracteres'
+            });
+        }
+
+        User.verifyResetCode(email, code, (verifyErr, entry) => {
+            if (verifyErr || !entry) {
+                return res.status(400).json({
+                    success: false,
+                    message: verifyErr?.message || 'Código inválido o expirado'
+                });
+            }
+
+            User.changePassword(entry.userId, newPassword, (updateErr) => {
+                if (updateErr) {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Error al actualizar la contraseña',
+                        error: updateErr
+                    });
+                }
+
+                User.clearResetCode(email);
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Contraseña restablecida correctamente. Ya puedes iniciar sesión.',
+                    data: { email }
+                });
+            });
+        });
     },
 
     // ====================================================

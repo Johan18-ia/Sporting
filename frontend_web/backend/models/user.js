@@ -3,6 +3,7 @@
 // ====================================================
 const db = require('../config/config');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const User = {};
 
@@ -190,6 +191,39 @@ User.changePassword = async (userId, newPassword, result) => {
         console.error('Error al hashear contraseña:', error);
         result(error, null);
     }
+
+    // ====================================================
+// RECUPERACIÓN DE CONTRASEÑA 
+// ====================================================
+const resetCodes = new Map(); // email -> { code, expiresAt, userId }
+
+User.generateResetCode = (email, userId, result) => {
+    const normalized = String(email || '').trim().toLowerCase();
+    const code = String(crypto.randomInt(100000, 999999));
+    const expiresAt = Date.now() + 15 * 60 * 1000;
+    resetCodes.set(normalized, { code, expiresAt, userId });
+    result(null, { code, expiresAt, userId, email: normalized });
+};
+
+User.verifyResetCode = (email, code, result) => {
+    const normalized = String(email || '').trim().toLowerCase();
+    const entry = resetCodes.get(normalized);
+    if (!entry) {
+        return result({ message: 'No hay solicitud de recuperación activa para este correo' }, null);
+    }
+    if (Date.now() > entry.expiresAt) {
+        resetCodes.delete(normalized);
+        return result({ message: 'El código ha expirado. Solicita uno nuevo.' }, null);
+    }
+    if (String(code).trim() !== String(entry.code)) {
+        return result({ message: 'Código incorrecto' }, null);
+    }
+    result(null, entry);
+};
+
+User.clearResetCode = (email) => {
+    resetCodes.delete(String(email || '').trim().toLowerCase());
+};
 };
 
 module.exports = User;
