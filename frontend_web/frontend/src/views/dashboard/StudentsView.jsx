@@ -1,4 +1,6 @@
-// src/views/dashboard/StudentsView.jsx
+/**
+ * StudentsView.jsx — listado de estudiantes en tabla profesional (estilo panel admin).
+ */
 import React, { useState, useEffect, useMemo } from 'react'
 import AlertMessage from '../common/AlertMessage'
 import CategoryModel from '../../models/CategoryModel'
@@ -220,7 +222,7 @@ const StudentsView = () => {
                 } else openCreate()
               }}
             >
-              {showForm ? '✕ Cancelar' : '+ Nuevo Estudiante'}
+              {showForm ? 'Cancelar' : 'Nuevo estudiante'}
             </Button>
           ) : null
         }
@@ -232,25 +234,16 @@ const StudentsView = () => {
 
       <div className="stu-stats">
         <div className="stu-stat">
-          <div className="stu-stat-icon stu-stat-icon--e">E</div>
-          <div>
-            <span className="stu-stat-value">{students.length}</span>
-            <span className="stu-stat-label">Estudiantes</span>
-          </div>
+          <span className="stu-stat-value">{students.length}</span>
+          <span className="stu-stat-label">Estudiantes</span>
         </div>
         <div className="stu-stat">
-          <div className="stu-stat-icon stu-stat-icon--c">C</div>
-          <div>
-            <span className="stu-stat-value">{categories.length}</span>
-            <span className="stu-stat-label">Categorías</span>
-          </div>
+          <span className="stu-stat-value">{categories.length}</span>
+          <span className="stu-stat-label">Categorías</span>
         </div>
         <div className="stu-stat">
-          <div className="stu-stat-icon stu-stat-icon--f">F</div>
-          <div>
-            <span className="stu-stat-value">{filteredStudents.length}</span>
-            <span className="stu-stat-label">En vista</span>
-          </div>
+          <span className="stu-stat-value">{filteredStudents.length}</span>
+          <span className="stu-stat-label">En vista</span>
         </div>
       </div>
 
@@ -263,73 +256,146 @@ const StudentsView = () => {
             <div className="stu-form-grid">
               <div className="ui-field">
                 <label>Nombre *</label>
-                <input type="text" name="name" value={formData.name} onChange={handleChange} className={getFieldError('name', formData.name) ? 'field-invalid' : ''} required />
-                {getFieldError('name', formData.name) && <small className="field-error-message">{getFieldError('name', formData.name)}</small>}
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={getFieldError('name', formData.name) ? 'field-invalid' : ''}
+                  required
+                />
+                {getFieldError('name', formData.name) && (
+                  <small className="field-error-message">{getFieldError('name', formData.name)}</small>
+                )}
               </div>
               <div className="ui-field">
                 <label>Apellido *</label>
-                <input type="text" name="lastname" value={formData.lastname} onChange={handleChange} className={getFieldError('name', formData.lastname) ? 'field-invalid' : ''} required />
-                {getFieldError('name', formData.lastname) && <small className="field-error-message">{getFieldError('name', formData.lastname)}</small>}
+                <input
+                  type="text"
+                  name="lastname"
+                  value={formData.lastname}
+                  onChange={handleChange}
+                  className={getFieldError('name', formData.lastname) ? 'field-invalid' : ''}
+                  required
+                />
+                {getFieldError('name', formData.lastname) && (
+                  <small className="field-error-message">{getFieldError('name', formData.lastname)}</small>
+                )}
               </div>
               <div className="ui-field">
                 <label>Documento *</label>
-                <input type="text" name="document" value={formData.document} onChange={handleChange} className={getFieldError('digits', formData.document) ? 'field-invalid' : ''} required />
-                {getFieldError('digits', formData.document) && <small className="field-error-message">{getFieldError('digits', formData.document)}</small>}
+                <input
+                  type="text"
+                  name="document"
+                  value={formData.document}
+                  onChange={handleChange}
+                  className={getFieldError('digits', formData.document) ? 'field-invalid' : ''}
+                  required
+                />
+                {getFieldError('digits', formData.document) && (
+                  <small className="field-error-message">{getFieldError('digits', formData.document)}</small>
+                )}
               </div>
               <div className="ui-field">
                 <label>Categoría *</label>
-                <select name="category_id" value={formData.category_id} onChange={handleChange} required>
+                <select
+                  name="category_id"
+                  value={formData.category_id}
+                  onChange={handleChange}
+                  required
+                >
                   <option value="">Seleccionar...</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.category_year || c.name_year}
+                      {c.category_year || c.name_year || c.name}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="ui-field">
                 <label>Fecha de nacimiento</label>
-                <input type="date" name="birth_date" value={formData.birth_date} onChange={handleChange} />
+                <input
+                  type="date"
+                  name="birth_date"
+                  value={formData.birth_date}
+                  onChange={handleChange}
+                />
               </div>
               <div className="ui-field">
                 <label>Teléfono</label>
-                <input type="text" name="phone" value={formData.phone} onChange={handleChange} className={getFieldError('phone', formData.phone) ? 'field-invalid' : ''} />
-                {getFieldError('phone', formData.phone) && <small className="field-error-message">{getFieldError('phone', formData.phone)}</small>}
+                <input
+                  type="text"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className={getFieldError('phone', formData.phone) ? 'field-invalid' : ''}
+                />
+                {getFieldError('phone', formData.phone) && (
+                  <small className="field-error-message">{getFieldError('phone', formData.phone)}</small>
+                )}
               </div>
-              <div className="ui-field" style={{ gridColumn: '1 / -1' }}>
+              <div className="ui-field">
                 <label>Dirección</label>
-                <input type="text" name="address" value={formData.address} onChange={handleChange} />
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                />
               </div>
               <div className="ui-field">
                 <label>Contacto de emergencia</label>
-                <input type="text" name="emergency_contact" value={formData.emergency_contact} onChange={handleChange} className={getFieldError('name', formData.emergency_contact) ? 'field-invalid' : ''} />
-                {getFieldError('name', formData.emergency_contact) && <small className="field-error-message">{getFieldError('name', formData.emergency_contact)}</small>}
+                <input
+                  type="text"
+                  name="emergency_contact"
+                  value={formData.emergency_contact}
+                  onChange={handleChange}
+                />
               </div>
               <div className="ui-field">
                 <label>Tel. emergencia</label>
-                <input type="text" name="emergency_phone" value={formData.emergency_phone} onChange={handleChange} className={getFieldError('phone', formData.emergency_phone) ? 'field-invalid' : ''} />
-                {getFieldError('phone', formData.emergency_phone) && <small className="field-error-message">{getFieldError('phone', formData.emergency_phone)}</small>}
+                <input
+                  type="text"
+                  name="emergency_phone"
+                  value={formData.emergency_phone}
+                  onChange={handleChange}
+                  className={getFieldError('phone', formData.emergency_phone) ? 'field-invalid' : ''}
+                />
+                {getFieldError('phone', formData.emergency_phone) && (
+                  <small className="field-error-message">
+                    {getFieldError('phone', formData.emergency_phone)}
+                  </small>
+                )}
               </div>
             </div>
             <div className="stu-form-actions">
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Guardando...' : editingStudent ? 'Actualizar' : 'Registrar estudiante'}
-              </Button>
+              <button type="submit" className="stu-btn stu-btn-primary" disabled={loading}>
+                {loading ? 'Guardando...' : editingStudent ? 'Actualizar' : 'Registrar'}
+              </button>
+              <button
+                type="button"
+                className="stu-btn stu-btn-ghost"
+                onClick={() => {
+                  setShowForm(false)
+                  setEditingStudent(null)
+                  setFormData({ ...emptyForm })
+                }}
+              >
+                Cancelar
+              </button>
             </div>
           </form>
         </div>
       )}
 
       <div className="stu-toolbar">
-        <div className="stu-search-wrap">
-          <input
-            type="search"
-            className="stu-search"
-            placeholder="Buscar por nombre, documento o teléfono..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <input
+          type="search"
+          className="stu-search"
+          placeholder="Buscar por nombre, documento o teléfono..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
         <div className="stu-chips">
           <button
             type="button"
@@ -338,25 +404,28 @@ const StudentsView = () => {
           >
             Todas
           </button>
-          {categories.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className={`stu-chip ${String(filterCategory) === String(c.id) ? 'is-active' : ''}`}
-              onClick={() => setFilterCategory(String(c.id))}
-            >
-              {c.category_year || c.name_year}
-            </button>
-          ))}
+          {categories.map((c) => {
+            const label = c.category_year || c.name_year || c.name
+            return (
+              <button
+                key={c.id}
+                type="button"
+                className={`stu-chip ${String(filterCategory) === String(c.id) ? 'is-active' : ''}`}
+                onClick={() => setFilterCategory(String(c.id))}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {loading && students.length === 0 && <p className="stu-status">Cargando estudiantes...</p>}
-      {error && <p className="stu-status stu-status-error">{error}</p>}
-
-      {!loading && filteredStudents.length === 0 ? (
+      {loading && students.length === 0 ? (
+        <div className="stu-status">Cargando estudiantes...</div>
+      ) : error ? (
+        <div className="stu-status stu-status-error">{error}</div>
+      ) : filteredStudents.length === 0 ? (
         <div className="stu-empty">
-          <div className="stu-empty-icon">👤</div>
           <p className="stu-empty-title">Sin estudiantes</p>
           <p className="stu-empty-text">
             {search || filterCategory
@@ -365,64 +434,76 @@ const StudentsView = () => {
           </p>
         </div>
       ) : (
-        <div className="stu-grid">
-          {filteredStudents.map((s) => {
-            const year = getCategoryName(s.category_id)
-            const birth = formatBirth(s.birth_date)
-            return (
-              <article key={s.id} className="stu-card">
-                <div className="stu-card-top">
-                  <div className="stu-avatar">{initials(s.name, s.lastname)}</div>
-                  <div className="stu-card-head">
-                    <h3 className="stu-card-name">
-                      {s.name} {s.lastname}
-                    </h3>
-                    <span className="stu-card-year">{year}</span>
-                  </div>
-                </div>
-                <div className="stu-card-rows">
-                  <div className="stu-row">
-                    <span className="stu-row-label">Documento</span>
-                    <span className="stu-row-value">{s.document || '—'}</span>
-                  </div>
-                  {birth && (
-                    <div className="stu-row">
-                      <span className="stu-row-label">Nacimiento</span>
-                      <span className="stu-row-value">{birth}</span>
-                    </div>
-                  )}
-                  <div className="stu-row">
-                    <span className="stu-row-label">Contacto</span>
-                    <span className="stu-row-value">{s.phone || '—'}</span>
-                  </div>
-                  {s.address && (
-                    <div className="stu-row">
-                      <span className="stu-row-label">Dirección</span>
-                      <span className="stu-row-value">{s.address}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="stu-card-actions">
-                  <button
-                    type="button"
-                    className="stu-btn stu-btn-edit"
-                    onClick={() => handleEdit(s)}
-                    disabled={!canEdit()}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    className="stu-btn stu-btn-del"
-                    onClick={() => handleDelete(s.id, `${s.name} ${s.lastname}`)}
-                    disabled={!canDelete()}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </article>
-            )
-          })}
+        <div className="stu-table-wrap">
+          <table className="stu-table">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Categoría</th>
+                <th>Documento</th>
+                <th>Nacimiento</th>
+                <th>Contacto</th>
+                <th>Dirección</th>
+                <th className="stu-th-actions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStudents.map((s) => {
+                const year = getCategoryName(s.category_id)
+                const birth = formatBirth(s.birth_date)
+                return (
+                  <tr key={s.id}>
+                    <td>
+                      <div className="stu-person">
+                        <div className="stu-avatar">{initials(s.name, s.lastname)}</div>
+                        <div className="stu-person-meta">
+                          <span className="stu-person-name">
+                            {s.name} {s.lastname}
+                          </span>
+                          <span className="stu-person-id">#{s.id}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="stu-year-badge">{year}</span>
+                    </td>
+                    <td>
+                      <span className="stu-cell">{s.document || '—'}</span>
+                    </td>
+                    <td>
+                      <span className="stu-cell">{birth || '—'}</span>
+                    </td>
+                    <td>
+                      <span className="stu-cell">{s.phone || '—'}</span>
+                    </td>
+                    <td>
+                      <span className="stu-cell stu-cell-muted">{s.address || '—'}</span>
+                    </td>
+                    <td>
+                      <div className="stu-row-actions">
+                        <button
+                          type="button"
+                          className="stu-btn stu-btn-edit"
+                          onClick={() => handleEdit(s)}
+                          disabled={!canEdit()}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="stu-btn stu-btn-del"
+                          onClick={() => handleDelete(s.id, `${s.name} ${s.lastname}`)}
+                          disabled={!canDelete()}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

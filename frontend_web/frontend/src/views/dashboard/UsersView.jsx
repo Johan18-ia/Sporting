@@ -1,8 +1,8 @@
 /**
  * UsersView.jsx:
- * - ¿Qué hace? Muestra la lista de usuarios con roles, filtros, estado y acciones de administración.
- * - ¿Qué función cumple en el proyecto? Es la vista equivalente al listado del mobile para controlar identidad, permisos y estudiantes.
- * - Origen mobile equivalente: frontend_mobile/src/presentation/views/users/UsersScreen.tsx
+ * - Listado de usuarios en tabla profesional (estilo panel admin).
+ * - Filtros, búsqueda, acciones de administración.
+ * - Equivalente mobile: frontend_mobile/src/presentation/views/users/UsersScreen.tsx
  */
 import { useState, useMemo, useEffect } from 'react'
 import useUsers from '../../hooks/useUsers'
@@ -31,6 +31,13 @@ const initials = (user) => {
   const b = (user?.lastname || '').trim().charAt(0)
   if (a || b) return ((a + b) || '?').toUpperCase()
   return (user?.email || '?').charAt(0).toUpperCase()
+}
+
+const fullName = (user) => {
+  if (user?.name || user?.lastname) {
+    return `${user.name || ''} ${user.lastname || ''}`.trim()
+  }
+  return user?.email?.split('@')[0] || '—'
 }
 
 const UsersView = () => {
@@ -63,7 +70,6 @@ const UsersView = () => {
         console.warn('No se pudo cargar el mapa de estudiantes:', err)
       }
     }
-
     loadStudentMap()
   }, [])
 
@@ -85,7 +91,7 @@ const UsersView = () => {
   const canCreateUser = () =>
     currentUser && (currentUser.role === 'admin' || currentUser.role === 'seller')
 
-    const normalizeRole = (role) => {
+  const normalizeRole = (role) => {
     const value = String(role || '').toLowerCase()
     if (['admin', 'seller', 'user'].includes(value)) return value
     return 'user'
@@ -100,17 +106,19 @@ const UsersView = () => {
 
     list = list.map((user) => {
       const normalizedRole = normalizeRole(user.role)
-      const isStudentUser = normalizedRole === 'user' && (
-        String(user.user_type || '').toLowerCase() === 'student' ||
-        Boolean(studentMap[Number(user.id)]) ||
-        Boolean(user.isStudent)
-      )
+      const isStudentUser =
+        normalizedRole === 'user' &&
+        (String(user.user_type || '').toLowerCase() === 'student' ||
+          Boolean(studentMap[Number(user.id)]) ||
+          Boolean(user.isStudent))
 
       return {
         ...user,
         role: normalizedRole,
         isStudentUser,
-        resolvedUserType: isStudentUser ? 'student' : (String(user.user_type || 'none').toLowerCase() || 'none')
+        resolvedUserType: isStudentUser
+          ? 'student'
+          : String(user.user_type || 'none').toLowerCase() || 'none'
       }
     })
 
@@ -261,7 +269,7 @@ const UsersView = () => {
                 setShowDetails(false)
               }}
             >
-              + Nuevo Usuario
+              Nuevo usuario
             </Button>
           ) : null
         }
@@ -321,7 +329,7 @@ const UsersView = () => {
             </button>
           ))}
         </div>
-        <div className="usr-chips" style={{ marginTop: '8px' }}>
+        <div className="usr-chips">
           <button
             type="button"
             className={`usr-chip ${!filterType ? 'is-active' : ''}`}
@@ -346,109 +354,117 @@ const UsersView = () => {
         <div className="usr-empty">
           <p className="usr-empty-title">Sin usuarios</p>
           <p className="usr-empty-text">
-            {searchTerm || filterRole
+            {searchTerm || filterRole || filterType
               ? 'No hay resultados con esos filtros.'
               : 'Crea el primer usuario con el botón de arriba.'}
           </p>
         </div>
       ) : (
-        <div className="usr-grid">
-          {filteredUsers.map((user) => {
-            const isActive =
-              user.is_active === undefined || user.is_active === null
-                ? true
-                : user.is_active === 1 || user.is_active === true
-            const color = roleColor(user.role)
-            const studentTypeLabel = user.role === 'user' && user.isStudentUser ? 'Estudiante' : userTypeLabel(user.resolvedUserType || 'none')
-            return (
-              <article key={user.id} className="usr-card">
-                <div className="usr-card-top">
-                  <div
-                    className="usr-avatar"
-                    style={{ background: `linear-gradient(135deg, ${color}, #c41e3a)` }}
-                  >
-                    {initials(user)}
-                  </div>
-                  <div className="usr-card-head">
-                    <h3 className="usr-card-name">
-                      {user.name || user.lastname
-                        ? `${user.name || ''} ${user.lastname || ''}`.trim()
-                        : user.email?.split('@')[0]}
-                    </h3>
-                    <span className="usr-role-badge" style={{ color, background: `${color}14` }}>
-                      {roleLabel(user.role)}
-                    </span>
-                    {Number(user.id) === Number(currentUser?.id) && (
-                      <span className="usr-role-badge">Tú</span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    className={`usr-status-pill ${isActive ? 'is-on' : 'is-off'}`}
-                    onClick={() => handleToggleStatus(user)}
-                    disabled={!canToggleStatus(user)}
-                  >
-                    {isActive ? 'Activo' : 'Inactivo'}
-                  </button>
-                </div>
+        <div className="usr-table-wrap">
+          <table className="usr-table">
+            <thead>
+              <tr>
+                <th>Persona</th>
+                <th>Rol</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Email</th>
+                <th>Documento</th>
+                <th className="usr-th-actions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user) => {
+                const isActive =
+                  user.is_active === undefined || user.is_active === null
+                    ? true
+                    : user.is_active === 1 || user.is_active === true
+                const color = roleColor(user.role)
+                const studentTypeLabel =
+                  user.role === 'user' && user.isStudentUser
+                    ? 'Estudiante'
+                    : userTypeLabel(user.resolvedUserType || 'none')
+                const isYou = Number(user.id) === Number(currentUser?.id)
 
-                <div className="usr-card-rows">
-                  <div className="usr-row">
-                    <span className="usr-row-label">Email</span>
-                    <span className="usr-row-value">{user.email || '—'}</span>
-                  </div>
-                  {user.document && (
-                    <div className="usr-row">
-                      <span className="usr-row-label">Documento</span>
-                      <span className="usr-row-value">{user.document}</span>
-                    </div>
-                  )}
-                  <div className="usr-row">
-                    <span className="usr-row-label">Tipo</span>
-                    <span className="usr-row-value">{studentTypeLabel}</span>
-                  </div>
-                  <div className="usr-row">
-                    <span className="usr-row-label">Estado</span>
-                    <span className="usr-row-value">{isActive ? 'Activo' : 'Inactivo'}</span>
-                  </div>
-                  <div className="usr-row">
-                    <span className="usr-row-label">ID</span>
-                    <span className="usr-row-value">#{user.id}</span>
-                  </div>
-                </div>
-
-                <div className="usr-card-actions">
-                  <button type="button" className="usr-btn usr-btn-view" onClick={() => handleViewDetails(user)}>
-                    Ver
-                  </button>
-                  <button
-                    type="button"
-                    className="usr-btn usr-btn-edit"
-                    onClick={() => handleEdit(user)}
-                    disabled={!canEdit(user)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    className="usr-btn"
-                    onClick={() => handleToggleStatus(user)}
-                    disabled={!canToggleStatus(user)}
-                  >
-                    {user.is_active === 1 || user.is_active === true ? 'Desactivar' : 'Activar'}
-                  </button>
-                  <button
-                    type="button"
-                    className="usr-btn usr-btn-del"
-                    onClick={() => handleDelete(user)}
-                    disabled={!canDelete(user)}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </article>
-            )
-          })}
+                return (
+                  <tr key={user.id} className={isYou ? 'usr-row-you' : undefined}>
+                    <td>
+                      <div className="usr-person">
+                        <div
+                          className="usr-avatar"
+                          style={{ background: `linear-gradient(135deg, ${color}, #c41e3a)` }}
+                        >
+                          {initials(user)}
+                        </div>
+                        <div className="usr-person-meta">
+                          <span className="usr-person-name">
+                            {fullName(user)}
+                            {isYou ? <span className="usr-you-badge">Tú</span> : null}
+                          </span>
+                          <span className="usr-person-id">#{user.id}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span
+                        className="usr-role-badge"
+                        style={{ color, background: `${color}14` }}
+                      >
+                        {roleLabel(user.role)}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="usr-type-text">{studentTypeLabel}</span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className={`usr-status-pill ${isActive ? 'is-on' : 'is-off'}`}
+                        onClick={() => handleToggleStatus(user)}
+                        disabled={!canToggleStatus(user)}
+                        title={isActive ? 'Desactivar' : 'Activar'}
+                      >
+                        {isActive ? 'Activo' : 'Inactivo'}
+                      </button>
+                    </td>
+                    <td>
+                      <span className="usr-email">{user.email || '—'}</span>
+                    </td>
+                    <td>
+                      <span className="usr-doc">{user.document || '—'}</span>
+                    </td>
+                    <td>
+                      <div className="usr-row-actions">
+                        <button
+                          type="button"
+                          className="usr-btn usr-btn-view"
+                          onClick={() => handleViewDetails(user)}
+                        >
+                          Ver
+                        </button>
+                        <button
+                          type="button"
+                          className="usr-btn usr-btn-edit"
+                          onClick={() => handleEdit(user)}
+                          disabled={!canEdit(user)}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="usr-btn usr-btn-del"
+                          onClick={() => handleDelete(user)}
+                          disabled={!canDelete(user)}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
